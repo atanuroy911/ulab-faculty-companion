@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULAB Common Free Time</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root, [data-theme="dark"] {
+            --bg:            #0c1220;
+            --surface:       #131e30;
+            --surface2:      #1a2840;
+            --border:        rgba(255,255,255,0.07);
+            --border2:       rgba(255,255,255,0.04);
+            --text:          #e2e8f0;
+            --muted:         #64748b;
+            --accent:        #38bdf8;
+            --accent2:       #818cf8;
+            --badge-bg:      rgba(56,189,248,0.12);
+            --badge-border:  rgba(56,189,248,0.25);
+            --badge2-bg:     rgba(129,140,248,0.12);
+            --badge2-border: rgba(129,140,248,0.25);
+            --odd-row:       rgba(255,255,255,0.025);
+            --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+            --glow1:         rgba(56,189,248,0.08);
+            --glow2:         rgba(129,140,248,0.06);
+            --modal-overlay: rgba(5,10,20,0.85);
+            --busy-bg:       rgba(239,68,68,0.10);
+            --busy-border:   rgba(239,68,68,0.25);
+            --free-bg:       rgba(52,211,153,0.10);
+            --free-border:   rgba(52,211,153,0.25);
+        }
+        [data-theme="light"] {
+            --bg:            #f1f5f9;
+            --surface:       #ffffff;
+            --surface2:      #f8fafc;
+            --border:        rgba(0,0,0,0.08);
+            --border2:       rgba(0,0,0,0.05);
+            --text:          #0f172a;
+            --muted:         #94a3b8;
+            --accent:        #0284c7;
+            --accent2:       #6366f1;
+            --badge-bg:      rgba(2,132,199,0.08);
+            --badge-border:  rgba(2,132,199,0.25);
+            --badge2-bg:     rgba(99,102,241,0.08);
+            --badge2-border: rgba(99,102,241,0.25);
+            --odd-row:       rgba(0,0,0,0.03);
+            --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+            --glow1:         rgba(2,132,199,0.04);
+            --glow2:         rgba(99,102,241,0.04);
+            --modal-overlay: rgba(15,23,42,0.7);
+            --busy-bg:       rgba(239,68,68,0.06);
+            --busy-border:   rgba(239,68,68,0.2);
+            --free-bg:       rgba(16,185,129,0.06);
+            --free-border:   rgba(16,185,129,0.2);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow1), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, var(--glow2), transparent);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 48px 24px 80px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .page { max-width: 1100px; margin: 0 auto; animation: fadeUp 0.5s ease-out both; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed; top: 20px; right: 24px; z-index: 200;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 8px 16px;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            color: var(--muted); transition: all 0.2s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+        .theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+        .toggle-sun  { display: inline; }
+        .toggle-moon { display: none; }
+        [data-theme="light"] .toggle-sun  { display: none; }
+        [data-theme="light"] .toggle-moon { display: inline; }
+
+        /* Hero */
+        .hero { text-align: center; margin-bottom: 48px; }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--badge-bg); border: 1px solid var(--badge-border);
+            color: var(--accent); font-size: 12px; font-weight: 600;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 5px 14px; border-radius: 999px; margin-bottom: 18px;
+        }
+        .hero-eyebrow::before { content: '✦'; font-size: 10px; }
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+            background: var(--hero-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px; line-height: 1.1; margin-bottom: 12px;
+        }
+        .hero-sub { color: var(--muted); font-size: 14px; }
+        .hero-sub strong { color: var(--text); font-weight: 600; }
+
+        /* Stats */
+        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 44px; }
+        .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; }
+        .stat-icon { font-size: 18px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 17px; font-weight: 700; color: var(--accent); }
+
+        /* Section titles */
+        .section-title {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--muted);
+            display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Free-time day cards */
+        .ft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-bottom: 56px; }
+        .ft-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; transition: transform 0.2s, box-shadow 0.2s; }
+        .ft-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.18); }
+        .ft-day { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .ft-day > span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
+        .ft-section-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; margin-top: 10px; }
+
+        .explain-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border);
+            color: var(--accent2); font-size: 11px; font-weight: 600;
+            padding: 3px 9px; border-radius: 999px; cursor: pointer;
+            transition: background 0.2s, transform 0.15s; font-family: inherit;
+        }
+        .explain-btn:hover { background: rgba(129,140,248,0.22); transform: scale(1.04); }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; margin: 2px 2px 2px 0; background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--accent); white-space: nowrap; }
+        .badge-maj { background: var(--badge2-bg); border-color: var(--badge2-border); color: var(--accent2); }
+        .badge-sep { color: var(--muted); font-size: 10px; }
+        .empty-label { color: var(--muted); font-style: italic; font-size: 12px; }
+
+        /* Student cards */
+        .students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        .student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
+        .student-card:hover { border-color: rgba(128,128,128,0.3); }
+        .student-card.open { border-color: var(--accent); }
+        .card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; user-select: none; }
+        .avatar { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+        .card-info { flex: 1; min-width: 0; }
+        .card-id { font-size: 13px; font-weight: 700; color: var(--accent); }
+        .card-name { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .course-pill { background: var(--badge2-bg); color: var(--accent2); border: 1px solid var(--badge2-border); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+        .chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.25s ease; }
+        .student-card.open .chevron { transform: rotate(180deg); }
+        .card-body { max-height: 0; overflow: hidden; transition: max-height 0.32s ease, padding 0.2s ease, border-top-width 0.2s; border-top: 0px solid var(--border2); padding: 0 16px; }
+        .student-card.open .card-body { border-top-width: 1px; padding: 10px 16px 14px; }
+        .sched-row { padding: 6px 9px; border-radius: 7px; margin-top: 3px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+        .odd-row { background: var(--odd-row); }
+        .sched-empty { font-size: 12px; color: var(--muted); padding: 8px 0; font-style: italic; }
+
+        /* Parsed course rows */
+        .course-row { padding: 8px 10px; border-radius: 9px; margin-top: 5px; }
+        .course-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+        .course-code { font-size: 11px; font-weight: 700; color: var(--accent); font-family: 'Courier New', monospace; letter-spacing: 0.2px; }
+        .course-days { font-size: 10px; font-weight: 600; color: var(--accent2); background: var(--badge2-bg); border: 1px solid var(--badge2-border); padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+        .course-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 5px; }
+        .course-row-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); }
+        .course-time { font-weight: 600; }
+        .course-room, .course-instructor { color: var(--muted); }
+
+        /* Search */
+        .schedule-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+        .search-bar { width: 100%; padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .search-bar:focus { border-color: var(--accent); }
+        .search-bar::placeholder { color: var(--muted); }
+        .view-toggle-btn { flex-shrink: 0; white-space: nowrap; padding: 9px 16px; background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2); font-size: 13px; font-weight: 600; border-radius: 9px; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+        .view-toggle-btn:hover { background: rgba(129,140,248,0.22); }
+        .sched-day-group { margin-top: 8px; }
+        .sched-day-group:first-child { margin-top: 0; }
+        .sched-day-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent2); margin-bottom: 4px; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; z-index: 500; background: var(--modal-overlay); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 660px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px -12px rgba(0,0,0,0.6); transform: translateY(16px) scale(0.98); transition: transform 0.25s ease; }
+        .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .modal-title { font-size: 17px; font-weight: 700; color: var(--accent); }
+        .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .modal-close { width: 30px; height: 30px; border-radius: 7px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+        .modal-close:hover { background: var(--border); color: var(--text); }
+        .modal-body { overflow-y: auto; padding: 18px 24px 24px; flex: 1; }
+        .modal-body::-webkit-scrollbar { width: 5px; }
+        .modal-body::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 4px; }
+        .timeline-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; margin-top: 18px; }
+        .timeline-label:first-child { margin-top: 0; }
+        .free-slot-explain { background: var(--free-bg); border: 1px solid var(--free-border); border-radius: 10px; padding: 11px 14px; margin-bottom: 7px; }
+        .slot-time { font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 3px; }
+        .slot-note { font-size: 12px; color: var(--muted); }
+        .busy-entry { background: var(--busy-bg); border: 1px solid var(--busy-border); border-radius: 10px; padding: 11px 14px; margin-bottom: 7px; display: flex; align-items: flex-start; gap: 11px; }
+        .busy-avatar { width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+        .busy-info { flex: 1; min-width: 0; }
+        .busy-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .busy-time { font-size: 11px; color: #f87171; margin-top: 2px; }
+        .busy-course { font-size: 11px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .no-activity { font-size: 13px; color: var(--muted); font-style: italic; padding: 14px 0; text-align: center; }
+
+        /* Footer */
+        footer { text-align: center; margin-top: 56px; font-size: 12px; color: var(--muted); }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<!-- Explain Modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title"  id="modal-title">Breakdown</div>
+                <div class="modal-subtitle" id="modal-subtitle"></div>
+            </div>
+            <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<div class="page">
+    <header class="hero">
+        <div class="hero-eyebrow">ULAB Free Time Finder</div>
+        <h1>Common Free Time</h1>
+        <p class="hero-sub" id="n-students-text">Analyzing…</p>
+        <p class="hero-sub" id="threshold-text" style="margin-top:4px"></p>
+    </header>
+
+    <div class="stats">
+        <div class="stat-chip">
+            <span class="stat-icon">👥</span>
+            <div>
+                <div class="stat-label">Students</div>
+                <div class="stat-value" id="stat-students">—</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <span class="stat-icon">🎯</span>
+            <div>
+                <div class="stat-label">Free-time threshold</div>
+                <div class="stat-value" id="stat-maj">—</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <span class="stat-icon">📅</span>
+            <div>
+                <div class="stat-label">Days analyzed</div>
+                <div class="stat-value">7</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="section-title">Common Free Slots</p>
+    <div class="ft-grid" id="ft-grid"></div>
+
+    <p class="section-title">Individual Schedules</p>
+    <div class="schedule-toolbar">
+        <input class="search-bar" id="search" placeholder="🔍  Search by Student ID or Name…">
+        <button class="view-toggle-btn" id="view-toggle">📅 Day-wise view</button>
+    </div>
+    <div class="students-grid" id="students-grid"></div>
+
+    <footer>Generated privately in your browser by <a href="#">Antigravity V3 Extension</a></footer>
+</div>
+
+<script src="results.js"></script>
+</body>
+</html>

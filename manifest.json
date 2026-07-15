@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "ULAB Faculty Companion",
+  "version": "0.1.0",
+  "description": "A sidebar companion for ULAB faculty with tools like Free Time Finder. 100% private and local.",
+  "permissions": ["storage", "sidePanel"],
+  "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "ULAB Faculty Companion"
+  },
+  "side_panel": {
+    "default_path": "sidebar/sidebar.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png",
+    "256": "icons/icon256.png",
+    "512": "icons/icon512.png"
+  }
+}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULAB Bulk Save Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root, [data-theme="dark"] {
+            --bg:            #0c1220;
+            --surface:       #131e30;
+            --surface2:      #1a2840;
+            --border:        rgba(255,255,255,0.07);
+            --border2:       rgba(255,255,255,0.04);
+            --text:          #e2e8f0;
+            --muted:         #64748b;
+            --accent:        #38bdf8;
+            --accent2:       #818cf8;
+            --badge2-bg:     rgba(129,140,248,0.12);
+            --badge2-border: rgba(129,140,248,0.25);
+            --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+            --glow1:         rgba(56,189,248,0.08);
+            --glow2:         rgba(129,140,248,0.06);
+            --ok-bg:         rgba(52,211,153,0.10);
+            --ok-border:     rgba(52,211,153,0.25);
+            --ok-text:       #34d399;
+            --warn-bg:       rgba(245,158,11,0.10);
+            --warn-border:   rgba(245,158,11,0.3);
+            --warn-text:     #f59e0b;
+            --bad-bg:        rgba(239,68,68,0.10);
+            --bad-border:    rgba(239,68,68,0.25);
+            --bad-text:      #f87171;
+            --odd-row:       rgba(255,255,255,0.025);
+        }
+        [data-theme="light"] {
+            --bg:            #f1f5f9;
+            --surface:       #ffffff;
+            --surface2:      #f8fafc;
+            --border:        rgba(0,0,0,0.08);
+            --border2:       rgba(0,0,0,0.05);
+            --text:          #0f172a;
+            --muted:         #94a3b8;
+            --accent:        #0284c7;
+            --accent2:       #6366f1;
+            --badge2-bg:     rgba(99,102,241,0.08);
+            --badge2-border: rgba(99,102,241,0.25);
+            --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+            --glow1:         rgba(2,132,199,0.04);
+            --glow2:         rgba(99,102,241,0.04);
+            --ok-bg:         rgba(16,185,129,0.06);
+            --ok-border:     rgba(16,185,129,0.2);
+            --ok-text:       #059669;
+            --warn-bg:       rgba(245,158,11,0.08);
+            --warn-border:   rgba(245,158,11,0.25);
+            --warn-text:     #b45309;
+            --bad-bg:        rgba(239,68,68,0.06);
+            --bad-border:    rgba(239,68,68,0.2);
+            --bad-text:      #dc2626;
+            --odd-row:       rgba(0,0,0,0.03);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow1), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, var(--glow2), transparent);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 48px 24px 80px;
+        }
+        .page { max-width: 900px; margin: 0 auto; }
+
+        .theme-toggle {
+            position: fixed; top: 20px; right: 24px; z-index: 200;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 8px 16px;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            color: var(--muted);
+        }
+        .toggle-sun  { display: inline; }
+        .toggle-moon { display: none; }
+        [data-theme="light"] .toggle-sun  { display: none; }
+        [data-theme="light"] .toggle-moon { display: inline; }
+
+        .hero { text-align: center; margin-bottom: 32px; }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--bad-bg); border: 1px solid var(--bad-border);
+            color: var(--bad-text); font-size: 12px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 5px 14px; border-radius: 999px; margin-bottom: 18px;
+        }
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800;
+            background: var(--hero-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px; margin-bottom: 10px;
+        }
+        .hero-sub { color: var(--muted); font-size: 13px; max-width: 560px; margin: 0 auto; }
+
+        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin: 28px 0; }
+        .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 17px; font-weight: 700; }
+        .stat-ok .stat-value { color: var(--ok-text); }
+        .stat-fail .stat-value { color: var(--bad-text); }
+        .stat-skip .stat-value { color: var(--warn-text); }
+        .stat-unconfirmed .stat-value { color: var(--warn-text); }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 18px; }
+        .tool-btn {
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2);
+            font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+            font-family: inherit;
+        }
+
+        table.report-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        table.report-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+        table.report-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border2); vertical-align: top; }
+        table.report-table tr:nth-child(odd) td { background: var(--odd-row); }
+        .status-pill { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid; }
+        .status-saved { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
+        .status-skipped { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+        .status-failed, .status-error { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad-text); }
+        .status-unconfirmed { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+        .courses-list { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+        .disclaimer { margin-top: 24px; font-size: 12px; color: var(--muted); text-align: center; }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<div class="page">
+    <header class="hero">
+        <div class="hero-eyebrow">⚠️ Bulk Save Report</div>
+        <h1>Registration Save Results</h1>
+        <p class="hero-sub" id="summary-text">Loading…</p>
+    </header>
+
+    <div class="stats">
+        <div class="stat-chip stat-ok"><div><div class="stat-label">Saved</div><div class="stat-value" id="stat-saved">—</div></div></div>
+        <div class="stat-chip stat-fail"><div><div class="stat-label">Failed</div><div class="stat-value" id="stat-failed">—</div></div></div>
+        <div class="stat-chip stat-skip"><div><div class="stat-label">Skipped</div><div class="stat-value" id="stat-skipped">—</div></div></div>
+        <div class="stat-chip stat-unconfirmed"><div><div class="stat-label">Unconfirmed</div><div class="stat-value" id="stat-unconfirmed">—</div></div></div>
+    </div>
+
+    <div class="toolbar">
+        <button class="tool-btn" id="btn-export-csv">⬇️ Export CSV</button>
+    </div>
+
+    <table class="report-table" id="report-table">
+        <thead><tr><th>Student ID</th><th>Name</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody id="report-body"></tbody>
+    </table>
+
+    <p class="disclaimer">"Saved" means URMS returned its own "Saved successfully" confirmation banner for that request. "Unconfirmed" means no error was detected either, but that banner wasn't found — check those students directly in URMS.</p>
+</div>
+
+<script src="results.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+* , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg:        #0c1220;
+    --surface:   #131e30;
+    --surface2:  #1a2840;
+    --border:    rgba(255,255,255,0.08);
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --accent:    #38bdf8;
+    --accent2:   #818cf8;
+}
+
+html, body { height: 100%; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+}
+
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Feature rail */
+#rail {
+    width: 56px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 6px;
+}
+.rail-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.rail-btn:hover { background: var(--surface2); color: var(--text); }
+.rail-btn.active {
+    background: rgba(56,189,248,0.12);
+    border-color: rgba(56,189,248,0.3);
+    color: var(--accent);
+}
+
+/* Content area */
+#content {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+#content::-webkit-scrollbar { width: 6px; }
+#content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+.feature-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+}
+.feature-header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.feature-header p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.feature-body { padding: 18px; }
+
+.empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--muted);
+}
+.empty-state .icon { font-size: 36px; margin-bottom: 10px; }

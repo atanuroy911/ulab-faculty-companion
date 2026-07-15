@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULAB Faculty Companion — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root, [data-theme="dark"] {
+    --bg:            #0c1220;
+    --surface:       #131e30;
+    --surface2:      #1a2840;
+    --border:        rgba(255,255,255,0.08);
+    --border2:       rgba(255,255,255,0.04);
+    --text:          #e2e8f0;
+    --muted:         #94a3b8;
+    --muted2:        #64748b;
+    --accent:        #38bdf8;
+    --accent2:       #818cf8;
+    --badge-bg:      rgba(56,189,248,0.12);
+    --badge-border:  rgba(56,189,248,0.25);
+    --warn-bg:       rgba(245,158,11,0.10);
+    --warn-border:   rgba(245,158,11,0.3);
+    --warn-text:     #f59e0b;
+    --bad-bg:        rgba(239,68,68,0.10);
+    --bad-border:    rgba(239,68,68,0.3);
+    --bad-text:      #f87171;
+    --code-bg:       rgba(0,0,0,0.28);
+    --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+    --glow1:         rgba(56,189,248,0.08);
+    --glow2:         rgba(129,140,248,0.06);
+}
+[data-theme="light"] {
+    --bg:            #f1f5f9;
+    --surface:       #ffffff;
+    --surface2:      #f8fafc;
+    --border:        rgba(0,0,0,0.08);
+    --border2:       rgba(0,0,0,0.05);
+    --text:          #0f172a;
+    --muted:         #475569;
+    --muted2:        #94a3b8;
+    --accent:        #0284c7;
+    --accent2:       #6366f1;
+    --badge-bg:      rgba(2,132,199,0.08);
+    --badge-border:  rgba(2,132,199,0.25);
+    --warn-bg:       rgba(245,158,11,0.08);
+    --warn-border:   rgba(245,158,11,0.3);
+    --warn-text:     #b45309;
+    --bad-bg:        rgba(239,68,68,0.06);
+    --bad-border:    rgba(239,68,68,0.25);
+    --bad-text:      #dc2626;
+    --code-bg:       rgba(0,0,0,0.05);
+    --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+    --glow1:         rgba(2,132,199,0.04);
+    --glow2:         rgba(99,102,241,0.04);
+}
+
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    background-image:
+        radial-gradient(ellipse 80% 40% at 50% -10%, var(--glow1), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 10%, var(--glow2), transparent);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+}
+
+.theme-toggle {
+    position: fixed; top: 16px; right: 20px; z-index: 300;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 14px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 12.5px; font-weight: 600;
+    color: var(--muted); box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+.toggle-sun  { display: inline; }
+.toggle-moon { display: none; }
+[data-theme="light"] .toggle-sun  { display: none; }
+[data-theme="light"] .toggle-moon { display: inline; }
+
+.layout { display: flex; max-width: 1180px; margin: 0 auto; min-height: 100vh; }
+
+/* ── Sidebar TOC ─────────────────────────────────────────────── */
+.toc {
+    width: 260px; flex-shrink: 0; padding: 40px 20px 40px 24px;
+    position: sticky; top: 0; align-self: flex-start; max-height: 100vh; overflow-y: auto;
+}
+.toc-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.toc-brand-icon { font-size: 22px; }
+.toc-brand-text { font-size: 14px; font-weight: 800; }
+.toc-brand-sub { font-size: 10.5px; color: var(--muted2); text-transform: uppercase; letter-spacing: 1px; }
+.toc nav { display: flex; flex-direction: column; gap: 2px; }
+.toc a {
+    display: block; padding: 6px 10px; border-radius: 7px; font-size: 12.5px;
+    color: var(--muted); text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.toc a:hover { background: var(--surface2); color: var(--text); }
+.toc a.toc-h3 { padding-left: 22px; font-size: 12px; }
+.toc-section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted2); margin: 16px 0 4px; padding: 0 10px;
+}
+.toc-section-label:first-child { margin-top: 0; }
+
+/* ── Content ─────────────────────────────────────────────────── */
+.content { flex: 1; min-width: 0; padding: 48px 40px 100px; max-width: 820px; }
+
+.hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--badge-bg); border: 1px solid var(--badge-border);
+    color: var(--accent); font-size: 11.5px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 999px; margin-bottom: 18px;
+}
+h1 {
+    font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800;
+    background: var(--hero-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -1px; margin-bottom: 10px; line-height: 1.15;
+}
+.subtitle { color: var(--muted); font-size: 14.5px; margin-bottom: 40px; max-width: 620px; }
+
+section { margin-bottom: 52px; scroll-margin-top: 24px; }
+h2 {
+    font-size: 21px; font-weight: 700; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+}
+h3 { font-size: 16px; font-weight: 700; margin: 24px 0 10px; color: var(--text); }
+h3 .code-inline { font-size: 14px; }
+p { margin-bottom: 12px; color: var(--text); }
+p.muted, li.muted { color: var(--muted); }
+ul, ol { margin: 0 0 14px 22px; }
+li { margin-bottom: 6px; }
+strong { color: var(--text); font-weight: 700; }
+a { color: var(--accent); }
+
+code, .code-inline {
+    font-family: 'Courier New', monospace; font-size: 0.88em; background: var(--code-bg);
+    padding: 1px 6px; border-radius: 5px; color: var(--accent);
+}
+pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; margin-bottom: 16px;
+}
+pre code { background: none; padding: 0; color: var(--text); font-size: 12.5px; line-height: 1.6; }
+
+table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border2); }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--surface2); }
+tr:nth-child(odd) td { background: var(--surface2); }
+
+.card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; margin-bottom: 16px;
+}
+.callout {
+    border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; line-height: 1.6;
+}
+.callout-warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+.callout-danger { background: var(--bad-bg); border: 1px solid var(--bad-border); color: var(--bad-text); }
+.callout strong { color: inherit; }
+
+.badge-list { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+    background: var(--badge-bg); border: 1px solid var(--badge-border); border-radius: 999px;
+    font-size: 11px; font-weight: 600; color: var(--accent);
+}
+
+.tree {
+    font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.75;
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; white-space: pre; color: var(--muted);
+}
+.tree .hl { color: var(--accent); }
+
+footer {
+    margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted2);
+}
+
+@media (max-width: 900px) {
+    .toc { display: none; }
+    .content { padding: 40px 20px 80px; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<div class="layout">
+    <aside class="toc">
+        <div class="toc-brand">
+            <span class="toc-brand-icon">🎓</span>
+            <div>
+                <div class="toc-brand-text">Faculty Companion</div>
+                <div class="toc-brand-sub">Documentation</div>
+            </div>
+        </div>
+        <nav>
+            <div class="toc-section-label">Getting Started</div>
+            <a href="#overview">Overview</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#installation">Installation</a>
+            <a href="#architecture">Architecture</a>
+
+            <div class="toc-section-label">Features</div>
+            <a href="#feature-time">Free Time Finder</a>
+            <a href="#feature-advising">Student Advising</a>
+            <a href="#feature-bulk-save">Bulk Save</a>
+            <a href="#feature-catalogue">Course Catalogue Viewer</a>
+            <a href="#feature-marks">Marks Management</a>
+
+            <div class="toc-section-label">Reference</div>
+            <a href="#file-structure">File Structure</a>
+            <a href="#data-flow">Data Flow & Permissions</a>
+            <a href="#limitations">Known Limitations</a>
+            <a href="#changelog">Changelog</a>
+            <a href="privacy-policy.html">Privacy Policy ↗</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <div class="hero-eyebrow">✦ Internal Documentation</div>
+        <h1>ULAB Faculty Companion</h1>
+        <p class="subtitle">
+            A Chrome side-panel extension that gives ULAB faculty a set of tools built directly on top of
+            URMS — finding common free time across students, running automated advising checks, and (carefully)
+            bulk-confirming staged registrations. Everything runs locally in the browser using your existing
+            URMS session; nothing is sent to a third-party server.
+        </p>
+
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                URMS (the university's registration/attendance portal) requires a lot of repetitive manual work —
+                checking each student's attendance one by one to find shared free periods, or opening every
+                advisee's page individually to check probation status, failed courses, and prerequisites. This
+                extension automates that by driving the same requests the URMS pages themselves make, using the
+                browser's existing logged-in session, and presenting the results in one place.
+            </p>
+            <p>
+                The extension is a <strong>Chrome Side Panel</strong> app (not a popup) — click the toolbar icon
+                once to pin it open, and it stays available alongside whatever tab you're working in. Each tool is
+                a self-contained <em>feature module</em> registered into a shared sidebar shell (see
+                <a href="#architecture">Architecture</a>), so new tools can be added without touching existing ones.
+            </p>
+            <div class="badge-list">
+                <span class="badge">Manifest V3</span>
+                <span class="badge">Chrome Side Panel API</span>
+                <span class="badge">No backend / no analytics</span>
+                <span class="badge">chrome.storage.local only</span>
+            </div>
+        </section>
+
+        <section id="how-it-works">
+            <h2>How It Works</h2>
+            <p>The general shape is the same for every data-driven feature (Time, Advising, Bulk Save):</p>
+            <ol>
+                <li><strong>Open the side panel</strong> and pick a feature from the icon rail on the left.</li>
+                <li><strong>Paste a student list</strong> (an attendance sheet export, an Advising Student export, etc.) into the paste box, then confirm/edit the parsed rows.</li>
+                <li><strong>The extension calls URMS directly</strong> — for each student, it POSTs to the same <code>StudentRegistration</code> endpoint the site's own pages use (e.g. clicking "Load" on a student), using <code>fetch(url, &#123; credentials: 'include' &#125;)</code> so your browser attaches the URMS session cookies you already have. There's no separate login step; if you're not logged in to URMS in that Chrome profile, these requests fail the same way loading the page manually would.</li>
+                <li><strong>The response HTML is parsed in-browser</strong> (via <code>DOMParser</code>) to pull out whatever that feature needs — a weekly schedule, a probation banner, a grade history table, or (for Bulk Save) the currently-staged course rows.</li>
+                <li><strong>Analysis runs entirely client-side</strong> — e.g. Student Advising cross-references a student's course history against <code>features/advising/catalogue.js</code> to compute retakes, prerequisite gaps, lab/theory violations, and degree-progress credit sums. Nothing is sent anywhere for this step.</li>
+                <li><strong>Results are handed off to a report tab</strong> for anything too large for the side panel: written to <code>chrome.storage.local</code>, then a full browser tab is opened (via the background service worker) that reads that same storage key back out and renders it.</li>
+            </ol>
+            <p>
+                Bulk Save follows the same Load step, but then <em>writes</em> — it submits the staged data straight
+                back to URMS, replicating the page's own Save action. See
+                <a href="#feature-bulk-save">Bulk Save</a> for exactly how that's different and what to verify.
+                Course Catalogue Viewer and Marks Management don't fetch anything from URMS at all — the former
+                just renders a local data file, the latter is a plain link to an external site.
+            </p>
+        </section>
+
+        <section id="installation">
+            <h2>Installation (Load Unpacked)</h2>
+            <p>This extension is not published on the Chrome Web Store — it's loaded locally as an unpacked extension:</p>
+            <ol>
+                <li>Open <code>chrome://extensions</code> in Chrome.</li>
+                <li>Enable <strong>Developer mode</strong> (top-right toggle).</li>
+                <li>Click <strong>Load unpacked</strong> and select this project's root folder.</li>
+                <li>Pin the extension to the toolbar, then click its icon to open the side panel.</li>
+                <li>Make sure you're logged in to <code>urms-awp.ulab.edu.bd</code> in the same Chrome profile — the extension reuses that session's cookies for every request.</li>
+            </ol>
+            <p class="muted">After pulling code changes, click the reload icon on the extension's card in <code>chrome://extensions</code> to pick them up.</p>
+        </section>
+
+        <section id="architecture">
+            <h2>Architecture</h2>
+            <h3>Side Panel shell</h3>
+            <p>
+                <code>manifest.json</code> declares <code>side_panel.default_path</code> pointing at
+                <code>sidebar/sidebar.html</code>. <code>background.js</code> is a minimal service worker with two
+                jobs: call <code>chrome.sidePanel.setPanelBehavior</code> so clicking the toolbar icon opens the
+                panel, and listen for <code>chrome.runtime.onMessage</code> requests from feature modules asking to
+                open one of their report pages in a full tab.
+            </p>
+            <h3>Feature module pattern</h3>
+            <p>
+                Each feature lives in its own folder under <code>features/</code> and registers itself onto a
+                shared <code>window.ULAB_FEATURES</code> array with an id, icon, title, subtitle, and a
+                <code>mount(container)</code> function:
+            </p>
+            <pre><code>window.ULAB_FEATURES.push({
+    id: 'time',
+    icon: '🕐',
+    title: 'Free Time Finder',
+    subtitle: '...',
+    mount(container) { /* render the feature's UI into container */ }
+});</code></pre>
+            <p>
+                <code>sidebar/sidebar.js</code> reads that array, renders one icon per feature in the left rail, and
+                calls the matching module's <code>mount()</code> when clicked. This means adding a new tool is just:
+                create a folder, register a feature object, add a <code>&lt;script&gt;</code> tag in
+                <code>sidebar.html</code> — nothing about the shell itself needs to change.
+            </p>
+            <h3>Report pages</h3>
+            <p>
+                Features that produce a large result set (Time, Advising, Bulk Save, the Catalogue Viewer) open
+                a dedicated full-tab HTML report instead of cramming a wide table into the narrow side panel.
+                The mounted sidebar UI writes its results to <code>chrome.storage.local</code>, sends a
+                <code>chrome.runtime.sendMessage</code> to the background worker, which opens the report tab via
+                <code>chrome.tabs.create</code>; the report page then reads the same storage key back out.
+            </p>
+            <h3>Shared styling</h3>
+            <p>
+                <code>features/common/wizard.css</code> holds the paste/confirm/run wizard styling shared by every
+                feature that follows the "paste a student list → confirm → run" pattern (Time, Advising, Bulk Save),
+                so they look and behave consistently without duplicating CSS per feature.
+            </p>
+        </section>
+
+        <section id="feature-time">
+            <h2>🕐 Free Time Finder</h2>
+            <p>
+                Finds common free class periods across a group of students by pulling each student's schedule
+                directly from URMS's <code>StudentRegistration</code> endpoint (the same call the site's own
+                Add/Drop page makes) — no PDF parsing, no page-injection required.
+            </p>
+            <h3>Workflow</h3>
+            <ol>
+                <li>Paste a list of students (9-digit ID + name per line, copied from an attendance sheet or typed manually).</li>
+                <li>Confirm/edit the parsed list and set a free-time threshold (e.g. "75%+ of students free").</li>
+                <li>Run — the extension fetches each student's weekly schedule and evaluates it against the university's fixed class slots (Slot 1–7).</li>
+                <li>A report tab opens showing, per day, which slots are free for everyone vs. free for the threshold percentage, plus each student's individual schedule.</li>
+            </ol>
+        </section>
+
+        <section id="feature-advising">
+            <h2>🎓 Student Advising</h2>
+            <p>
+                Automates the manual "open every advisee's page and check for problems" routine. Paste the
+                university's own <strong>Advising Student</strong> list export, and for each student the extension
+                checks:
+            </p>
+            <table>
+                <thead><tr><th>Check</th><th>How it's determined</th></tr></thead>
+                <tbody>
+                    <tr><td>Probation status &amp; tier</td><td>Parsed from the probation banner on the student's own page (e.g. "Probation number-2" → Tier 2).</td></tr>
+                    <tr><td>Courses needing a retake</td><td>Any course with a failing grade and no later passing grade — cleared if they've passed it since, <em>or</em> are currently re-registered for it.</td></tr>
+                    <tr><td>Prerequisite violations</td><td>For every course added this semester, checks the catalogue's declared prerequisites against the student's passing-grade history.</td></tr>
+                    <tr><td>Lab without theory</td><td>Separate from the above — flags a lab course added without its paired theory course ever being taken or concurrently registered (not a formal "prerequisite" in the catalogue, but university policy).</td></tr>
+                    <tr><td>Degree progress</td><td>Sums earned + in-progress credits per degree-requirement category (GED, Major Core, Major Elective, Other Engineering, Optional/Minor, Basic Science, Mathematics — 140 credits total) and flags shortfalls. ESK is intentionally excluded — confirmed not part of the CSE degree requirement.</td></tr>
+                </tbody>
+            </table>
+            <p>
+                Every check resolves course codes through the catalogue whether a student's record shows the
+                current UNESCO code or an older local code (e.g. <code>CSE1301</code>) — history rows, added
+                courses, and prerequisite lookups are all normalized to the same canonical code before comparing,
+                so a course doesn't silently fail to match just because one semester's row used a different code
+                format than another. The prerequisite and lab/theory data comes from
+                <code>features/advising/catalogue.js</code> — see <a href="#feature-catalogue">Course Catalogue Viewer</a> to browse it directly.
+            </p>
+            <h3>Communication tools</h3>
+            <p>The report page includes:</p>
+            <ul>
+                <li>A <strong>Hide clean students</strong> filter, to focus on advisees that actually need attention.</li>
+                <li>Per-student and bulk <strong>email generation</strong> — opens a modal with the recipient address(es) and a plain-text message, with buttons to copy either and a button to open a blank Gmail compose window to paste them into.</li>
+                <li><strong>CSV export</strong> of the full report.</li>
+            </ul>
+            <div class="callout callout-warn">
+                <strong>Automated, not authoritative.</strong> Every generated warning and email carries a
+                disclaimer that this is a best-effort automated check derived from a hand-transcribed prerequisite
+                map — always spot-check anything the advisor is going to act on.
+            </div>
+        </section>
+
+        <section id="feature-bulk-save">
+            <h2>💾 Bulk Save <span class="badge" style="background:var(--bad-bg);border-color:var(--bad-border);color:var(--bad-text)">writes data</span></h2>
+            <p>
+                Unlike the read-only features above, Bulk Save <strong>submits real registration data</strong> to
+                URMS. For each pasted student it replicates exactly what a human clicking that student's own
+                "Save" button does: loads their Add/Drop page, reads the currently-staged
+                <code>Course</code>/<code>Section</code>/<code>CourseCredit</code> rows and the live
+                <code>RegDateString</code>/<code>FineAmount</code>/<code>Comments</code>/etc. values straight off
+                that response, and posts them back unchanged.
+            </p>
+            <div class="callout callout-danger">
+                <strong>This does not add, remove, or edit any course.</strong> It only confirms whatever is
+                already staged on the student's own page. It runs fully unattended once started — there is no
+                per-student pause — so review the pasted list carefully before clicking
+                <em>"I understand — Run Bulk Save."</em>
+            </div>
+            <h3>Result detection</h3>
+            <p>Each student's outcome is classified from the actual server response, not assumed:</p>
+            <table>
+                <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Saved</strong></td><td>Response contained URMS's own <code>"Saved successfully"</code> banner.</td></tr>
+                    <tr><td><strong>Failed</strong></td><td>An HTTP error, or a validation-error block was found in the response.</td></tr>
+                    <tr><td><strong>Unconfirmed</strong></td><td>Neither a success banner nor an error was detected — genuinely ambiguous, flagged for manual verification rather than assumed to have worked.</td></tr>
+                    <tr><td><strong>Skipped</strong></td><td>No courses were staged for that student — nothing to confirm.</td></tr>
+                </tbody>
+            </table>
+            <p>A report tab lists every student's outcome with a CSV export.</p>
+        </section>
+
+        <section id="feature-catalogue">
+            <h2>📖 Course Catalogue Viewer</h2>
+            <p>
+                A searchable, full-tab table of every course the extension knows about — code, UNESCO code, title,
+                resolved prerequisites, and lab→theory pairing. It reads live from
+                <code>features/advising/catalogue.js</code>, the same file Student Advising uses, so if a warning
+                in Advising looks wrong, this is the first place to check.
+            </p>
+            <p class="muted">
+                The catalogue was transcribed by hand from the university's course catalogue PDF using
+                <code>pdftotext -table</code> (which keeps prerequisite columns aligned to their row far more
+                reliably than plain <code>-layout</code> mode). It is not sourced from a live, authoritative feed —
+                treat it as a best-effort reference and report mismatches against the PDF for correction. Each
+                course also carries its legacy local code (e.g. <code>CSE1301</code>) alongside its UNESCO code —
+                see <a href="#data-flow">Data Flow &amp; Permissions</a> for why both matter.
+            </p>
+        </section>
+
+        <section id="feature-marks">
+            <h2>📊 Marks Management</h2>
+            <p>
+                A simple launcher — clicking <strong>Manage Marks</strong> opens
+                <a href="https://ulab-mms.netlify.app/" target="_blank" rel="noopener">the external Marks
+                Management System</a> in a new browser tab. This extension doesn't read from, write to, or
+                otherwise integrate with that site; it's just a shortcut.
+            </p>
+        </section>
+
+        <section id="file-structure">
+            <h2>File Structure</h2>
+            <div class="tree">.
+├── manifest.json              <span class="hl"># MV3 manifest, side_panel + host_permissions</span>
+├── background.js              <span class="hl"># service worker: opens side panel, opens report tabs</span>
+├── icons/                     <span class="hl"># toolbar/store icons, generated from ulab-logo.png</span>
+├── sidebar/
+│   ├── sidebar.html           <span class="hl"># side panel shell</span>
+│   ├── sidebar.js             <span class="hl"># feature rail + router</span>
+│   └── sidebar.css
+├── features/
+│   ├── common/
+│   │   └── wizard.css         <span class="hl"># shared paste/confirm/run wizard styling</span>
+│   ├── time/                  <span class="hl"># Free Time Finder</span>
+│   ├── advising/              <span class="hl"># Student Advising + catalogue.js data</span>
+│   ├── bulk-save/              <span class="hl"># Bulk Save</span>
+│   └── catalogue-viewer/       <span class="hl"># Course Catalogue Viewer</span>
+└── docs/
+    ├── index.html             <span class="hl"># this page</span>
+    └── privacy-policy.html</div>
+        </section>
+
+        <section id="data-flow">
+            <h2>Data Flow &amp; Permissions</h2>
+            <p>
+                <code>manifest.json</code> declares <code>host_permissions</code> for
+                <code>https://urms-awp.ulab.edu.bd/*</code> and the <code>storage</code> + <code>sidePanel</code>
+                permissions — nothing else. Every feature's requests use <code>fetch(url, &#123; credentials: 'include' &#125;)</code>
+                from the extension's own side panel / tab context, which sends whatever URMS session cookies
+                already exist in that Chrome profile. There is no separate login flow, token storage, or
+                credential handling by the extension itself.
+            </p>
+            <p>
+                Fetched data (schedules, advising details, save results) is written to
+                <code>chrome.storage.local</code> only, purely to hand results off between the side panel and a
+                report tab. It never leaves the browser, is never sent to any server other than URMS, and is
+                overwritten the next time a feature runs.
+            </p>
+            <p>See the <a href="privacy-policy.html">Privacy Policy</a> for the full statement.</p>
+        </section>
+
+        <section id="limitations">
+            <h2>Known Limitations</h2>
+            <ul>
+                <li>The prerequisite/lab-theory catalogue is hand-transcribed from a PDF and may contain errors — verify anything surprising against the source PDF or the live Catalogue Viewer.</li>
+                <li>Bulk Save's success/failure detection depends on a specific HTML banner/error class existing in URMS's response; if URMS changes that markup, detection could silently degrade to "Unconfirmed" for everything (safe) or misclassify (in the worst case) — spot-check after any URMS UI change.</li>
+                <li>All features depend on an active, logged-in URMS session in the same Chrome profile; there's no in-extension login or session-refresh handling.</li>
+                <li>The extension is unpacked/unsigned and not distributed via the Chrome Web Store.</li>
+                <li>Major Elective and Optional/Minor credits in Degree Progress are estimated from UNESCO-code patterns, not an exhaustive course list (concentration electives and other-department courses number in the dozens and aren't individually enumerated) — treat "short by N credits" for those two categories as approximate. One known pattern exception: <code>CSE4455</code> "Data Mining" is misclassified as Optional/Minor.</li>
+                <li>Legacy local course codes (e.g. <code>CSE1301</code>) are matched alongside UNESCO codes for every course explicitly listed in the catalogue, but a course renumbered under a <em>different</em> UNESCO code over time would need that old UNESCO code added to its <code>oldCodes</code> array by hand — the catalogue PDF doesn't document any such renumbering.</li>
+            </ul>
+        </section>
+
+        <section id="changelog">
+            <h2>Changelog</h2>
+            <p class="muted">Dated by when each batch of work landed in this repository, newest first.</p>
+
+            <h3>2026-07-15</h3>
+            <ul>
+                <li><strong>Added</strong> 📊 Marks Management — a launcher that opens the external Marks Management System in a new tab.</li>
+                <li><strong>Fixed</strong> a regression where <code>catalogue.js</code>'s exported <code>degreeRequirements</code> was accidentally dropped while adding legacy-code support, crashing Advising with <em>"Cannot read properties of undefined (reading 'credits')"</em>.</li>
+                <li><strong>Added</strong> legacy course-code matching — every catalogue lookup (title, category, prerequisites, lab/theory pairing) now resolves a course whether a student's record shows the current UNESCO code or the older local code (e.g. <code>CSE1301</code>); Advising's retake/prerequisite/lab-theory analysis canonicalizes course codes before comparing so mixed formats across semesters don't silently fail to match.</li>
+                <li><strong>Added</strong> Degree Progress tracking to Student Advising — per-category credit sums (earned + in-progress) against the catalogue's degree-requirement table, with Major Elective/Optional-Minor credits estimated by UNESCO-code pattern since those courses aren't individually enumerated.</li>
+                <li><strong>Investigated and removed</strong> ESK (Essential Skills) from degree-requirement tracking — confirmed not part of the CSE degree requirement despite appearing in the catalogue's course listing. This also fixed a false positive where an "ESK not started" warning fired for nearly every student regardless of actual progress.</li>
+                <li><strong>Improved</strong> Advising results page performance for large batches (100+ students) — each student's report body (several nested tables) is now built lazily on first expand instead of for every card up front.</li>
+                <li><strong>Added</strong> a "Hide clean students" filter and an email modal (copy address, copy message, open a blank Gmail compose tab) for per-student and bulk advising emails, replacing the old shared-textarea output.</li>
+                <li><strong>Changed</strong> default theme to light across all report/viewer pages (Time, Advising, Bulk Save, Catalogue Viewer).</li>
+                <li><strong>Added</strong> 📖 Course Catalogue Viewer, 🧪 lab-without-theory detection, and 💾 Bulk Save (with URMS's own <code>"Saved successfully"</code> banner as the authoritative success signal, plus a distinct "Unconfirmed" state for genuinely ambiguous responses).</li>
+                <li><strong>Corrected</strong> several prerequisite mappings (<code>CSE3120</code>, <code>CSE3201/3202</code>, <code>CSE3203</code>, <code>CSE3200</code>, <code>CSE3205/3206</code>, <code>CSE3301</code>, the Capstone chain) that had shifted onto the wrong course after re-extracting the catalogue PDF with <code>pdftotext -table</code> instead of <code>-layout</code>.</li>
+                <li><strong>Added</strong> this documentation site and the privacy policy.</li>
+            </ul>
+
+            <h3>Earlier</h3>
+            <ul>
+                <li>Initial scaffold: Manifest V3 side panel shell, feature-module pattern, and the 🕐 Free Time Finder and 🎓 Student Advising features built on top of it.</li>
+            </ul>
+        </section>
+
+        <footer>
+            ULAB Faculty Companion — internal tool, not affiliated with or endorsed by URMS/ValuePLUS Computer Systems Ltd.
+        </footer>
+    </main>
+</div>
+
+<script>
+    const htmlEl = document.documentElement;
+    const lbl = document.getElementById('toggle-label');
+    const saved = localStorage.getItem('ulab-theme') || 'dark';
+    applyTheme(saved);
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    function applyTheme(t) {
+        htmlEl.setAttribute('data-theme', t);
+        localStorage.setItem('ulab-theme', t);
+        lbl.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+    }
+</script>
+</body>
+</html>

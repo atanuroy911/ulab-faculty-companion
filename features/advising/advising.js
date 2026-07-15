@@ -250,6 +250,19 @@
     // as authoritative.
     function normCode(c) { return (c || '').replace(/\s+/g, '').toUpperCase(); }
 
+    // A student's course history can mix code formats across semesters —
+    // older rows sometimes show the legacy local code (e.g. "CSE1301")
+    // instead of the current UNESCO code. Resolve to the catalogue's
+    // canonical UNESCO code wherever possible so the same course always maps
+    // to the same key, regardless of which format a given row used; falls
+    // back to the raw normalized code for anything the catalogue doesn't
+    // recognize (at least self-consistent for repeated raw strings).
+    function canonicalCode(rawCode) {
+        const cat = window.ULAB_CATALOGUE;
+        const resolved = cat && cat.resolve(rawCode);
+        return resolved ? cat.normalizeUnesco(resolved.unescoCode) : normCode(rawCode);
+    }
+
     function semesterRank(semStr) {
         const m = (semStr || '').match(/(Spring|Summer|Fall)\s+(\d{4})/i);
         if (!m) return 0;
@@ -257,10 +270,56 @@
         return parseInt(m[2], 10) * 10 + termRank;
     }
 
+    // Sums a student's completed/in-progress credit hours per degree-
+    // requirement category and compares against the catalogue's targets.
+    // Failed courses don't count; blank-grade rows (in-progress this
+    // semester) count separately from earned credits so both can be shown.
+    function computeDegreeProgress(cat, completedRows) {
+        const requirements = cat.degreeRequirements;
+        const earned = {};
+        const inProgress = {};
+
+        for (const row of completedRows) {
+            const courseId = normCode(row['CourseID'] || row['CourseId'] || '');
+            if (!courseId) continue;
+            const category = cat.categoryFor(courseId);
+            if (!(category in requirements.credits)) continue; // e.g. ESK — not a CSE degree requirement
+            const credit = parseFloat(row['Credit']) || 0;
+            const grade = (row['Grade'] || '').trim();
+
+            if (/^F$/i.test(grade)) continue; // failed — doesn't count toward completion
+
+            if (grade) {
+                earned[category] = (earned[category] || 0) + credit;
+            } else {
+                inProgress[category] = (inProgress[category] || 0) + credit;
+            }
+        }
+
+        const progress = Object.keys(requirements.credits).map(category => {
+            const earnedCredits = earned[category] || 0;
+            const inProgressCredits = inProgress[category] || 0;
+            const required = requirements.credits[category];
+            const total = earnedCredits + inProgressCredits;
+            return {
+                category,
+                label: requirements.labels[category],
+                earnedCredits,
+                inProgressCredits,
+                required,
+                shortBy: Math.max(0, required - total),
+            };
+        });
+
+        return { progress };
+    }
+
     function analyzeStudent(info) {
         const cat = window.ULAB_CATALOGUE;
-        const result = { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [] };
+        const result = { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [], degreeProgress: null };
         if (!cat) return result;
+
+        result.degreeProgress = computeDegreeProgress(cat, info.completedCourses || []);
 
         // Probation tier, e.g. "Student is in Probation number-2" → 2.
         if (info.probation) {
@@ -268,11 +327,15 @@
             result.probationTier = m ? parseInt(m[1], 10) : 'unspecified';
         }
 
-        // Group course history by normalized course code.
+        // Group course history by canonical course code — resolved to the
+        // catalogue's current UNESCO code where possible, so a course taken
+        // under its legacy local code in one semester still matches the same
+        // course referenced by UNESCO code elsewhere (e.g. as a prerequisite).
         const byCourse = {};
         for (const row of (info.completedCourses || [])) {
-            const courseId = normCode(row['CourseID'] || row['CourseId'] || '');
-            if (!courseId) continue;
+            const rawId = row['CourseID'] || row['CourseId'] || '';
+            if (!rawId.trim()) continue;
+            const courseId = canonicalCode(rawId);
             (byCourse[courseId] = byCourse[courseId] || []).push({
                 semester: row['Semester'] || '',
                 grade: (row['Grade'] || '').trim(),
@@ -280,7 +343,7 @@
             });
         }
 
-        const registeringSet = new Set((info.coursesToRegister || []).map(c => normCode(c.courseId)));
+        const registeringSet = new Set((info.coursesToRegister || []).map(c => canonicalCode(c.courseId)));
 
         // Courses that were failed and never passed since.
         for (const courseId in byCourse) {
@@ -299,11 +362,11 @@
 
         // Prerequisite gaps among courses the student has added this semester.
         for (const c of (info.coursesToRegister || [])) {
-            const cid = normCode(c.courseId);
+            const cid = canonicalCode(c.courseId);
             const prereqs = cat.prereqUnescoFor(cid);
             if (!prereqs.length) continue;
             const missing = prereqs.filter(p => {
-                const norm = normCode(p);
+                const norm = canonicalCode(p);
                 const attempts = byCourse[norm];
                 if (!attempts) return true;
                 return !attempts.some(a => a.grade && !/^F$/i.test(a.grade));
@@ -322,10 +385,10 @@
         // it's a separate policy (theory must come before or alongside its
         // lab) — so it's tracked separately from prereqIssues above.
         for (const c of (info.coursesToRegister || [])) {
-            const cid = normCode(c.courseId);
+            const cid = canonicalCode(c.courseId);
             const theory = cat.theoryForLab(cid);
             if (!theory) continue;
-            const theoryCode = normCode(theory.unescoCode);
+            const theoryCode = canonicalCode(theory.unescoCode);
             const takenBefore = !!byCourse[theoryCode];
             const takingNow = registeringSet.has(theoryCode);
             if (!takenBefore && !takingNow) {

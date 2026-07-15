@@ -59,7 +59,7 @@ chrome.storage.local.get(['ulabBulkSaveResults'], (data) => {
 
     const htmlEl = document.documentElement;
     const lbl = document.getElementById('toggle-label');
-    const savedTheme = localStorage.getItem('ulab-theme') || 'dark';
+    const savedTheme = localStorage.getItem('ulab-theme') || 'light';
     applyTheme(savedTheme);
     document.getElementById('theme-toggle').addEventListener('click', () => {
         applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');

@@ -72,7 +72,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
         const ini = initials(info.urmsName || s.name);
         const displayName = info.urmsName || s.name || 'Unknown';
 
-        const advising = info.advising || { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [] };
+        const advising = info.advising || { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [], degreeProgress: null };
         if (info.probation) probationCount++;
         const hasCourses = (info.coursesToRegister || []).length > 0;
         if (!info.error && !hasCourses) noCoursesCount++;
@@ -102,6 +102,12 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
                 ${!hasCourses ? `<span class="badge badge-warn">📝 No courses added</span>` : `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>`}
             `;
 
+        // Body HTML is expensive to build (several nested tables) and stays
+        // visually collapsed until expanded — with large lists (100+
+        // students) building all of this up front is the real cost, so it's
+        // deferred until the card is first opened (see the click handler
+        // below) rather than computed here for every card immediately.
+        function buildBodyHTML() {
         let bodyHTML = '';
         if (info.error) {
             bodyHTML = `<div class="error-note">Could not load this student's page: ${info.error}</div>`;
@@ -177,6 +183,31 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
                 </div>
             `;
 
+            if (advising.degreeProgress) {
+                const { progress } = advising.degreeProgress;
+                bodyHTML += `<div class="section-label">🎓 Degree Progress (BSc CSE, 140 credits)</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Category</th><th>Earned</th><th>In Progress</th><th>Required</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${progress.map(p => `
+                                <tr>
+                                    <td>${p.label}</td>
+                                    <td>${p.earnedCredits}</td>
+                                    <td>${p.inProgressCredits || '—'}</td>
+                                    <td>${p.required}</td>
+                                    <td class="${p.shortBy > 0 ? 'grade-fail' : ''}">${p.shortBy > 0 ? `Short by ${p.shortBy}` : '✓ Met'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="empty-note">
+                        Major Elective and Optional/Minor credits are estimated from the course code pattern
+                        (concentration electives and other-department courses aren't individually listed in the
+                        catalogue) — treat as approximate. "Short by" is normal for earlier-semester students; it's
+                        not an issue on its own.
+                    </div>`;
+            }
+
             bodyHTML += `<div class="section-label">📝 Courses to be registered${info.totalCreditRegistering ? ` — ${info.totalCreditRegistering} credit(s)` : ''}</div>`;
             if (hasCourses) {
                 bodyHTML += `
@@ -229,6 +260,8 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
                     </table>`;
             }
         }
+        return bodyHTML;
+        }
 
         card.innerHTML = `
             <div class="stu-header">
@@ -243,10 +276,15 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
                 </svg>
             </div>
-            <div class="stu-body">${bodyHTML}</div>
+            <div class="stu-body"></div>
         `;
+        let bodyBuilt = false;
         card.querySelector('.stu-header').addEventListener('click', (e) => {
             if (e.target.closest('.card-email-btn')) return;
+            if (!bodyBuilt) {
+                card.querySelector('.stu-body').innerHTML = buildBodyHTML();
+                bodyBuilt = true;
+            }
             card.classList.toggle('open');
         });
         const emailBtn = card.querySelector('.card-email-btn');
@@ -529,7 +567,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
     // ── Theme toggle ─────────────────────────────────────────────
     const htmlEl = document.documentElement;
     const lbl = document.getElementById('toggle-label');
-    const saved = localStorage.getItem('ulab-theme') || 'dark';
+    const saved = localStorage.getItem('ulab-theme') || 'light';
     applyTheme(saved);
     document.getElementById('theme-toggle').addEventListener('click', () => {
         applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');

@@ -214,7 +214,7 @@
         for (const tr of table.querySelectorAll('tr')) {
             const tds = tr.querySelectorAll('td');
             if (tds.length >= 2) {
-                const key = tds[0].textContent.replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
+                const key = tds[0].textContent.replace(/\s+/g, ' ').trim().replace(/\s*:\s*$/, '');
                 const value = tds[1].textContent.replace(/\s+/g, ' ').trim();
                 if (key) result[key] = value;
             }

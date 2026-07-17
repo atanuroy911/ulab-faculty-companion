@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "0.3.0",
-  "description": "Free Time Finder, Student Advising, Bulk Save, and Course Catalogue tools for ULAB faculty on URMS. 100% local.",
+  "version": "1.0.0",
+  "description": "Free Time Finder, Student Advising, Bulk Save, Capstone Eligibility, and Course Catalogue tools for ULAB faculty on URMS. 100% local.",
   "permissions": ["storage", "sidePanel"],
   "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
   "background": {

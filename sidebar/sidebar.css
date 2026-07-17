@@ -79,6 +79,8 @@ body {
     height: 24px;
     background: var(--surface);
     border-top: 1px solid var(--border);
+    padding: 0 8px;
+    min-width: 0;
 }
 
 #ulab-credit {
@@ -86,6 +88,10 @@ body {
     color: var(--muted);
     text-decoration: none;
     letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 #ulab-credit:hover { color: var(--accent); }
 

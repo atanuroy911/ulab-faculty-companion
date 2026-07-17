@@ -1,5 +1,7 @@
 * , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Theme: dark is the default palette, used both as the explicit
+   dark theme and as the fallback before the auto/light rules below. ── */
 :root {
     --bg:        #0c1220;
     --surface:   #131e30;
@@ -9,7 +11,55 @@
     --muted:     #64748b;
     --accent:    #38bdf8;
     --accent2:   #818cf8;
+    --overlay-rgb:     255,255,255;
+    --shadow-rgb:      0,0,0;
+    --text-strong:     #f8fafc;
+    --text-secondary:  #cbd5e1;
+    --text-tertiary:   #94a3b8;
+    --placeholder:     #475569;
+    color-scheme: dark;
 }
+
+/* Auto mode: follow the OS/browser preference when no manual choice is set. */
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+        --bg:        #f4f6fa;
+        --surface:   #ffffff;
+        --surface2:  #eef1f6;
+        --border:    rgba(15,23,42,0.1);
+        --text:      #1e293b;
+        --muted:     #64748b;
+        --accent:    #0284c7;
+        --accent2:   #6366f1;
+        --overlay-rgb:     15,23,42;
+        --shadow-rgb:      15,23,42;
+        --text-strong:     #0f172a;
+        --text-secondary:  #334155;
+        --text-tertiary:   #475569;
+        --placeholder:     #94a3b8;
+        color-scheme: light;
+    }
+}
+
+/* Manual override via the theme toggle button, persisted in storage. */
+:root[data-theme="light"] {
+    --bg:        #f4f6fa;
+    --surface:   #ffffff;
+    --surface2:  #eef1f6;
+    --border:    rgba(15,23,42,0.1);
+    --text:      #1e293b;
+    --muted:     #64748b;
+    --accent:    #0284c7;
+    --accent2:   #6366f1;
+    --overlay-rgb:     15,23,42;
+    --shadow-rgb:      15,23,42;
+    --text-strong:     #0f172a;
+    --text-secondary:  #334155;
+    --text-tertiary:   #475569;
+    --placeholder:     #94a3b8;
+    color-scheme: light;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
 
 html, body { height: 100%; }
 body {
@@ -19,7 +69,43 @@ body {
     font-size: 14px;
 }
 
-#app { display: flex; height: 100vh; overflow: hidden; }
+#app { display: flex; height: calc(100vh - 24px); overflow: hidden; }
+
+#ulab-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 24px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+#ulab-credit {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.2px;
+}
+#ulab-credit:hover { color: var(--accent); }
+
+#ulab-theme-toggle {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+#ulab-theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
 
 /* Feature rail */
 #rail {

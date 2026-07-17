@@ -1,14 +1,14 @@
 /* ── Time feature (Free Time Finder) ─────────────────────────── */
 .ulab-step-icon { font-size: 34px; text-align: center; margin-bottom: 14px; }
-.ulab-step-desc { font-size: 13px; line-height: 1.6; color: #cbd5e1; margin-bottom: 12px; }
-.ulab-step-desc strong { color: #f8fafc; font-weight: 600; }
+.ulab-step-desc { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 12px; }
+.ulab-step-desc strong { color: var(--text-strong); font-weight: 600; }
 /* ── How-to steps ─────────────────────────────────────────────────── */
 .ulab-howto {
     display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px;
 }
 .ulab-howto-item {
     display: flex; gap: 12px; align-items: flex-start;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(var(--overlay-rgb),0.03); border: 1px solid rgba(var(--overlay-rgb),0.06);
     border-radius: 12px; padding: 10px 14px;
 }
 .ulab-howto-badge {
@@ -18,9 +18,9 @@
     justify-content: center; margin-top: 1px;
 }
 .ulab-howto-body { flex: 1; min-width: 0; }
-.ulab-howto-title { font-size: 13px; font-weight: 600; color: #f8fafc; line-height: 1.4; }
-.ulab-howto-sub { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-top: 3px; }
-.ulab-howto-sub strong { color: #cbd5e1; font-weight: 600; }
+.ulab-howto-title { font-size: 13px; font-weight: 600; color: var(--text-strong); line-height: 1.4; }
+.ulab-howto-sub { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; margin-top: 3px; }
+.ulab-howto-sub strong { color: var(--text-secondary); font-weight: 600; }
 .ulab-link-chip {
     display: inline-flex; align-items: center; gap: 4px;
     margin-top: 6px; padding: 4px 10px; font-size: 11.5px; font-weight: 600;
@@ -29,11 +29,11 @@
     text-decoration: none; transition: background 0.15s, color 0.15s;
 }
 .ulab-link-chip:hover { background: rgba(129,140,248,0.22); color: #c7d2fe; }
-.ulab-step-hint { font-size: 11.5px; color: #64748b; margin-bottom: 16px; }
+.ulab-step-hint { font-size: 11.5px; color: var(--muted); margin-bottom: 16px; }
 kbd {
-    display: inline-block; padding: 2px 6px; background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
-    font-size: 11px; font-family: monospace; color: #94a3b8;
+    display: inline-block; padding: 2px 6px; background: rgba(var(--overlay-rgb),0.08);
+    border: 1px solid rgba(var(--overlay-rgb),0.15); border-radius: 4px;
+    font-size: 11px; font-family: monospace; color: var(--text-tertiary);
 }
 
 .ulab-primary-btn {
@@ -46,12 +46,12 @@ kbd {
 .ulab-primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .ulab-secondary-btn {
-    display: block; padding: 10px 14px; background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 13px;
+    display: block; padding: 10px 14px; background: rgba(var(--overlay-rgb),0.05);
+    border: 1px solid rgba(var(--overlay-rgb),0.1); color: var(--text-tertiary); font-size: 13px;
     font-weight: 600; border-radius: 10px; cursor: pointer;
     transition: background 0.2s; font-family: inherit;
 }
-.ulab-secondary-btn:hover { background: rgba(255,255,255,0.09); color: #e2e8f0; }
+.ulab-secondary-btn:hover { background: rgba(var(--overlay-rgb),0.09); color: var(--text-strong); }
 
 .ulab-btn-row { display: flex; gap: 8px; align-items: center; }
 .ulab-btn-row .ulab-primary-btn { flex: 1; }
@@ -65,34 +65,34 @@ kbd {
     color: #38bdf8; margin-bottom: 6px;
 }
 .ulab-format-example {
-    background: rgba(0,0,0,0.25); border-radius: 7px; padding: 8px 10px;
-    font-family: 'Courier New', monospace; font-size: 11px; color: #94a3b8;
-    white-space: pre; line-height: 1.6; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(var(--shadow-rgb),0.25); border-radius: 7px; padding: 8px 10px;
+    font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-tertiary);
+    white-space: pre; line-height: 1.6; margin-bottom: 8px; border: 1px solid rgba(var(--overlay-rgb),0.06);
     overflow-x: auto;
 }
-.ulab-format-hint { font-size: 11px; color: #64748b; line-height: 1.55; }
-.ulab-format-hint strong { color: #94a3b8; }
+.ulab-format-hint { font-size: 11px; color: var(--muted); line-height: 1.55; }
+.ulab-format-hint strong { color: var(--text-tertiary); }
 .ulab-format-hint em { color: #38bdf8; font-style: normal; }
 
 #ulab-paste-box {
-    width: 100%; height: 120px; background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px;
-    color: #cbd5e1; font-size: 12px; font-family: monospace; resize: vertical;
+    width: 100%; height: 120px; background: rgba(var(--overlay-rgb),0.04);
+    border: 1px solid rgba(var(--overlay-rgb),0.1); border-radius: 10px; padding: 10px;
+    color: var(--text-secondary); font-size: 12px; font-family: monospace; resize: vertical;
     outline: none; margin-bottom: 10px; transition: border-color 0.2s;
 }
 #ulab-paste-box:focus { border-color: rgba(56,189,248,0.5); }
-#ulab-paste-box::placeholder { color: #475569; }
+#ulab-paste-box::placeholder { color: var(--placeholder); }
 
 .ulab-preview-ok   { font-size: 12px; color: #34d399; margin-bottom: 12px; }
 .ulab-preview-warn { font-size: 12px; color: #f59e0b; margin-bottom: 12px; }
 
 #ulab-student-list { max-height: 260px; overflow-y: auto; margin-bottom: 4px; }
 #ulab-student-list::-webkit-scrollbar { width: 5px; }
-#ulab-student-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+#ulab-student-list::-webkit-scrollbar-thumb { background: rgba(var(--overlay-rgb),0.1); border-radius: 4px; }
 
 .ulab-student-row {
     display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 9px;
-    margin-bottom: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 6px; background: rgba(var(--overlay-rgb),0.03); border: 1px solid rgba(var(--overlay-rgb),0.06);
 }
 .ulab-student-idx {
     width: 20px; height: 20px; border-radius: 6px; background: rgba(56,189,248,0.15);
@@ -101,8 +101,8 @@ kbd {
 }
 .ulab-student-details { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .ulab-id-input, .ulab-name-input {
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px; padding: 4px 8px; color: #e2e8f0; font-size: 11.5px;
+    background: rgba(var(--overlay-rgb),0.05); border: 1px solid rgba(var(--overlay-rgb),0.08);
+    border-radius: 6px; padding: 4px 8px; color: var(--text-strong); font-size: 11.5px;
     font-family: monospace; outline: none; transition: border-color 0.2s; width: 100%;
 }
 .ulab-name-input { font-family: inherit; }
@@ -116,30 +116,48 @@ kbd {
 }
 .ulab-remove-btn:hover { background: rgba(239,68,68,0.2); }
 
+.ulab-row-save-btn {
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc;
+    border-radius: 6px; padding: 0 8px; height: 22px; font-size: 10.5px; font-weight: 600;
+    cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: background 0.2s;
+    font-family: inherit;
+}
+.ulab-row-save-btn:hover:not(:disabled) { background: rgba(99,102,241,0.22); }
+.ulab-row-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ulab-row-status {
+    font-size: 10px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+    color: var(--text-tertiary); max-width: 92px; overflow: hidden; text-overflow: ellipsis;
+}
+.ulab-row-status-ok   { color: #4ade80; }
+.ulab-row-status-fail { color: #f87171; }
+.ulab-row-status-skip { color: #fbbf24; }
+.ulab-row-status-pending { color: #38bdf8; }
+
 .ulab-threshold-box {
     background: rgba(129,140,248,0.05); border: 1px solid rgba(129,140,248,0.18);
     border-radius: 10px; padding: 10px 12px; margin-top: 12px;
 }
 .ulab-threshold-presets { display: flex; gap: 6px; margin-bottom: 10px; }
 .ulab-threshold-preset {
-    flex: 1; padding: 6px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    color: #94a3b8; font-size: 11px; font-weight: 600; border-radius: 7px; cursor: pointer;
+    flex: 1; padding: 6px 0; background: rgba(var(--overlay-rgb),0.05); border: 1px solid rgba(var(--overlay-rgb),0.1);
+    color: var(--text-tertiary); font-size: 11px; font-weight: 600; border-radius: 7px; cursor: pointer;
     transition: background 0.2s, color 0.2s, border-color 0.2s; font-family: inherit;
 }
-.ulab-threshold-preset:hover { background: rgba(255,255,255,0.09); color: #e2e8f0; }
+.ulab-threshold-preset:hover { background: rgba(var(--overlay-rgb),0.09); color: var(--text-strong); }
 .ulab-threshold-preset.active {
     background: rgba(129,140,248,0.18); border-color: rgba(129,140,248,0.5); color: #818cf8;
 }
-.ulab-threshold-custom { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8; }
+.ulab-threshold-custom { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-tertiary); }
 #ulab-threshold-input {
-    width: 56px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px; padding: 4px 8px; color: #e2e8f0; font-size: 12px; font-family: monospace; outline: none;
+    width: 56px; background: rgba(var(--overlay-rgb),0.05); border: 1px solid rgba(var(--overlay-rgb),0.1);
+    border-radius: 6px; padding: 4px 8px; color: var(--text-strong); font-size: 12px; font-family: monospace; outline: none;
 }
 #ulab-threshold-input:focus { border-color: rgba(129,140,248,0.5); }
 
 .ulab-run-status-msg {
-    margin-top: 12px; font-size: 12.5px; color: #94a3b8; text-align: center;
-    padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;
+    margin-top: 12px; font-size: 12.5px; color: var(--text-tertiary); text-align: center;
+    padding: 8px; background: rgba(var(--overlay-rgb),0.03); border-radius: 8px;
 }
 
 /* ── Danger / Bulk Save ──────────────────────────────────────────── */
@@ -149,7 +167,7 @@ kbd {
     font-size: 12.5px; line-height: 1.6;
 }
 .ulab-checkbox-row {
-    font-size: 12.5px; color: #cbd5e1; cursor: pointer;
+    font-size: 12.5px; color: var(--text-secondary); cursor: pointer;
 }
 .ulab-danger-box {
     background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
@@ -167,10 +185,10 @@ kbd {
 
 #ulab-run-log {
     margin-top: 12px; max-height: 220px; overflow-y: auto; font-family: 'Courier New', monospace;
-    font-size: 11.5px; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
-    padding: 8px 10px; background: rgba(0,0,0,0.2);
+    font-size: 11.5px; border: 1px solid rgba(var(--overlay-rgb),0.08); border-radius: 8px;
+    padding: 8px 10px; background: rgba(var(--shadow-rgb),0.2);
 }
-.ulab-log-row { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.ulab-log-row { padding: 3px 0; border-bottom: 1px solid rgba(var(--overlay-rgb),0.04); }
 .ulab-log-row:last-child { border-bottom: none; }
 .ulab-log-ok { color: #34d399; }
 .ulab-log-fail { color: #f87171; }

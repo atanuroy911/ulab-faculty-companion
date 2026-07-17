@@ -125,19 +125,23 @@
                     <input class="ulab-id-input"   value="${s.id}"   data-idx="${i}" placeholder="Student ID" maxlength="9" />
                     <input class="ulab-name-input" value="${s.name}" data-idx="${i}" placeholder="Name (optional)" />
                 </div>
+                <span class="ulab-row-status" id="ulab-row-status-${i}"></span>
+                <button class="ulab-row-save-btn" data-idx="${i}" title="Save this student only">💾 Save</button>
                 <button class="ulab-remove-btn" data-idx="${i}" title="Remove">✕</button>
             </div>
         `).join('');
 
         root.innerHTML = `
             <p class="ulab-step-desc">
-                Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect entries.
+                Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect
+                entries, or use each row's own <strong>💾 Save</strong> button to save just that student.
             </p>
             <div id="ulab-student-list">${listHTML}</div>
             <div class="ulab-info-box">
-                💾 This clicks <strong>Save</strong> on each student's page for you, one after
-                another — nothing is added, removed, or changed beyond what's already staged.
-                It writes to real URMS records, so it's worth a quick look at the list above
+                💾 <strong>Run Bulk Save</strong> below clicks <strong>Save</strong> on every student's
+                page for you, one after another — or save just one student at a time with the button
+                next to their row. Either way, nothing is added, removed, or changed beyond what's
+                already staged. It writes to real URMS records, so it's worth a quick look at the list
                 before you start, but it's the same action you'd take by hand either way.
             </div>
             <label class="ulab-checkbox-row" style="display:flex;align-items:center;gap:8px;margin-top:10px">
@@ -165,8 +169,42 @@
                 const idx = parseInt(e.target.dataset.idx);
                 PARSED_STUDENTS.splice(idx, 1);
                 renderStep2();
+                return;
+            }
+            if (e.target.classList.contains('ulab-row-save-btn')) {
+                const idx = parseInt(e.target.dataset.idx);
+                runSingleSave(idx, e.target);
             }
         });
+    }
+
+    function setRowStatus(idx, msg, cls) {
+        const el = $('ulab-row-status-' + idx);
+        if (el) { el.textContent = msg; el.className = `ulab-row-status ulab-row-status-${cls || ''}`; }
+    }
+
+    async function runSingleSave(idx, btn) {
+        const s = PARSED_STUDENTS[idx];
+        if (!s || !/^\d{9}$/.test(s.id)) {
+            setRowStatus(idx, '❌ Invalid ID', 'fail');
+            return;
+        }
+        const emailBillEnabled = $('ulab-email-bill-toggle') ? $('ulab-email-bill-toggle').checked : false;
+        if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+        setRowStatus(idx, '⏳ Saving…', 'pending');
+
+        const parser = new DOMParser();
+        const BASE = 'https://urms-awp.ulab.edu.bd';
+
+        try {
+            const result = await saveOneStudent(s, { parser, BASE, emailBillEnabled });
+            setRowStatus(idx, result.rowMsg, result.rowClass);
+        } catch (err) {
+            console.error('[ULAB Bulk Save]', s.id, err);
+            setRowStatus(idx, `❌ ${err.message}`, 'fail');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '💾 Save'; }
+        }
     }
 
     function setRunStatus(msg) {
@@ -236,14 +274,163 @@
         return link ? link.getAttribute('href') : null;
     }
 
+    // ── Save exactly one student: Load → Save → (optionally) Email Bill ────
+    // Accepts an optional pre-fetched token/semesterId (used by the bulk run
+    // to avoid re-fetching the token page for every student); fetches its
+    // own when omitted (used by the per-row Save button).
+    async function saveOneStudent(s, { parser, BASE, emailBillEnabled, sharedToken, semesterId }) {
+        let token = sharedToken;
+        if (!token || semesterId === undefined) {
+            const getRes = await fetch(`${BASE}/StudentRegistration`, { credentials: 'include' });
+            const getDoc = parser.parseFromString(await getRes.text(), 'text/html');
+            const tokenEl = getDoc.querySelector('input[name="__RequestVerificationToken"]');
+            if (!tokenEl) throw new Error('Could not find anti-forgery token. Are you logged in to URMS?');
+            token = tokenEl.value;
+            if (semesterId === undefined) {
+                const semesterEl = getDoc.querySelector('input[name="GenaratedCourseList.Semester"], select[name="GenaratedCourseList.Semester"]');
+                semesterId = semesterEl ? semesterEl.value : '';
+            }
+        }
+
+        const today = new Date();
+        const loadRegDateString = [
+            String(today.getDate()).padStart(2, '0'),
+            String(today.getMonth() + 1).padStart(2, '0'),
+            today.getFullYear()
+        ].join('/');
+
+        // Step 1: Load — same call Time/Advising already make.
+        const loadParams = new URLSearchParams();
+        loadParams.append('IsAddDropWithdraw', 'False');
+        loadParams.append('IsCreditBased', '');
+        loadParams.append('HasLateRegistrationWithoutFinePermission', 'False');
+        loadParams.append('LateRegistrationFineEnabled', 'False');
+        loadParams.append('RegistrationDateOver', 'True');
+        loadParams.append('RegDateString', loadRegDateString);
+        loadParams.append('GenaratedCourseList.Semester', semesterId);
+        loadParams.append('GenaratedCourseList.StudentId', s.id);
+        loadParams.append('btnLoad', 'Load');
+        loadParams.append('__RequestVerificationToken', token);
+
+        const loadRes = await fetch(`${BASE}/StudentRegistration`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': `${BASE}/StudentRegistration` },
+            body: loadParams.toString(),
+        });
+        const loadDoc = parser.parseFromString(await loadRes.text(), 'text/html');
+        const state = extractSaveState(loadDoc);
+
+        if (!state.rows.length) {
+            appendLog(s.id, s.name, 'skip', '⚠️ No staged courses found — skipped');
+            return {
+                id: s.id, name: s.name, status: 'skipped', detail: 'No staged courses', courses: [],
+                rowMsg: '⚠️ Nothing staged', rowClass: 'skip', token, semesterId,
+            };
+        }
+
+        if (state.token) token = state.token;
+
+        // Step 2: Save — replicate the page's own Save submission exactly.
+        const saveParams = new URLSearchParams();
+        saveParams.append('IsAddDropWithdraw', state.isAddDropWithdraw);
+        saveParams.append('IsCreditBased', state.isCreditBased);
+        saveParams.append('HasLateRegistrationWithoutFinePermission', state.hasLateRegFinePermission);
+        saveParams.append('LateRegistrationFineEnabled', state.lateRegFineEnabled);
+        saveParams.append('RegistrationDateOver', state.registrationDateOver);
+        saveParams.append('RegDateString', state.regDateString);
+        saveParams.append('GenaratedCourseList.Semester', semesterId);
+        saveParams.append('GenaratedCourseList.StudentId', s.id);
+        for (const row of state.rows) {
+            saveParams.append('Course', row.course);
+            saveParams.append('Section', row.section);
+            saveParams.append('CourseCredit', row.credit);
+        }
+        saveParams.append('FineAmount', state.fineAmount);
+        saveParams.append('FinePercent', state.finePercent);
+        saveParams.append('Comments', state.comments);
+        saveParams.append('__RequestVerificationToken', token);
+
+        const saveRes = await fetch(`${BASE}/StudentRegistration`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': `${BASE}/StudentRegistration` },
+            body: saveParams.toString(),
+        });
+        const saveHtml = await saveRes.text();
+        const saveDoc = parser.parseFromString(saveHtml, 'text/html');
+        const err = looksLikeError(saveDoc);
+        const confirmed = looksLikeSuccess(saveDoc);
+
+        if (!saveRes.ok) {
+            appendLog(s.id, s.name, 'fail', `❌ HTTP ${saveRes.status} — please verify manually`);
+            return {
+                id: s.id, name: s.name, status: 'failed', detail: `HTTP ${saveRes.status}`, courses: state.rows,
+                rowMsg: `❌ HTTP ${saveRes.status}`, rowClass: 'fail', token, semesterId,
+            };
+        }
+        if (err) {
+            appendLog(s.id, s.name, 'fail', `❌ ${err}`);
+            return {
+                id: s.id, name: s.name, status: 'failed', detail: err, courses: state.rows,
+                rowMsg: '❌ Failed', rowClass: 'fail', token, semesterId,
+            };
+        }
+        if (confirmed) {
+            appendLog(s.id, s.name, 'ok', `✅ Saved successfully — ${state.rows.length} course(s)`);
+            let billDetail = 'Saved successfully';
+            let rowMsg = '✅ Saved';
+            if (emailBillEnabled) {
+                const billHref = findEmailBillHref(saveDoc);
+                if (billHref) {
+                    try {
+                        const billRes = await fetch(`${BASE}${billHref}`, {
+                            credentials: 'include',
+                            headers: { 'Referer': `${BASE}/StudentRegistration` },
+                        });
+                        if (billRes.ok) {
+                            appendLog(s.id, s.name, 'ok', '📧 Bill emailed');
+                            billDetail += ' — bill emailed';
+                            rowMsg = '✅ Saved + 📧';
+                        } else {
+                            appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — HTTP ${billRes.status}`);
+                            billDetail += ` — bill email failed (HTTP ${billRes.status})`;
+                            rowMsg = '✅ Saved, ⚠️ bill failed';
+                        }
+                    } catch (billErr) {
+                        appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — ${billErr.message}`);
+                        billDetail += ` — bill email failed (${billErr.message})`;
+                        rowMsg = '✅ Saved, ⚠️ bill failed';
+                    }
+                } else {
+                    appendLog(s.id, s.name, 'skip', '⚠️ No "Email Bill" link found on Save response — skipped');
+                    billDetail += ' — no Email Bill link found';
+                    rowMsg = '✅ Saved, ⚠️ no bill link';
+                }
+            }
+            return {
+                id: s.id, name: s.name, status: 'saved', detail: billDetail, courses: state.rows,
+                rowMsg, rowClass: 'ok', token, semesterId,
+            };
+        }
+
+        appendLog(s.id, s.name, 'skip', `❓ No confirmation banner seen — please verify manually`);
+        return {
+            id: s.id, name: s.name, status: 'unconfirmed', detail: 'No "Saved successfully" banner in response', courses: state.rows,
+            rowMsg: '❓ Unconfirmed', rowClass: 'skip', token, semesterId,
+        };
+    }
+
     async function runBulkSave() {
         const runBtn = $('ulab-step2-run');
         const emailBillEnabled = $('ulab-email-bill-toggle') ? $('ulab-email-bill-toggle').checked : false;
         if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'Running…'; }
         $('ulab-run-log').innerHTML = '';
 
-        const students = PARSED_STUDENTS.filter(s => /^\d{9}$/.test(s.id));
-        if (!students.length) {
+        const indexedStudents = PARSED_STUDENTS
+            .map((s, idx) => ({ s, idx }))
+            .filter(({ s }) => /^\d{9}$/.test(s.id));
+        if (!indexedStudents.length) {
             setRunStatus('❌ No valid 9-digit IDs found.');
             if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Run Bulk Save'; }
             return;
@@ -263,123 +450,20 @@
             const semesterEl = getDoc.querySelector('input[name="GenaratedCourseList.Semester"], select[name="GenaratedCourseList.Semester"]');
             const semesterId = semesterEl ? semesterEl.value : '';
 
-            const today = new Date();
-            const loadRegDateString = [
-                String(today.getDate()).padStart(2, '0'),
-                String(today.getMonth() + 1).padStart(2, '0'),
-                today.getFullYear()
-            ].join('/');
-
-            for (let i = 0; i < students.length; i++) {
-                const s = students[i];
-                setRunStatus(`⏳ ${i + 1}/${students.length}: loading ${s.name || s.id}…`);
+            for (let i = 0; i < indexedStudents.length; i++) {
+                const { s, idx } = indexedStudents[i];
+                setRunStatus(`⏳ ${i + 1}/${indexedStudents.length}: saving ${s.name || s.id}…`);
+                setRowStatus(idx, '⏳ Saving…', 'pending');
 
                 try {
-                    // Step 1: Load — same call Time/Advising already make.
-                    const loadParams = new URLSearchParams();
-                    loadParams.append('IsAddDropWithdraw', 'False');
-                    loadParams.append('IsCreditBased', '');
-                    loadParams.append('HasLateRegistrationWithoutFinePermission', 'False');
-                    loadParams.append('LateRegistrationFineEnabled', 'False');
-                    loadParams.append('RegistrationDateOver', 'True');
-                    loadParams.append('RegDateString', loadRegDateString);
-                    loadParams.append('GenaratedCourseList.Semester', semesterId);
-                    loadParams.append('GenaratedCourseList.StudentId', s.id);
-                    loadParams.append('btnLoad', 'Load');
-                    loadParams.append('__RequestVerificationToken', sharedToken);
-
-                    const loadRes = await fetch(`${BASE}/StudentRegistration`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': `${BASE}/StudentRegistration` },
-                        body: loadParams.toString(),
-                    });
-                    const loadDoc = parser.parseFromString(await loadRes.text(), 'text/html');
-                    const state = extractSaveState(loadDoc);
-
-                    if (!state.rows.length) {
-                        appendLog(s.id, s.name, 'skip', '⚠️ No staged courses found — skipped');
-                        results.push({ id: s.id, name: s.name, status: 'skipped', detail: 'No staged courses', courses: [] });
-                        continue;
-                    }
-
-                    // Keep the token fresh off this student's own Load response if present.
-                    if (state.token) sharedToken = state.token;
-
-                    setRunStatus(`⏳ ${i + 1}/${students.length}: saving ${s.name || s.id} (${state.rows.length} course row(s))…`);
-
-                    // Step 2: Save — replicate the page's own Save submission exactly.
-                    const saveParams = new URLSearchParams();
-                    saveParams.append('IsAddDropWithdraw', state.isAddDropWithdraw);
-                    saveParams.append('IsCreditBased', state.isCreditBased);
-                    saveParams.append('HasLateRegistrationWithoutFinePermission', state.hasLateRegFinePermission);
-                    saveParams.append('LateRegistrationFineEnabled', state.lateRegFineEnabled);
-                    saveParams.append('RegistrationDateOver', state.registrationDateOver);
-                    saveParams.append('RegDateString', state.regDateString);
-                    saveParams.append('GenaratedCourseList.Semester', semesterId);
-                    saveParams.append('GenaratedCourseList.StudentId', s.id);
-                    for (const row of state.rows) {
-                        saveParams.append('Course', row.course);
-                        saveParams.append('Section', row.section);
-                        saveParams.append('CourseCredit', row.credit);
-                    }
-                    saveParams.append('FineAmount', state.fineAmount);
-                    saveParams.append('FinePercent', state.finePercent);
-                    saveParams.append('Comments', state.comments);
-                    saveParams.append('__RequestVerificationToken', sharedToken);
-
-                    const saveRes = await fetch(`${BASE}/StudentRegistration`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': `${BASE}/StudentRegistration` },
-                        body: saveParams.toString(),
-                    });
-                    const saveHtml = await saveRes.text();
-                    const saveDoc = parser.parseFromString(saveHtml, 'text/html');
-                    const err = looksLikeError(saveDoc);
-                    const confirmed = looksLikeSuccess(saveDoc);
-
-                    if (!saveRes.ok) {
-                        appendLog(s.id, s.name, 'fail', `❌ HTTP ${saveRes.status} — please verify manually`);
-                        results.push({ id: s.id, name: s.name, status: 'failed', detail: `HTTP ${saveRes.status}`, courses: state.rows });
-                    } else if (err) {
-                        appendLog(s.id, s.name, 'fail', `❌ ${err}`);
-                        results.push({ id: s.id, name: s.name, status: 'failed', detail: err, courses: state.rows });
-                    } else if (confirmed) {
-                        appendLog(s.id, s.name, 'ok', `✅ Saved successfully — ${state.rows.length} course(s)`);
-                        let billDetail = 'Saved successfully';
-                        if (emailBillEnabled) {
-                            const billHref = findEmailBillHref(saveDoc);
-                            if (billHref) {
-                                try {
-                                    const billRes = await fetch(`${BASE}${billHref}`, {
-                                        credentials: 'include',
-                                        headers: { 'Referer': `${BASE}/StudentRegistration` },
-                                    });
-                                    if (billRes.ok) {
-                                        appendLog(s.id, s.name, 'ok', '📧 Bill emailed');
-                                        billDetail += ' — bill emailed';
-                                    } else {
-                                        appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — HTTP ${billRes.status}`);
-                                        billDetail += ` — bill email failed (HTTP ${billRes.status})`;
-                                    }
-                                } catch (billErr) {
-                                    appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — ${billErr.message}`);
-                                    billDetail += ` — bill email failed (${billErr.message})`;
-                                }
-                            } else {
-                                appendLog(s.id, s.name, 'skip', '⚠️ No "Email Bill" link found on Save response — skipped');
-                                billDetail += ' — no Email Bill link found';
-                            }
-                        }
-                        results.push({ id: s.id, name: s.name, status: 'saved', detail: billDetail, courses: state.rows });
-                    } else {
-                        appendLog(s.id, s.name, 'skip', `❓ No confirmation banner seen — please verify manually`);
-                        results.push({ id: s.id, name: s.name, status: 'unconfirmed', detail: 'No "Saved successfully" banner in response', courses: state.rows });
-                    }
+                    const result = await saveOneStudent(s, { parser, BASE, emailBillEnabled, sharedToken, semesterId });
+                    sharedToken = result.token;
+                    setRowStatus(idx, result.rowMsg, result.rowClass);
+                    results.push(result);
                 } catch (err) {
                     console.error('[ULAB Bulk Save]', s.id, err);
                     appendLog(s.id, s.name, 'fail', `❌ ${err.message}`);
+                    setRowStatus(idx, `❌ ${err.message}`, 'fail');
                     results.push({ id: s.id, name: s.name, status: 'error', detail: err.message, courses: [] });
                 }
             }

@@ -35,7 +35,6 @@
     // ── Step 1: Paste box ────────────────────────────────────────────────────
     function showStep1() {
         root.innerHTML = `
-            <div class="ulab-step-icon">📋</div>
             <p class="ulab-step-desc">
                 Open the attendance sheet PDF on URMS, press <kbd>Ctrl+A</kbd> then
                 <kbd>Ctrl+C</kbd> to copy the text, then paste below —

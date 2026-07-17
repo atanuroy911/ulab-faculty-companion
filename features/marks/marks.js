@@ -14,7 +14,6 @@
 
     function mount(container) {
         container.innerHTML = `
-            <div class="ulab-step-icon">📊</div>
             <p class="ulab-step-desc">
                 Opens the Marks Management System in a new tab.
             </p>

@@ -20,11 +20,32 @@
     // ── Step 1: Paste box ────────────────────────────────────────────────────
     function showStep1() {
         root.innerHTML = `
-            <div class="ulab-step-icon">🎓</div>
-            <p class="ulab-step-desc">
-                Open <strong>Advisor → Advising Student</strong> on URMS, select all
-                the rows in the table, copy them, then paste below.
-            </p>
+            <div class="ulab-howto">
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">1</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Open the Advising Student page and print it</div>
+                        <a class="ulab-link-chip" href="https://urms-awp.ulab.edu.bd/AdvisingStudent" target="_blank" rel="noopener">
+                            🔗 urms-awp.ulab.edu.bd/AdvisingStudent
+                        </a>
+                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page.</div>
+                    </div>
+                </div>
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">2</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Copy the printed table</div>
+                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below.</div>
+                    </div>
+                </div>
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">3</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Parse it</div>
+                        <div class="ulab-howto-sub">Click <strong>Parse Students</strong> below to continue.</div>
+                    </div>
+                </div>
+            </div>
             <div class="ulab-format-box">
                 <div class="ulab-format-label">Expected format (one student per line)</div>
                 <div class="ulab-format-example">1 253014001 Md. Minhajur Rahman minhajur.rahman.cse@ulab.edu.bd 1855533355 OK 20 Apr 2026 OK

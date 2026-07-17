@@ -12,7 +12,6 @@
 
     function mount(container) {
         container.innerHTML = `
-            <div class="ulab-step-icon">📖</div>
             <p class="ulab-step-desc">
                 Browse every course this extension knows about, along with its prerequisites
                 and lab/theory pairing — the exact data Student Advising uses to generate its

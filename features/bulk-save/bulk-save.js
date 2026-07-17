@@ -29,13 +29,36 @@
     // ── Step 1: Paste box (same list format as Student Advising) ───────────
     function showStep1() {
         root.innerHTML = `
-            <div class="ulab-step-icon">💾</div>
-            <p class="ulab-step-desc">
-                Paste the same <strong>Advising Student</strong> list used by the Student
-                Advising feature. Each student's currently staged registration will be
-                loaded and saved as-is — <strong>no courses are added, removed, or changed
-                by this tool.</strong>
-            </p>
+            <div class="ulab-howto">
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">1</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Open the Advising Student page and print it</div>
+                        <a class="ulab-link-chip" href="https://urms-awp.ulab.edu.bd/AdvisingStudent" target="_blank" rel="noopener">
+                            🔗 urms-awp.ulab.edu.bd/AdvisingStudent
+                        </a>
+                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page.</div>
+                    </div>
+                </div>
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">2</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Copy the printed table</div>
+                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below.</div>
+                    </div>
+                </div>
+                <div class="ulab-howto-item">
+                    <div class="ulab-howto-badge">3</div>
+                    <div class="ulab-howto-body">
+                        <div class="ulab-howto-title">Parse and run</div>
+                        <div class="ulab-howto-sub">
+                            Click <strong>Parse Students</strong>, then <strong>Run Bulk Save</strong> — each
+                            student's currently staged registration is loaded and saved as-is; no courses
+                            are added, removed, or changed by this tool.
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="ulab-format-box">
                 <div class="ulab-format-label">Expected format (one student per line)</div>
                 <div class="ulab-format-example">1 253014001 Md. Minhajur Rahman minhajur.rahman.cse@ulab.edu.bd 1855533355 OK 20 Apr 2026 OK
@@ -111,16 +134,19 @@
                 Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect entries.
             </p>
             <div id="ulab-student-list">${listHTML}</div>
-            <div class="ulab-danger-box">
-                ⚠️ <strong>This writes real data to URMS.</strong> Each student below will be
-                loaded and their currently-staged registration will be Saved — exactly as if
-                you opened their page and clicked Save yourself, for all of them, back to
-                back, with no pause in between. This cannot be undone from this tool.
-                Double-check the list above before proceeding.
+            <div class="ulab-info-box">
+                💾 This clicks <strong>Save</strong> on each student's page for you, one after
+                another — nothing is added, removed, or changed beyond what's already staged.
+                It writes to real URMS records, so it's worth a quick look at the list above
+                before you start, but it's the same action you'd take by hand either way.
             </div>
+            <label class="ulab-checkbox-row" style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                <input type="checkbox" id="ulab-email-bill-toggle" />
+                <span>📧 Email the bill to each student right after their Save succeeds</span>
+            </label>
             <div class="ulab-btn-row" style="margin-top:14px">
                 <button class="ulab-secondary-btn" id="ulab-step2-back">← Back</button>
-                <button class="ulab-danger-btn" id="ulab-step2-run">⚠️ I understand — Run Bulk Save</button>
+                <button class="ulab-primary-btn" id="ulab-step2-run">Run Bulk Save</button>
             </div>
             <div id="ulab-run-status"></div>
             <div id="ulab-run-log"></div>
@@ -204,15 +230,22 @@
         return null;
     }
 
+    function findEmailBillHref(doc) {
+        const link = Array.from(doc.querySelectorAll('a[href*="/StudentRegistration/Print"]'))
+            .find(a => /email bill/i.test(a.textContent));
+        return link ? link.getAttribute('href') : null;
+    }
+
     async function runBulkSave() {
         const runBtn = $('ulab-step2-run');
+        const emailBillEnabled = $('ulab-email-bill-toggle') ? $('ulab-email-bill-toggle').checked : false;
         if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'Running…'; }
         $('ulab-run-log').innerHTML = '';
 
         const students = PARSED_STUDENTS.filter(s => /^\d{9}$/.test(s.id));
         if (!students.length) {
             setRunStatus('❌ No valid 9-digit IDs found.');
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = '⚠️ I understand — Run Bulk Save'; }
+            if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Run Bulk Save'; }
             return;
         }
 
@@ -314,7 +347,32 @@
                         results.push({ id: s.id, name: s.name, status: 'failed', detail: err, courses: state.rows });
                     } else if (confirmed) {
                         appendLog(s.id, s.name, 'ok', `✅ Saved successfully — ${state.rows.length} course(s)`);
-                        results.push({ id: s.id, name: s.name, status: 'saved', detail: 'Saved successfully', courses: state.rows });
+                        let billDetail = 'Saved successfully';
+                        if (emailBillEnabled) {
+                            const billHref = findEmailBillHref(saveDoc);
+                            if (billHref) {
+                                try {
+                                    const billRes = await fetch(`${BASE}${billHref}`, {
+                                        credentials: 'include',
+                                        headers: { 'Referer': `${BASE}/StudentRegistration` },
+                                    });
+                                    if (billRes.ok) {
+                                        appendLog(s.id, s.name, 'ok', '📧 Bill emailed');
+                                        billDetail += ' — bill emailed';
+                                    } else {
+                                        appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — HTTP ${billRes.status}`);
+                                        billDetail += ` — bill email failed (HTTP ${billRes.status})`;
+                                    }
+                                } catch (billErr) {
+                                    appendLog(s.id, s.name, 'skip', `⚠️ Bill email request failed — ${billErr.message}`);
+                                    billDetail += ` — bill email failed (${billErr.message})`;
+                                }
+                            } else {
+                                appendLog(s.id, s.name, 'skip', '⚠️ No "Email Bill" link found on Save response — skipped');
+                                billDetail += ' — no Email Bill link found';
+                            }
+                        }
+                        results.push({ id: s.id, name: s.name, status: 'saved', detail: billDetail, courses: state.rows });
                     } else {
                         appendLog(s.id, s.name, 'skip', `❓ No confirmation banner seen — please verify manually`);
                         results.push({ id: s.id, name: s.name, status: 'unconfirmed', detail: 'No "Saved successfully" banner in response', courses: state.rows });
@@ -329,12 +387,12 @@
             setRunStatus('✅ Done! Opening report…');
             chrome.storage.local.set({ ulabBulkSaveResults: results }, () => {
                 chrome.runtime.sendMessage({ action: 'openBulkSaveResults' });
-                if (runBtn) { runBtn.disabled = false; runBtn.textContent = '⚠️ I understand — Run Bulk Save'; }
+                if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Run Bulk Save'; }
             });
         } catch (err) {
             console.error('[ULAB Bulk Save]', err);
             setRunStatus(`❌ Error: ${err.message}`);
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = '⚠️ I understand — Run Bulk Save'; }
+            if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Run Bulk Save'; }
         }
     }
 

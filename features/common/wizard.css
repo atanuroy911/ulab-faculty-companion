@@ -2,6 +2,33 @@
 .ulab-step-icon { font-size: 34px; text-align: center; margin-bottom: 14px; }
 .ulab-step-desc { font-size: 13px; line-height: 1.6; color: #cbd5e1; margin-bottom: 12px; }
 .ulab-step-desc strong { color: #f8fafc; font-weight: 600; }
+/* ── How-to steps ─────────────────────────────────────────────────── */
+.ulab-howto {
+    display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px;
+}
+.ulab-howto-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 10px 14px;
+}
+.ulab-howto-badge {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; margin-top: 1px;
+}
+.ulab-howto-body { flex: 1; min-width: 0; }
+.ulab-howto-title { font-size: 13px; font-weight: 600; color: #f8fafc; line-height: 1.4; }
+.ulab-howto-sub { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-top: 3px; }
+.ulab-howto-sub strong { color: #cbd5e1; font-weight: 600; }
+.ulab-link-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 6px; padding: 4px 10px; font-size: 11.5px; font-weight: 600;
+    color: #a5b4fc; background: rgba(129,140,248,0.12);
+    border: 1px solid rgba(129,140,248,0.3); border-radius: 999px;
+    text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.ulab-link-chip:hover { background: rgba(129,140,248,0.22); color: #c7d2fe; }
 .ulab-step-hint { font-size: 11.5px; color: #64748b; margin-bottom: 16px; }
 kbd {
     display: inline-block; padding: 2px 6px; background: rgba(255,255,255,0.08);
@@ -116,6 +143,14 @@ kbd {
 }
 
 /* ── Danger / Bulk Save ──────────────────────────────────────────── */
+.ulab-info-box {
+    background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.3);
+    color: #c7d2fe; border-radius: 10px; padding: 12px 14px; margin-top: 14px;
+    font-size: 12.5px; line-height: 1.6;
+}
+.ulab-checkbox-row {
+    font-size: 12.5px; color: #cbd5e1; cursor: pointer;
+}
 .ulab-danger-box {
     background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
     color: #fca5a5; border-radius: 10px; padding: 12px 14px; margin-top: 14px;

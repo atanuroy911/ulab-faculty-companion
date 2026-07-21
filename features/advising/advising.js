@@ -14,28 +14,63 @@
 
     let PARSED_STUDENTS = [];
     let root = null;
+    let SELECTED_PROGRAM = null;
 
     function $(id) { return root.querySelector('#' + id); }
 
+    function currentCatalogue() {
+        return (window.ULAB_CATALOGUES || {})[SELECTED_PROGRAM] || null;
+    }
+
+    // ── Step 0: Program picker ──────────────────────────────────────────────
+    function showStep0() {
+        const programs = window.ULAB_PROGRAMS || [];
+        root.innerHTML = `
+            <p class="ulab-step-desc">Which program are these students in?</p>
+            <div id="ulab-program-list" class="ulab-howto">
+                ${programs.map(p => `
+                    <div class="ulab-howto-item ulab-program-choice" data-id="${p.id}" style="cursor:pointer">
+                        <div class="ulab-howto-badge">${p.icon}</div>
+                        <div class="ulab-howto-body">
+                            <div class="ulab-howto-title">${p.short}</div>
+                            <div class="ulab-howto-sub">${p.name}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        root.querySelectorAll('.ulab-program-choice').forEach(el => {
+            el.addEventListener('click', () => {
+                SELECTED_PROGRAM = el.dataset.id;
+                showStep1();
+            });
+        });
+    }
+
     // ── Step 1: Paste box ────────────────────────────────────────────────────
     function showStep1() {
+        const program = (window.ULAB_PROGRAMS || []).find(p => p.id === SELECTED_PROGRAM);
         root.innerHTML = `
+            <p class="ulab-step-desc">
+                Program: <strong>${program ? program.short : SELECTED_PROGRAM}</strong>
+                — <a href="#" id="ulab-change-program">change</a>
+            </p>
             <div class="ulab-howto">
                 <div class="ulab-howto-item">
                     <div class="ulab-howto-badge">1</div>
                     <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Open the Advising Student page and print it</div>
+                        <div class="ulab-howto-title">Open the Advising Student page, then print it or save it as a PDF</div>
                         <a class="ulab-link-chip" href="https://urms-awp.ulab.edu.bd/AdvisingStudent" target="_blank" rel="noopener">
                             🔗 urms-awp.ulab.edu.bd/AdvisingStudent
                         </a>
-                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page.</div>
+                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page — either print it, or choose "Save as PDF" as the destination.</div>
                     </div>
                 </div>
                 <div class="ulab-howto-item">
                     <div class="ulab-howto-badge">2</div>
                     <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Copy the printed table</div>
-                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below.</div>
+                        <div class="ulab-howto-title">Copy the printed table, or upload the saved PDF</div>
+                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below — or use the PDF upload option instead.</div>
                     </div>
                 </div>
                 <div class="ulab-howto-item">
@@ -58,9 +93,12 @@
             </div>
             <textarea id="ulab-paste-box" placeholder="Paste the Advising Student table here…"></textarea>
             <div id="ulab-parse-preview"></div>
+            <div id="ulab-pdf-upload-slot"></div>
             <button class="ulab-primary-btn" id="ulab-step1-next">Parse Students →</button>
         `;
         $('ulab-step1-next').onclick = parseAndShowStep2;
+        $('ulab-change-program').addEventListener('click', (e) => { e.preventDefault(); showStep0(); });
+        if (window.ulabMountPdfUpload) ulabMountPdfUpload($('ulab-pdf-upload-slot'), $('ulab-paste-box'));
 
         $('ulab-paste-box').addEventListener('input', () => {
             const text = $('ulab-paste-box').value;
@@ -278,8 +316,7 @@
     // to the same key, regardless of which format a given row used; falls
     // back to the raw normalized code for anything the catalogue doesn't
     // recognize (at least self-consistent for repeated raw strings).
-    function canonicalCode(rawCode) {
-        const cat = window.ULAB_CATALOGUE;
+    function canonicalCode(rawCode, cat) {
         const resolved = cat && cat.resolve(rawCode);
         return resolved ? cat.normalizeUnesco(resolved.unescoCode) : normCode(rawCode);
     }
@@ -335,8 +372,7 @@
         return { progress };
     }
 
-    function analyzeStudent(info) {
-        const cat = window.ULAB_CATALOGUE;
+    function analyzeStudent(info, cat) {
         const result = { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [], degreeProgress: null };
         if (!cat) return result;
 
@@ -356,7 +392,7 @@
         for (const row of (info.completedCourses || [])) {
             const rawId = row['CourseID'] || row['CourseId'] || '';
             if (!rawId.trim()) continue;
-            const courseId = canonicalCode(rawId);
+            const courseId = canonicalCode(rawId, cat);
             (byCourse[courseId] = byCourse[courseId] || []).push({
                 semester: row['Semester'] || '',
                 grade: (row['Grade'] || '').trim(),
@@ -364,7 +400,7 @@
             });
         }
 
-        const registeringSet = new Set((info.coursesToRegister || []).map(c => canonicalCode(c.courseId)));
+        const registeringSet = new Set((info.coursesToRegister || []).map(c => canonicalCode(c.courseId, cat)));
 
         // Courses that were failed and never passed since.
         for (const courseId in byCourse) {
@@ -383,11 +419,11 @@
 
         // Prerequisite gaps among courses the student has added this semester.
         for (const c of (info.coursesToRegister || [])) {
-            const cid = canonicalCode(c.courseId);
+            const cid = canonicalCode(c.courseId, cat);
             const prereqs = cat.prereqUnescoFor(cid);
             if (!prereqs.length) continue;
             const missing = prereqs.filter(p => {
-                const norm = canonicalCode(p);
+                const norm = canonicalCode(p, cat);
                 const attempts = byCourse[norm];
                 if (!attempts) return true;
                 return !attempts.some(a => a.grade && !/^F$/i.test(a.grade));
@@ -406,10 +442,10 @@
         // it's a separate policy (theory must come before or alongside its
         // lab) — so it's tracked separately from prereqIssues above.
         for (const c of (info.coursesToRegister || [])) {
-            const cid = canonicalCode(c.courseId);
+            const cid = canonicalCode(c.courseId, cat);
             const theory = cat.theoryForLab(cid);
             if (!theory) continue;
-            const theoryCode = canonicalCode(theory.unescoCode);
+            const theoryCode = canonicalCode(theory.unescoCode, cat);
             const takenBefore = !!byCourse[theoryCode];
             const takingNow = registeringSet.has(theoryCode);
             if (!takenBefore && !takingNow) {
@@ -426,6 +462,7 @@
     }
 
     async function fetchAdvisingDetails(students) {
+        const cat = currentCatalogue();
         const parser = new DOMParser();
         const details = {};
         const BASE = 'https://urms-awp.ulab.edu.bd';
@@ -483,7 +520,7 @@
                 const postHtml = await postRes.text();
                 const postDoc = parser.parseFromString(postHtml, 'text/html');
                 const info = extractAdvisingInfo(postDoc);
-                info.advising = analyzeStudent(info);
+                info.advising = analyzeStudent(info, cat);
                 details[s.id] = info;
             } catch (err) {
                 console.error('[ULAB Advising]', s.id, err);
@@ -509,7 +546,7 @@
             const details = await fetchAdvisingDetails(students);
 
             setRunStatus('✅ Done! Opening results…');
-            chrome.storage.local.set({ ulabAdvisingStudents: students, ulabAdvisingDetails: details }, () => {
+            chrome.storage.local.set({ ulabAdvisingStudents: students, ulabAdvisingDetails: details, ulabAdvisingProgram: SELECTED_PROGRAM }, () => {
                 chrome.runtime.sendMessage({ action: 'openAdvisingResults' });
                 if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 Check Advising'; }
             });
@@ -523,7 +560,8 @@
     // ── Feature entry point ─────────────────────────────────────────────────
     function mount(container) {
         root = container;
-        showStep1();
+        SELECTED_PROGRAM = null;
+        showStep0();
     }
 
     window.ULAB_FEATURES = window.ULAB_FEATURES || [];

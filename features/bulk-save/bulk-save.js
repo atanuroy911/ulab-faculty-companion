@@ -33,18 +33,18 @@
                 <div class="ulab-howto-item">
                     <div class="ulab-howto-badge">1</div>
                     <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Open the Advising Student page and print it</div>
+                        <div class="ulab-howto-title">Open the Advising Student page, then print it or save it as a PDF</div>
                         <a class="ulab-link-chip" href="https://urms-awp.ulab.edu.bd/AdvisingStudent" target="_blank" rel="noopener">
                             🔗 urms-awp.ulab.edu.bd/AdvisingStudent
                         </a>
-                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page.</div>
+                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page — either print it, or choose "Save as PDF" as the destination.</div>
                     </div>
                 </div>
                 <div class="ulab-howto-item">
                     <div class="ulab-howto-badge">2</div>
                     <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Copy the printed table</div>
-                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below.</div>
+                        <div class="ulab-howto-title">Copy the printed table, or upload the saved PDF</div>
+                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below — or use the PDF upload option instead.</div>
                     </div>
                 </div>
                 <div class="ulab-howto-item">
@@ -66,9 +66,11 @@
             </div>
             <textarea id="ulab-paste-box" placeholder="Paste the Advising Student table here…"></textarea>
             <div id="ulab-parse-preview"></div>
+            <div id="ulab-pdf-upload-slot"></div>
             <button class="ulab-primary-btn" id="ulab-step1-next">Parse Students →</button>
         `;
         $('ulab-step1-next').onclick = parseAndShowStep2;
+        if (window.ulabMountPdfUpload) ulabMountPdfUpload($('ulab-pdf-upload-slot'), $('ulab-paste-box'));
 
         $('ulab-paste-box').addEventListener('input', () => {
             const text = $('ulab-paste-box').value;

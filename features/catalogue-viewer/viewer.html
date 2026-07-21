@@ -136,12 +136,13 @@
 
 <div class="page">
     <header class="hero">
-        <div class="hero-eyebrow">📖 CSE Catalogue</div>
+        <div class="hero-eyebrow">📖 Course Catalogue</div>
         <h1>Course & Prerequisite Map</h1>
         <p class="hero-sub" id="summary-text">Loading…</p>
     </header>
 
     <div class="toolbar">
+        <select class="search-bar" id="program-select" style="flex:0 0 220px"></select>
         <input class="search-bar" id="search" placeholder="🔍  Search by course code, UNESCO code, or title…">
     </div>
 
@@ -161,15 +162,23 @@
     </div>
 
     <p class="disclaimer">
-        Transcribed by hand from "UD Course Catalogue -UNESCO CODE (CSE)_updated (1).pdf" using <code>pdftotext -table</code>.
+        Transcribed by hand from the ULAB course catalogue PDFs (CSE from "UD Course Catalogue -UNESCO CODE
+        (CSE)_updated (1).pdf"; BBA/English/MSJ/EEE from "Course-Catalogue-Undergraduate-Summer-2026.pdf").
         This is the exact data the Student Advising feature uses for its prerequisite and lab/theory checks —
         if a warning in Advising looks wrong, check the course here first. Report any mismatch against the PDF
-        so it can be corrected in <code>features/advising/catalogue.js</code>.
+        so it can be corrected in <code>features/advising/catalogues/&lt;program&gt;.js</code>.
     </p>
 </div>
 <p class="page-credit">Made by <a href="https://atanusroy.com" target="_blank" rel="noopener">Atanu Shuvam Roy</a> · with Shah Jafor Sadeek Quaderi</p>
 
-<script src="../advising/catalogue.js"></script>
+<script src="../advising/catalogue-factory.js"></script>
+<script src="../advising/catalogues/cse.js"></script>
+<script src="../advising/catalogues/bba.js"></script>
+<script src="../advising/catalogues/english.js"></script>
+<script src="../advising/catalogues/msj.js"></script>
+<script src="../advising/catalogues/eee.js"></script>
+<script src="../advising/catalogues/bangla.js"></script>
+<script src="../advising/catalogues/registry.js"></script>
 <script src="viewer.js"></script>
 </body>
 </html>

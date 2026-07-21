@@ -1,5 +1,5 @@
 // results.js — loaded inside features/advising/results.html (chrome-extension page)
-chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data) => {
+chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAdvisingProgram'], (data) => {
     if (!data.ulabAdvisingStudents) {
         document.body.innerHTML = `
             <div style="color:#94a3b8;text-align:center;margin-top:120px;font-family:system-ui">
@@ -13,6 +13,10 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
     const students = data.ulabAdvisingStudents || [];
     const details  = data.ulabAdvisingDetails  || {};
     const nStudents = students.length;
+    const programId = data.ulabAdvisingProgram || 'CSE';
+    const programMeta = (window.ULAB_PROGRAMS || []).find(p => p.id === programId);
+    const programCat = (window.ULAB_CATALOGUES || {})[programId];
+    const programLabel = programMeta ? programMeta.short : programId;
 
     document.getElementById('n-students-text').textContent = `${nStudents} Students Checked`;
     document.getElementById('stat-students').textContent = nStudents;
@@ -185,7 +189,8 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
 
             if (advising.degreeProgress) {
                 const { progress } = advising.degreeProgress;
-                bodyHTML += `<div class="section-label">🎓 Degree Progress (BSc CSE, 140 credits)</div>
+                const totalCredits = programCat && programCat.degreeRequirements ? programCat.degreeRequirements.total : null;
+                bodyHTML += `<div class="section-label">🎓 Degree Progress (${programMeta ? programMeta.name : programLabel}${totalCredits ? `, ${totalCredits} credits` : ''})</div>
                     <table class="mini-table">
                         <thead><tr><th>Category</th><th>Earned</th><th>In Progress</th><th>Required</th><th>Status</th></tr></thead>
                         <tbody>
@@ -236,7 +241,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails'], (data)
             }
 
             if ((info.completedCourses || []).length) {
-                const cat = window.ULAB_CATALOGUE;
+                const cat = programCat;
                 const rows = info.completedCourses.slice().sort((a, b) => semesterRank(a['Semester']) - semesterRank(b['Semester']));
                 bodyHTML += `<div class="section-label">📚 Completed / Registered Courses</div>
                     <table class="mini-table">

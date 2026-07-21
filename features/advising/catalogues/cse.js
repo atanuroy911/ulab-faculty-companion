@@ -1,4 +1,4 @@
-// features/advising/catalogue.js — CSE course catalogue & prerequisite map.
+// features/advising/catalogues/cse.js — CSE course catalogue & prerequisite map.
 //
 // Transcribed from "UD Course Catalogue -UNESCO CODE (CSE)_updated (1).pdf"
 // using `pdftotext -table`, which keeps the prerequisite column aligned to
@@ -126,63 +126,6 @@
         total: 140,
     };
 
-    function normalizeUnesco(code) {
-        return (code || '').replace(/\s+/g, '').toUpperCase();
-    }
-
-    // Local course codes (e.g. "CSE1301") are the legacy identifier scheme —
-    // UNESCO codes are the newer one. Some students' history rows (typically
-    // older/senior students who registered before the UNESCO switchover) can
-    // still show the legacy local code instead of a UNESCO code, so local
-    // codes need to be matchable the same way UNESCO codes are. Normalized by
-    // stripping everything but letters/digits, since legacy codes appear with
-    // inconsistent spacing/hyphenation ("CSE 1301", "CSE-1301", "CSE1301").
-    function normalizeLocalCode(code) {
-        return (code || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    }
-
-    const byCode = {};
-    const byUnesco = {};
-    const byLocalCode = {};
-    for (const c of COURSES) {
-        byCode[c.code] = c;
-        byUnesco[normalizeUnesco(c.unescoCode)] = c;
-        byLocalCode[normalizeLocalCode(c.code)] = c;
-        // Further old/legacy UNESCO codes a course used to be listed under,
-        // beyond its local code above — students' history can still show
-        // these for courses taken before a renumbering. Not in the catalogue
-        // PDF (it has no old-code column/mapping); add known ones to a
-        // course's `oldCodes` array as they're identified.
-        for (const old of (c.oldCodes || [])) {
-            byUnesco[normalizeUnesco(old)] = c;
-        }
-    }
-
-    // Resolves a course by either its UNESCO code or its legacy local code —
-    // whichever format a student's record happens to show.
-    function resolveCourse(rawCode) {
-        return byUnesco[normalizeUnesco(rawCode)] || byLocalCode[normalizeLocalCode(rawCode)] || null;
-    }
-
-    // Lab/theory pairing — not declared as a formal "prerequisite" anywhere in
-    // the catalogue PDF, but every lab in it is numbered exactly one above its
-    // theory course (CSE2101 → CSE2102, EEE1101 → EEE1102, ...) and university
-    // policy requires the theory to be taken before or alongside its lab.
-    // Derived generically from that numbering rather than hand-listed, so it
-    // stays correct if the catalogue array above changes.
-    const labTheoryMap = {}; // normalized lab UNESCO code -> theory course object
-    for (const c of COURSES) {
-        if (!/\blab\b/i.test(c.title)) continue;
-        const m = c.unescoCode.match(/^(\d+-\d+-)(\d+)$/);
-        if (!m) continue;
-        const [, prefix, numStr] = m;
-        const theoryUnesco = prefix + String(parseInt(numStr, 10) - 1).padStart(numStr.length, '0');
-        const theoryCourse = byUnesco[normalizeUnesco(theoryUnesco)];
-        if (theoryCourse && !/\blab\b/i.test(theoryCourse.title)) {
-            labTheoryMap[normalizeUnesco(c.unescoCode)] = theoryCourse;
-        }
-    }
-
     // Best-effort category classifier for UNESCO codes NOT individually
     // listed above (concentration electives and other-department Optional/
     // Minor courses) — pattern-based on UNESCO code segments, not exact.
@@ -206,52 +149,11 @@
         return 'OptionalMinor';
     }
 
-    window.ULAB_CATALOGUE = {
-        courses: COURSES,
-        byCode,
-        byUnesco,
-        byLocalCode,
-        normalizeUnesco,
-        normalizeLocalCode,
-        degreeRequirements: DEGREE_REQUIREMENTS,
-        // Resolves a course by either its UNESCO code or its legacy local
-        // code (see resolveCourse above) — the general-purpose lookup.
-        resolve: resolveCourse,
-        // Returns the theory course object for a lab's code (UNESCO or legacy
-        // local), or null if this course isn't a lab / has no derivable
-        // theory sibling.
-        theoryForLab(codeRaw) {
-            const course = resolveCourse(codeRaw);
-            if (!course) return null;
-            return labTheoryMap[normalizeUnesco(course.unescoCode)] || null;
-        },
-        // Prerequisites as UNESCO codes for a given course code (UNESCO or
-        // legacy local) — [] if unknown/none.
-        prereqUnescoFor(codeRaw) {
-            const course = resolveCourse(codeRaw);
-            if (!course) return [];
-            return course.prereq.map(code => (byCode[code] ? byCode[code].unescoCode : code));
-        },
-        titleFor(codeRaw) {
-            const course = resolveCourse(codeRaw);
-            return course ? course.title : '';
-        },
-        // Degree-requirement category for a course code (UNESCO or legacy
-        // local) — exact match if this catalogue lists the course, otherwise
-        // a pattern-based best guess (see classifyByPattern above; only
-        // applies to UNESCO-shaped codes, since the pattern is UNESCO-code
-        // structure — unrecognized local codes fall through to Unknown).
-        categoryFor(codeRaw) {
-            const course = resolveCourse(codeRaw);
-            if (course) return course.category;
-            return classifyByPattern(normalizeUnesco(codeRaw));
-        },
-        // True if this code resolved to a course but isn't that course's
-        // current primary UNESCO code — i.e. it matched via the legacy local
-        // code or a further old UNESCO code in `oldCodes`.
-        isLegacyCode(codeRaw) {
-            const course = resolveCourse(codeRaw);
-            return !!course && normalizeUnesco(codeRaw) !== normalizeUnesco(course.unescoCode);
-        },
-    };
+    const catalogue = window.buildUlabCatalogue({ courses: COURSES, degreeRequirements: DEGREE_REQUIREMENTS, classifyByPattern });
+
+    window.ULAB_CATALOGUES = window.ULAB_CATALOGUES || {};
+    window.ULAB_CATALOGUES.CSE = catalogue;
+    // Backward compatibility: Capstone Eligibility and (pre-multi-program)
+    // callers read window.ULAB_CATALOGUE directly and only ever meant CSE.
+    window.ULAB_CATALOGUE = catalogue;
 })();

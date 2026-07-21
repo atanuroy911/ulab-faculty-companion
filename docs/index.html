@@ -270,7 +270,7 @@ footer {
                 <li><strong>Paste a student list</strong> (an attendance sheet export, an Advising Student export, etc.) into the paste box, then confirm/edit the parsed rows.</li>
                 <li><strong>The extension calls URMS directly</strong> — for each student, it POSTs to the same <code>StudentRegistration</code> endpoint the site's own pages use (e.g. clicking "Load" on a student), using <code>fetch(url, &#123; credentials: 'include' &#125;)</code> so your browser attaches the URMS session cookies you already have. There's no separate login step; if you're not logged in to URMS in that Chrome profile, these requests fail the same way loading the page manually would.</li>
                 <li><strong>The response HTML is parsed in-browser</strong> (via <code>DOMParser</code>) to pull out whatever that feature needs — a weekly schedule, a probation banner, a grade history table, or (for Bulk Save) the currently-staged course rows.</li>
-                <li><strong>Analysis runs entirely client-side</strong> — e.g. Student Advising cross-references a student's course history against <code>features/advising/catalogue.js</code> to compute retakes, prerequisite gaps, lab/theory violations, and degree-progress credit sums. Nothing is sent anywhere for this step.</li>
+                <li><strong>Analysis runs entirely client-side</strong> — e.g. Student Advising cross-references a student's course history against the selected program's catalogue in <code>features/advising/catalogues/</code> (CSE, BBA, English, MSJ, EEE, or Bangla) to compute retakes, prerequisite gaps, lab/theory violations, and degree-progress credit sums. Nothing is sent anywhere for this step.</li>
                 <li><strong>Results are handed off to a report tab</strong> for anything too large for the side panel: written to <code>chrome.storage.local</code>, then a full browser tab is opened (via the background service worker) that reads that same storage key back out and renders it.</li>
             </ol>
             <p>
@@ -378,8 +378,9 @@ footer {
                 current UNESCO code or an older local code (e.g. <code>CSE1301</code>) — history rows, added
                 courses, and prerequisite lookups are all normalized to the same canonical code before comparing,
                 so a course doesn't silently fail to match just because one semester's row used a different code
-                format than another. The prerequisite and lab/theory data comes from
-                <code>features/advising/catalogue.js</code> — see <a href="#feature-catalogue">Course Catalogue Viewer</a> to browse it directly.
+                format than another. Student Advising first asks which program (CSE, BBA, English, MSJ, EEE, or Bangla) the
+                batch belongs to; the prerequisite and lab/theory data for each comes from its own file under
+                <code>features/advising/catalogues/</code> — see <a href="#feature-catalogue">Course Catalogue Viewer</a> to browse any of them directly.
             </p>
             <h3>Communication tools</h3>
             <p>The report page includes:</p>
@@ -429,9 +430,9 @@ footer {
             <h2>📖 Course Catalogue Viewer</h2>
             <p>
                 A searchable, full-tab table of every course the extension knows about — code, UNESCO code, title,
-                resolved prerequisites, and lab→theory pairing. It reads live from
-                <code>features/advising/catalogue.js</code>, the same file Student Advising uses, so if a warning
-                in Advising looks wrong, this is the first place to check.
+                resolved prerequisites, and lab→theory pairing, with a program picker (CSE/BBA/English/MSJ/EEE/Bangla) at
+                the top. It reads live from <code>features/advising/catalogues/</code>, the same files Student
+                Advising uses, so if a warning in Advising looks wrong, this is the first place to check.
             </p>
             <p class="muted">
                 The catalogue was transcribed by hand from the university's course catalogue PDF using
@@ -467,7 +468,7 @@ footer {
 │   ├── common/
 │   │   └── wizard.css         <span class="hl"># shared paste/confirm/run wizard styling</span>
 │   ├── time/                  <span class="hl"># Free Time Finder</span>
-│   ├── advising/              <span class="hl"># Student Advising + catalogue.js data</span>
+│   ├── advising/              <span class="hl"># Student Advising + catalogues/&lt;program&gt;.js data</span>
 │   ├── bulk-save/              <span class="hl"># Bulk Save</span>
 │   └── catalogue-viewer/       <span class="hl"># Course Catalogue Viewer</span>
 └── docs/
@@ -509,6 +510,15 @@ footer {
         <section id="changelog">
             <h2>Changelog</h2>
             <p class="muted">Dated by when each batch of work landed in this repository, newest first.</p>
+
+            <h3>2026-07-21</h3>
+            <ul>
+                <li><strong>Added</strong> multi-program support to Student Advising — a new program picker (CSE, BBA, English &amp; Humanities, MSJ, EEE, or Bangla) now runs first, and every catalogue lookup (degree-progress credit sums, category labels, prerequisite/lab-theory checks) uses that program's own catalogue instead of always assuming CSE. Capstone Eligibility stays CSE-only by design — its subtitle now says so explicitly.</li>
+                <li><strong>Refactored</strong> the catalogue data model: <code>features/advising/catalogue.js</code> was split into a shared <code>catalogue-factory.js</code> builder plus one file per program under <code>features/advising/catalogues/</code> (<code>cse.js</code>, <code>bba.js</code>, <code>english.js</code>, <code>msj.js</code>, <code>eee.js</code>, <code>bangla.js</code>), each registering into a <code>window.ULAB_CATALOGUES</code> registry. The Course Catalogue tab gained a matching program dropdown.</li>
+                <li><strong>Added</strong> a full course catalogue for the Bangla Language and Literature department — previously excluded because the source PDF prints its course codes in Bangla numerals; resolved by cross-referencing a real URMS course-code export (<code>courses-scrapped-urms.txt</code>) that lists the department's actual Latin <code>BLL####</code> codes.</li>
+                <li><strong>Added</strong> real UNESCO codes to the BBA, English, MSJ, and EEE catalogues — these programs' section of the main catalogue PDF only prints local course codes, so each course's UNESCO code (and, where it had changed, its legacy local code) was cross-matched by title against that same URMS course-code export. Unmatched courses keep their local code as a fallback and are flagged as unverified in each file's header comment.</li>
+                <li><strong>Added</strong> a PDF upload option to Student Advising and Bulk Save, as an alternative to copy/pasting the printed Advising Student table — upload a "Save as PDF" export of that page instead, and its text is extracted client-side (via a locally vendored <code>pdf.js</code>, no network calls) and fed into the same paste/parse pipeline both features already had.</li>
+            </ul>
 
             <h3>2026-07-15</h3>
             <ul>

@@ -39,7 +39,7 @@ sidebar/                     side panel shell (feature rail + router)
 features/
   common/wizard.css          shared paste → confirm → run wizard styling
   time/                       Free Time Finder
-  advising/                   Student Advising + catalogue.js prerequisite data
+  advising/                   Student Advising + catalogues/<program>.js prerequisite data (CSE/BBA/English/MSJ/EEE/Bangla)
   bulk-save/                  Bulk Save
   catalogue-viewer/           Course Catalogue Viewer
   marks/                       Marks Management System launcher
@@ -54,9 +54,10 @@ docs/
   `id`, `icon`, `title`, `subtitle`, and `mount(container)` — see [`docs/index.html#architecture`](docs/index.html#architecture)
   for the full pattern.
 - No build step — everything is plain HTML/CSS/JS, loaded directly by the manifest.
-- The prerequisite/lab-theory data in `features/advising/catalogue.js` was hand-transcribed from the university's
-  course catalogue PDF and should be treated as best-effort — use the Catalogue Viewer to check it against
-  anything a warning looks wrong about.
+- The prerequisite/lab-theory data in `features/advising/catalogues/<program>.js` (one file per program: CSE, BBA,
+  English, MSJ, EEE, Bangla) was hand-transcribed from the university's course catalogue PDFs and cross-matched
+  against a real URMS course-code export for UNESCO codes; treat it as best-effort — use the Catalogue Viewer to
+  check it against anything a warning looks wrong about.
 
 ## ⚠️ A note on Bulk Save
 

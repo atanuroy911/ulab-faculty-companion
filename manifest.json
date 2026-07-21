@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
   "version": "1.1.0",
-  "description": "Free Time Finder, multi-program Student Advising (CSE/BBA/English/MSJ/EEE/Bangla), Bulk Save, Capstone Eligibility (CSE) and Course Catalogue tools for ULAB faculty on URMS. 100% local.",
+  "description": "Student Advising (CSE/BBA/English/MSJ/EEE/Bangla), Bulk Save, Capstone Eligibility (CSE) for ULAB faculty on URMS",
   "permissions": ["storage", "sidePanel"],
   "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
   "background": {

@@ -71,19 +71,14 @@ verify afterward.
 
 See [`docs/index.html#changelog`](docs/index.html#changelog) for the full changelog. Recent highlights:
 
+- **Added** multi-program support to Student Advising — pick CSE, BBA, English & Humanities, MSJ, EEE, or Bangla
+  up front, and every catalogue lookup (degree progress, prerequisites, lab/theory checks) uses that program's own
+  data. Capstone Eligibility remains CSE-only by design.
+- **Added** a full Bangla department catalogue and real UNESCO codes for BBA/English/MSJ/EEE, cross-matched by
+  title against a real URMS course-code export (`courses-scrapped-urms.txt`).
+- **Added** a PDF upload option to Student Advising and Bulk Save — upload a "Save as PDF" export of the printed
+  Advising Student page instead of copy/pasting; extracted locally via a vendored `pdf.js`, no network calls.
 - **Added** 📊 Marks Management launcher (opens the external MMS site in a new tab).
-- **Fixed** a regression where `catalogue.js`'s exported `degreeRequirements` was accidentally dropped while
-  adding legacy-code support, crashing Advising with "Cannot read properties of undefined (reading 'credits')".
-- **Added** legacy course-code support — courses are now matched whether a student's record shows the current
-  UNESCO code or the older local code (e.g. `CSE1301`), across prerequisite, lab/theory, and retake checks.
-- **Added** Degree Progress tracking in Student Advising — sums a student's credits per degree-requirement
-  category (GED, Major Core, Major Elective, Other Engineering, Optional/Minor, Basic Science, Mathematics) and
-  flags shortfalls. (ESK was investigated and confirmed **not** part of the CSE degree requirement, so it isn't
-  tracked as one.)
-- **Fixed** a false positive where "ESK not started" fired for nearly every student.
-- **Improved** Advising results page performance for large batches (100+ students) — per-student report bodies
-  are now built lazily on first expand instead of all up front.
-- **Added** "Hide clean students" filter and a per-student/bulk email modal (copy address, copy message, open a
-  blank Gmail compose tab) to Student Advising's results page.
-- **Changed** default theme to light on all report/viewer pages.
+- **Added** legacy course-code support, Degree Progress tracking, "Hide clean students" filter, and a
+  per-student/bulk email modal to Student Advising.
 - **Added** 📖 Course Catalogue Viewer, 🧪 lab-without-theory detection, and 💾 Bulk Save.

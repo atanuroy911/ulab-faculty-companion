@@ -1,0 +1,9 @@
+What's new in 1.5.2:
+
+• New: MMS integration for importing students. The ULAB MMS app can now pull a course's student list straight from URMS's Section Wise Result Entry page through this extension — pick your Course/Section and it fetches the roster automatically, no copy-pasting required.
+
+• New (Beta): MMS integration for auto-filling grades. MMS can open URMS and fill in the grade dropdowns for you based on your calculated grades. You still review everything and click URMS's own Save button yourself — nothing is ever submitted automatically.
+
+• These features only run when explicitly started from MMS; just browsing URMS on your own is unaffected.
+
+• Various reliability improvements to both integrations.

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.5.2 — 2026-07-26
+
+- **New: MMS integration — Import Students from URMS.** The [ULAB MMS](https://ulab-mms.netlify.app/)
+  app can now request this extension to open URMS's Section Wise Result
+  Entry page, and once you pick a Course/Section (or automatically, if
+  there's only one), it fetches the student list directly using your
+  existing URMS login — no copy/paste, and the popup closes itself when
+  done.
+- **New: MMS integration — Auto-Fill Grades (Beta).** MMS can ask the
+  extension to open the same URMS page and fill in the grade dropdown for
+  each student with the grade MMS calculated. Nothing is ever submitted
+  automatically — you review the filled-in values and click URMS's own
+  **Save** button yourself. Once saved, it prompts you to print the grade
+  sheet.
+- Both integrations cross-check the course/section against what MMS
+  expects before touching anything, and correctly handle courses that are
+  split into an old-code/new-code pair with separate, disjoint URMS
+  rosters — grades are filled per matching group instead of a merged list.
+- These MMS integrations only activate when MMS explicitly starts a
+  session (e.g. clicking "Import from URMS" or "Auto-Fill Grades" in MMS)
+  — simply browsing URMS on your own never triggers them.
+
 ## 1.0.0 — 2026-07-17
 
 - **Capstone Eligibility**: student list input is now a plain freeform paste

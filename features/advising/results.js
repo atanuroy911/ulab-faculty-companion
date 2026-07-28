@@ -61,6 +61,42 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         return tier === 'unspecified' ? 'Probation (tier unspecified)' : `Probation — Tier ${tier}`;
     }
 
+    // ── Student detail modal (replaces the old inline expand-in-place card) ──
+    let detailModalCtx = null; // { s, info, advising, flags, displayName } of the currently open modal
+    function openDetailModal({ s, info, advising, flags, displayName, ini, col, headerBadges, buildBodyHTML }) {
+        detailModalCtx = { s, info, advising, flags, displayName };
+        document.getElementById('detail-modal-avatar').style.background = col;
+        document.getElementById('detail-modal-avatar').textContent = ini;
+        document.getElementById('detail-modal-name').textContent = displayName;
+        document.getElementById('detail-modal-id').textContent = s.id + (s.email ? ' · ' + s.email : '');
+        document.getElementById('detail-modal-badges').innerHTML = headerBadges;
+        document.getElementById('detail-modal-body').innerHTML = buildBodyHTML();
+        document.getElementById('detail-modal-email-btn').style.display = info.error ? 'none' : '';
+        document.getElementById('detail-modal-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDetailModal() {
+        document.getElementById('detail-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+        detailModalCtx = null;
+    }
+    document.getElementById('detail-modal-close').addEventListener('click', closeDetailModal);
+    document.getElementById('detail-modal-overlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
+    });
+    document.getElementById('detail-modal-email-btn').addEventListener('click', () => {
+        if (!detailModalCtx) return;
+        const { s, info, advising, flags, displayName } = detailModalCtx;
+        openEmailModal({
+            title: `Advising Email — ${displayName}`,
+            to: info.urmsEmail || s.email || '',
+            body: buildStudentEmailText(s, info, advising, flags),
+        });
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('detail-modal-overlay').classList.contains('open')) closeDetailModal();
+    });
+
     let probationCount = 0;
     let noCoursesCount = 0;
     let retakeCount = 0;
@@ -304,20 +340,12 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 </div>
                 <div class="stu-flags">${headerBadges}</div>
                 ${!info.error ? `<button class="card-email-btn" data-sid="${s.id}" title="Copy this student's advising email">✉️ Email</button>` : ''}
-                <svg class="chevron" viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-                </svg>
+                <span class="view-details-hint">Details ›</span>
             </div>
-            <div class="stu-body"></div>
         `;
-        let bodyBuilt = false;
         card.querySelector('.stu-header').addEventListener('click', (e) => {
             if (e.target.closest('.card-email-btn')) return;
-            if (!bodyBuilt) {
-                card.querySelector('.stu-body').innerHTML = buildBodyHTML();
-                bodyBuilt = true;
-            }
-            card.classList.toggle('open');
+            openDetailModal({ s, info, advising, flags, displayName, ini, col, headerBadges, buildBodyHTML });
         });
         const emailBtn = card.querySelector('.card-email-btn');
         if (emailBtn) {

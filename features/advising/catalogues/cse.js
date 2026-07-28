@@ -60,6 +60,8 @@
         { code: 'EEE1302', unescoCode: '0714-016-1302', title: 'Electronic Device and Circuits 1 Lab', prereq: ['EEE1101', 'EEE1102'], category: 'OtherEngineering', courseType: 'Lab', oldCodes: ['EEE 202', 'ETE 203'] },
 
         // ── Major Core ───────────────────────────────────────────────────
+        { code: 'CSE1101', unescoCode: '0613-014-1101', title: 'Introduction to Programming', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE1102', unescoCode: '0613-014-1102', title: 'Introduction to Programming Lab', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: [] },
         { code: 'CSE1201', unescoCode: '0613-014-1201', title: 'Structured Programming', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['CSE 103'] },
         { code: 'CSE1202', unescoCode: '0613-014-1202', title: 'Structured Programming LAB', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: ['CSE 104'] },
         { code: 'CSE1203', unescoCode: '0613-014-1203', title: 'Discrete Mathematics', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['CSE 103', 'CSE 205'] },

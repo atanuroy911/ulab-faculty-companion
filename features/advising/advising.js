@@ -267,10 +267,32 @@
     // distinctly rather than silently rendered as an empty course list.
     function findRegistrationNotice(doc) {
         if (!doc.body) return null;
-        const text = doc.body.textContent.replace(/\s+/g, ' ').trim();
-        const m = text.match(/[^.]*\bnot\b[^.]*\bpre-?registration\s+time\b[^.]*\.?/i)
-            || text.match(/[^.]*\bregistration\s+is\s+not\s+open\b[^.]*\.?/i);
-        return m ? m[0].trim() : null;
+        // Walk text nodes directly (skipping <script>/<style> — inline <style>
+        // blocks sitting inside <body> on this page otherwise leak raw CSS
+        // text into body.textContent, e.g. "wCancel:hover { }" ending up
+        // glued onto the front of the actual notice sentence).
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                const tag = node.parentElement && node.parentElement.tagName;
+                return (tag === 'SCRIPT' || tag === 'STYLE') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        let combined = '';
+        let node;
+        while ((node = walker.nextNode())) combined += node.textContent + ' ';
+        combined = combined.replace(/\s+/g, ' ').trim();
+
+        const pattern = /\bnot\b[^.]*\bpre-?registration\s+time\b/i.exec(combined)
+            || /\bregistration\s+is\s+not\s+open\b/i.exec(combined);
+        if (!pattern) return null;
+
+        // Expand the match out to sentence boundaries (nearest surrounding
+        // periods) so the surfaced notice reads as a full sentence.
+        const idx = pattern.index;
+        const start = combined.lastIndexOf('.', idx);
+        const endDot = combined.indexOf('.', idx);
+        const sentence = combined.slice(start === -1 ? 0 : start + 1, endDot === -1 ? combined.length : endDot + 1).trim();
+        return sentence.length <= 200 ? sentence : pattern[0].trim();
     }
 
     function extractAdvisingInfo(doc) {

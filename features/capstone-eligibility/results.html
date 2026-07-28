@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULAB Capstone Eligibility Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        [data-theme="dark"] {
+            --bg:            #0c1220;
+            --surface:       #131e30;
+            --surface2:      #1a2840;
+            --border:        rgba(255,255,255,0.07);
+            --border2:       rgba(255,255,255,0.04);
+            --text:          #e2e8f0;
+            --muted:         #64748b;
+            --accent:        #38bdf8;
+            --accent2:       #818cf8;
+            --badge2-bg:     rgba(129,140,248,0.12);
+            --badge2-border: rgba(129,140,248,0.25);
+            --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+            --glow1:         rgba(56,189,248,0.08);
+            --glow2:         rgba(129,140,248,0.06);
+            --ok-bg:         rgba(52,211,153,0.10);
+            --ok-border:     rgba(52,211,153,0.25);
+            --ok-text:       #34d399;
+            --warn-bg:       rgba(245,158,11,0.10);
+            --warn-border:   rgba(245,158,11,0.3);
+            --warn-text:     #f59e0b;
+            --bad-bg:        rgba(239,68,68,0.10);
+            --bad-border:    rgba(239,68,68,0.25);
+            --bad-text:      #f87171;
+            --odd-row:       rgba(255,255,255,0.025);
+        }
+        [data-theme="light"] {
+            --bg:            #f1f5f9;
+            --surface:       #ffffff;
+            --surface2:      #f8fafc;
+            --border:        rgba(0,0,0,0.08);
+            --border2:       rgba(0,0,0,0.05);
+            --text:          #0f172a;
+            --muted:         #94a3b8;
+            --accent:        #0284c7;
+            --accent2:       #6366f1;
+            --badge2-bg:     rgba(99,102,241,0.08);
+            --badge2-border: rgba(99,102,241,0.25);
+            --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+            --glow1:         rgba(2,132,199,0.04);
+            --glow2:         rgba(99,102,241,0.04);
+            --ok-bg:         rgba(16,185,129,0.06);
+            --ok-border:     rgba(16,185,129,0.2);
+            --ok-text:       #059669;
+            --warn-bg:       rgba(245,158,11,0.08);
+            --warn-border:   rgba(245,158,11,0.25);
+            --warn-text:     #b45309;
+            --bad-bg:        rgba(239,68,68,0.06);
+            --bad-border:    rgba(239,68,68,0.2);
+            --bad-text:      #dc2626;
+            --odd-row:       rgba(0,0,0,0.03);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow1), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, var(--glow2), transparent);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 48px 24px 80px;
+        }
+        .page { max-width: 980px; margin: 0 auto; }
+
+        .theme-toggle {
+            position: fixed; top: 20px; right: 24px; z-index: 200;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 8px 16px;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            color: var(--muted);
+        }
+        .toggle-sun  { display: inline; }
+        .toggle-moon { display: none; }
+        [data-theme="light"] .toggle-sun  { display: none; }
+        [data-theme="light"] .toggle-moon { display: inline; }
+
+        .hero { text-align: center; margin-bottom: 32px; }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border);
+            color: var(--accent2); font-size: 12px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 5px 14px; border-radius: 999px; margin-bottom: 18px;
+        }
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800;
+            background: var(--hero-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px; margin-bottom: 10px;
+        }
+        .hero-sub { color: var(--muted); font-size: 13px; max-width: 620px; margin: 0 auto; }
+
+        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin: 28px 0; }
+        .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 17px; font-weight: 700; }
+        .stat-ok .stat-value { color: var(--ok-text); }
+        .stat-bad .stat-value { color: var(--bad-text); }
+        .stat-warn .stat-value { color: var(--warn-text); }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .tool-btn {
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2);
+            font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+            font-family: inherit;
+        }
+
+        .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border); }
+        table.report-table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        table.report-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; }
+        table.report-table td { padding: 10px 12px; font-size: 12.5px; border-bottom: 1px solid var(--border2); vertical-align: top; white-space: nowrap; }
+        table.report-table tr.data-row.row-odd td { background: var(--odd-row); }
+        tr.data-row { cursor: pointer; }
+        tr.data-row:hover td { background: var(--badge2-bg); }
+
+        .expand-btn {
+            width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--muted); font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ── Student detail modal ─────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 500; background: rgba(15,23,42,0.7);
+            backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+            padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+            width: 100%; max-width: 780px; max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 24px 64px -12px rgba(0,0,0,0.6); transform: translateY(14px) scale(0.98);
+            transition: transform 0.2s ease;
+        }
+        .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+        .modal-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            padding: 18px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+        .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .modal-close {
+            width: 28px; height: 28px; border-radius: 7px; background: var(--surface2);
+            border: 1px solid var(--border); color: var(--muted); font-size: 14px; cursor: pointer; flex-shrink: 0;
+        }
+        .modal-close:hover { color: var(--text); }
+        .modal-body { padding: 16px 22px 22px; overflow-y: auto; }
+        .detail-explanation { margin-bottom: 14px; font-size: 12.5px; line-height: 1.8; }
+        .detail-history-wrap { overflow-x: auto; }
+        table.detail-history { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+        table.detail-history th {
+            text-align: left; color: var(--muted); text-transform: uppercase; font-size: 10px;
+            letter-spacing: 0.4px; padding: 6px 10px; border-bottom: 1px solid var(--border);
+        }
+        table.detail-history td { padding: 5px 10px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+        table.detail-history tr.gating-row td { font-weight: 700; }
+        table.detail-history tr.extra-row td { color: var(--warn-text); }
+        .hist-passed, .hist-taken { color: var(--ok-text); }
+        .hist-not-completed, .hist-unknown-grade { color: var(--bad-text); }
+        .hist-in-progress { color: var(--accent2); }
+        .status-pill { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid; white-space: nowrap; }
+        .status-eligible { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
+        .status-not-eligible { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad-text); }
+        .status-error { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad-text); }
+        .course-pill { display: inline-flex; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 600; border: 1px solid; }
+        .course-passed, .course-taken { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
+        .course-not-completed { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad-text); }
+        .extra-courses { color: var(--warn-text); font-size: 11.5px; }
+
+        .disclaimer { margin-top: 24px; font-size: 12px; color: var(--muted); text-align: center; }
+        .page-credit {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 8px 16px; font-size: 11px; color: var(--muted); text-align: center;
+        }
+        .page-credit a { color: inherit; text-decoration: none; }
+        .page-credit a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="modal-title">Student</div>
+                <div class="modal-subtitle" id="modal-subtitle"></div>
+            </div>
+            <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<div class="page">
+    <header class="hero">
+        <div class="hero-eyebrow">📜 Capstone Eligibility</div>
+        <h1>Eligibility Report</h1>
+        <p class="hero-sub" id="summary-text">Loading…</p>
+    </header>
+
+    <div class="stats">
+        <div class="stat-chip stat-ok"><div><div class="stat-label">Eligible</div><div class="stat-value" id="stat-eligible">—</div></div></div>
+        <div class="stat-chip stat-bad"><div><div class="stat-label">Not Eligible</div><div class="stat-value" id="stat-not-eligible">—</div></div></div>
+        <div class="stat-chip stat-warn"><div><div class="stat-label">Errors</div><div class="stat-value" id="stat-error">—</div></div></div>
+    </div>
+
+    <div class="toolbar">
+        <button class="tool-btn" id="btn-export-csv">⬇️ Export CSV</button>
+        <button class="tool-btn" id="btn-export-xlsx">📊 Export Excel</button>
+    </div>
+
+    <div class="table-wrap">
+        <table class="report-table" id="report-table">
+            <thead>
+                <tr>
+                    <th></th><th>Student ID</th><th>Name</th><th>Eligibility</th>
+                    <th>CSE2200</th><th>CSE3103</th><th>CSE3200</th><th>CSE3203</th>
+                    <th>Earned Credit</th><th>Current Credit</th><th>Total Credit</th>
+                    <th>Email</th><th>Mobile</th><th>Extra Courses</th>
+                </tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+        </table>
+    </div>
+
+    <p class="disclaimer">
+        Eligibility requires 105+ total credit hours (earned + currently in progress) and CSE2200,
+        CSE3103, CSE3200, CSE3203 each passed or currently in progress. "Extra Courses" lists any
+        transcript entry outside the expected course-code list — worth a manual look, not necessarily
+        a problem. This report reflects a read-only check of URMS at the time it was run.
+    </p>
+</div>
+<p class="page-credit">Made by <a href="https://atanusroy.com" target="_blank" rel="noopener">Atanu Shuvam Roy</a> · with Shah Jafor Sadeek Quaderi</p>
+
+<script src="../common/vendor/xlsx.full.min.js"></script>
+<script src="results.js"></script>
+</body>
+</html>

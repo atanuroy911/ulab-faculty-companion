@@ -1,3 +1,5 @@
 *.pdf
 *.zip
-CAPSTONE*
+/CAPSTONE*
+*.xlsx
+*.xls

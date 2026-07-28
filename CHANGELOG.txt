@@ -1,0 +1,101 @@
+ULAB Faculty Companion — Changelog
+==================================
+
+[2.0.0] - 2026-07-28 (pending)
+------------------------------
+Registration-notice detection fixes:
+  - Fixed findRegistrationNotice() picking up leaked <style> tag text (e.g.
+    "wCancel:hover { }") from the page, by walking text nodes directly and
+    skipping <script>/<style> elements instead of reading body.textContent.
+  - Fixed the same function grabbing unrelated neighboring page text (the
+    logged-in user's name and "Logout" link) because there was no period
+    separating them from the actual notice sentence. Now reconstructs the
+    known "It is not Pre-Registration time." phrase directly from the regex
+    match instead of expanding outward to sentence boundaries.
+
+Repo hygiene:
+  - Fixed a .gitignore bug: the "CAPSTONE*" pattern was unintentionally
+    matching the features/capstone-eligibility/ folder (case-insensitive on
+    Windows), which had silently excluded that entire feature's source code
+    from git since it was created. Anchored the pattern to the repo root
+    (/CAPSTONE*) and tracked the feature's files for the first time.
+
+Catalogue data:
+  - Added missing CSE1101 / CSE1102 (Introduction to Programming / Lab,
+    UNESCO 0613-014-1101 / 1102) to the CSE course catalogue.
+  - Cross-checked and merged Previous Code / Current Code / UNESCO Code
+    mappings across all program equivalence sheets (BBA, MSJ, DEH/English,
+    CSE, EEE) and the UNESCO GED code sheet into the six course catalogues
+    (cse.js, eee.js, english.js, bangla.js, bba.js, msj.js), filling in
+    `oldCodes` and real `unescoCode` values that were previously
+    placeholders or missing outright (major gaps in CSE, EEE, English, and
+    Bangla in particular).
+  - Fixed a column-layout bug in the BBA equivalence-sheet parser that had
+    silently skipped ~34 concentration elective courses (BUS4111–BUS4185
+    series) due to the sheet using two different column layouts in one
+    file.
+  - Added 20 "legacy-only" course entries (16 in CSE, 4 in English) for
+    courses that have a historical Previous Code but no confirmed
+    Current/UNESCO equivalent in any source — flagged with a comment,
+    keyed by their old code.
+  - Introduced an explicit `courseType` field ('Theory' | 'Lab') on every
+    course entry across all six catalogues.
+
+New advising rules (system + email):
+  - Final Probation (Probation 3 — CGPA below 2.00 for the last three
+    consecutive terms): flagged in the system (badge, banner, stat
+    counter) and in both per-student and bulk advising emails, noting the
+    student must register through their Department Head/Coordinator
+    (request email or in person) rather than self-registering online.
+  - 3-theory-courses-in-one-day check: detects when a student's registering
+    courses put 3+ Theory (non-Lab) courses on the same day of the week
+    (all their finals would then land on that day too). Surfaced as a
+    warning badge/table in the system and as a general note included in
+    every advising email (not just when triggered).
+  - Section-change policy note: section changes are only permitted to
+    resolve a same-day 3-theory conflict that arose by chance during
+    pre-registration/registration/add-drop; not approved for any other
+    reason. Included alongside the theory-day-conflict note in emails.
+  - "It is not Pre-Registration time." (and similar) notices are now
+    detected and surfaced distinctly from "no courses added" — as an info
+    banner/badge in the results page and popup, and as a clarifying line in
+    both email builders — instead of silently looking like a clean/empty
+    registration.
+
+New "Run Advising" floating button (URMS StudentRegistration page):
+  - New content script (features/advising/student-page-content.js),
+    registered in manifest.json for
+    https://urms-awp.ulab.edu.bd/StudentRegistration*, adds a floating
+    button that runs the same advising analysis directly against the
+    student currently loaded on screen (no extra network request) and
+    shows the result in a popup modal.
+  - Popup includes a per-student "Email" view (To/Body, copy-address,
+    copy-body, open-Gmail) built from the same advising analysis.
+  - Removed the initial "[beta]" labeling from the button/modal/comments
+    now that it's been validated.
+
+UI: popup dialogs instead of inline expand-in-place
+  - Student Advising results page: each student card now opens a popup
+    modal (avatar, name/ID, status badges, full detail content, quick
+    Email action) instead of expanding the card inline — cleaner with long
+    lists.
+  - Capstone Eligibility results page: same change — clicking a student row
+    opens a popup modal instead of an inline expand-row.
+  - Free Time Finder results page: individual student schedule cards now
+    open the page's existing "explain" modal instead of expanding inline.
+
+[1.6.0] - 2026-07-28
+--------------------
+  - Initial version of the rules/features above before the beta-label
+    removal, popup-dialog conversions, and notice-detection bugfixes
+    landed in 2.0.0.
+
+[1.5.2] and earlier
+--------------------
+  - 1.5.2 (2026-07-26): URMS integration with MMS.
+  - 1.1.0 (2026-07-21): Added other majors (BBA, English/DEH, MSJ, EEE,
+    Bangla) to Student Advising; manifest fixes.
+  - 1.0.0 (2026-07-17): Capstone Eligibility check added; credits update;
+    UI changes.
+  - 0.3.0 and earlier (2026-07-15 to 2026-07-17): Initial project setup,
+    Student Advising and Free Time Finder features, first working versions.

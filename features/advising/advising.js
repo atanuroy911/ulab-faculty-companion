@@ -260,6 +260,19 @@
         return result;
     }
 
+    // URMS shows a plain sentence like "It is not Pre-Registration time." in
+    // place of the course table when pre-registration/registration hasn't
+    // opened yet for the current period — that's a *scheduling* notice, not
+    // "the student has no courses added", so it needs to be surfaced
+    // distinctly rather than silently rendered as an empty course list.
+    function findRegistrationNotice(doc) {
+        if (!doc.body) return null;
+        const text = doc.body.textContent.replace(/\s+/g, ' ').trim();
+        const m = text.match(/[^.]*\bnot\b[^.]*\bpre-?registration\s+time\b[^.]*\.?/i)
+            || text.match(/[^.]*\bregistration\s+is\s+not\s+open\b[^.]*\.?/i);
+        return m ? m[0].trim() : null;
+    }
+
     function extractAdvisingInfo(doc) {
         const probationEl = doc.querySelector('p.bg-warning.text-dark');
         const t1Rows = Array.from(doc.querySelectorAll('#T1 tbody tr')).map(tr => {
@@ -293,6 +306,7 @@
             advisor: labeledValue(doc, 'Advisor'),
             program: labeledValue(doc, 'Program'),
             probation: probationEl ? probationEl.textContent.replace(/\s+/g, ' ').trim() : null,
+            registrationNotice: findRegistrationNotice(doc),
             coursesToRegister: t1Rows,
             totalCreditRegistering: totalCreditEl ? totalCreditEl.value : '',
             completedCourses,
@@ -620,7 +634,7 @@
     });
 
     // Exposed so other injection points (e.g. the StudentRegistration page's
-    // floating "Run Advising [beta]" button, features/advising/student-page-content.js)
+    // floating "Run Advising" button, features/advising/student-page-content.js)
     // can reuse this scraping/analysis logic against the already-loaded page
     // instead of duplicating it or re-fetching over the network.
     window.ULAB_ADVISING_CORE = { extractAdvisingInfo, analyzeStudent, canonicalCode, normCode };

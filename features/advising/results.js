@@ -146,7 +146,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 ${advising.prereqIssues.length ? `<span class="badge badge-bad">⛔ Prereq issue</span>` : ''}
                 ${(advising.labWithoutTheory || []).length ? `<span class="badge badge-bad">🧪 Lab without theory</span>` : ''}
                 ${(advising.theoryDayConflicts || []).length ? `<span class="badge badge-warn">📅 3+ theory in 1 day</span>` : ''}
-                ${!hasCourses ? `<span class="badge badge-warn">📝 No courses added</span>` : `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>`}
+                ${!hasCourses ? (info.registrationNotice ? `<span class="badge badge-muted">🕒 Pre-Reg not open yet</span>` : `<span class="badge badge-warn">📝 No courses added</span>`) : `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>`}
             `;
 
         // Body HTML is expensive to build (several nested tables) and stays
@@ -159,6 +159,10 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         if (info.error) {
             bodyHTML = `<div class="error-note">Could not load this student's page: ${info.error}</div>`;
         } else {
+            if (info.registrationNotice) {
+                bodyHTML += `<div class="info-banner">🕒 ${info.registrationNotice}</div>`;
+            }
+
             if (info.probation) {
                 bodyHTML += `<div class="probation-banner">⚠️ ${info.probation}</div>`;
             }
@@ -287,6 +291,8 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                             `).join('')}
                         </tbody>
                     </table>`;
+            } else if (info.registrationNotice) {
+                bodyHTML += `<div class="empty-note">🕒 ${info.registrationNotice} — the course list can't be checked until pre-registration/registration opens.</div>`;
             } else {
                 bodyHTML += `<div class="empty-note">No courses added yet for this semester.</div>`;
             }
@@ -383,6 +389,11 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         lines.push('');
         lines.push(`Please find your advising status below (Student ID: ${s.id}).`);
         lines.push('');
+
+        if (info.registrationNotice) {
+            lines.push(`🕒 ${info.registrationNotice} Your course list can't be checked yet — this email covers everything else on your record.`);
+            lines.push('');
+        }
 
         if (advising.probationTier !== null && advising.probationTier !== undefined) {
             lines.push(`⚠️ PROBATION: You are currently on academic probation${advising.probationTier === 'unspecified' ? '' : ` (Tier ${advising.probationTier})`}. Please meet your advisor as soon as possible to discuss your academic plan.`);
@@ -483,6 +494,10 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
 
             if (advising.finalProbation) {
                 lines.push('   🚫 FINAL PROBATION: cannot self-register online — must register via Department Head/Coordinator (request email or in person).');
+            }
+
+            if (info.registrationNotice) {
+                lines.push(`   🕒 ${info.registrationNotice} Course list can't be checked yet.`);
             }
 
             if (openRetakes.length) {

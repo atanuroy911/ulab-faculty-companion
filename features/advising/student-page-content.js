@@ -1,6 +1,6 @@
 // features/advising/student-page-content.js — content script injected into
-// the live URMS StudentRegistration page. Adds a floating "Run Advising
-// [beta]" button that analyzes the student currently loaded on screen (using
+// the live URMS StudentRegistration page. Adds a floating "Run Advising"
+// button that analyzes the student currently loaded on screen (using
 // the exact same scraping/analysis logic as the side-panel Advising feature,
 // via window.ULAB_ADVISING_CORE — see features/advising/advising.js) and
 // shows the result in a popup modal, without any extra network request:
@@ -37,9 +37,6 @@
             }
             #${BTN_ID}:hover { background: #0284c7; }
             #${BTN_ID}[disabled] { background: #94a3b8; cursor: not-allowed; }
-            #${BTN_ID} .beta-tag {
-                background: rgba(255,255,255,.25); border-radius: 6px; padding: 1px 6px; font-size: 10px;
-            }
             #${MODAL_ID}-overlay {
                 display: none; position: fixed; inset: 0; z-index: 1000000;
                 background: rgba(15,23,42,.55); align-items: center; justify-content: center;
@@ -59,6 +56,7 @@
                 padding: 10px 12px; margin-bottom: 10px; font-size: 13px;
             }
             #${MODAL_ID} .ulab-fa-banner.warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+            #${MODAL_ID} .ulab-fa-banner.info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
             #${MODAL_ID} .ulab-fa-section { font-weight: 700; margin: 14px 0 6px; font-size: 13px; color: #334155; }
             #${MODAL_ID} table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 6px; }
             #${MODAL_ID} th, #${MODAL_ID} td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
@@ -93,7 +91,7 @@
         if (document.getElementById(BTN_ID)) return;
         const btn = document.createElement('button');
         btn.id = BTN_ID;
-        btn.innerHTML = `🎓 Run Advising <span class="beta-tag">BETA</span>`;
+        btn.innerHTML = `🎓 Run Advising`;
         btn.addEventListener('click', runAdvisingForCurrentStudent);
         document.body.appendChild(btn);
     }
@@ -169,6 +167,11 @@
         lines.push(`Please find your advising status below${sid ? ` (Student ID: ${sid})` : ''}.`);
         lines.push('');
 
+        if (info.registrationNotice) {
+            lines.push(`🕒 ${info.registrationNotice} Your course list can't be checked yet — this email covers everything else on your record.`);
+            lines.push('');
+        }
+
         if (advising.probationTier !== null && advising.probationTier !== undefined) {
             lines.push(`⚠️ PROBATION: You are currently on academic probation${advising.probationTier === 'unspecified' ? '' : ` (Tier ${advising.probationTier})`}. Please meet your advisor as soon as possible to discuss your academic plan.`);
             lines.push('');
@@ -219,8 +222,9 @@
             lines.push('');
         }
 
-        if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
-            && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
+        if (!info.registrationNotice && !openRetakes.length && !(advising.prereqIssues || []).length
+            && !(advising.labWithoutTheory || []).length && !(advising.theoryDayConflicts || []).length
+            && advising.probationTier === null) {
             lines.push('No issues found — you are clear to proceed with registration as planned.');
             lines.push('');
         }
@@ -252,7 +256,7 @@
         return `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
             <button class="ulab-fa-back" data-action="back">← Back to result</button>
             <h2>✉️ Advising Email — ${name}</h2>
-            <div class="ulab-fa-sub">Beta feature — review before sending.</div>
+            <div class="ulab-fa-sub">Review before sending.</div>
             <label class="ulab-fa-field-label">To</label>
             <input class="ulab-fa-input" id="ulab-fa-email-to" value="${to.replace(/"/g, '&quot;')}" />
             <label class="ulab-fa-field-label">Body</label>
@@ -269,7 +273,9 @@
         let html = `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
             <button class="ulab-fa-email-btn" data-action="email">✉️ Email</button>
             <h2>🎓 Advising Result — ${name}</h2>
-            <div class="ulab-fa-sub">Program: ${programId || info.program || 'Unknown'} · Beta feature — verify before acting.</div>`;
+            <div class="ulab-fa-sub">Program: ${programId || info.program || 'Unknown'} · Automated check — verify before acting.</div>`;
+
+        if (info.registrationNotice) html += `<div class="ulab-fa-banner info">🕒 ${info.registrationNotice}</div>`;
 
         if (info.probation) html += `<div class="ulab-fa-banner">⚠️ ${info.probation}</div>`;
 
@@ -307,8 +313,9 @@
                 <div class="ulab-fa-note">Not recommended — all 3 finals would fall on this day too. Section change is only permitted to resolve this specific conflict since it arose during pre-registration/registration/add-drop.</div>`;
         }
 
-        if (!info.probation && !advising.finalProbation && !openRetakes.length && !(advising.prereqIssues || []).length
-            && !(advising.labWithoutTheory || []).length && !(advising.theoryDayConflicts || []).length) {
+        if (!info.registrationNotice && !info.probation && !advising.finalProbation && !openRetakes.length
+            && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+            && !(advising.theoryDayConflicts || []).length) {
             html += `<div class="ulab-fa-note ulab-fa-ok">✓ No issues found.</div>`;
         }
 

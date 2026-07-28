@@ -146,19 +146,16 @@
 
         /* Student cards */
         .students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-        .student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
-        .student-card:hover { border-color: rgba(128,128,128,0.3); }
-        .student-card.open { border-color: var(--accent); }
+        .student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+        .student-card:hover { border-color: var(--accent); transform: translateY(-1px); }
         .card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; user-select: none; }
         .avatar { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
         .card-info { flex: 1; min-width: 0; }
         .card-id { font-size: 13px; font-weight: 700; color: var(--accent); }
         .card-name { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .course-pill { background: var(--badge2-bg); color: var(--accent2); border: 1px solid var(--badge2-border); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
-        .chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.25s ease; }
-        .student-card.open .chevron { transform: rotate(180deg); }
-        .card-body { max-height: 0; overflow: hidden; transition: max-height 0.32s ease, padding 0.2s ease, border-top-width 0.2s; border-top: 0px solid var(--border2); padding: 0 16px; }
-        .student-card.open .card-body { border-top-width: 1px; padding: 10px 16px 14px; }
+        .view-details-hint { color: var(--muted); flex-shrink: 0; font-size: 12px; }
+        .student-card:hover .view-details-hint { color: var(--accent); }
         .sched-row { padding: 6px 9px; border-radius: 7px; margin-top: 3px; font-size: 12px; line-height: 1.5; color: var(--muted); }
         .odd-row { background: var(--odd-row); }
         .sched-empty { font-size: 12px; color: var(--muted); padding: 8px 0; font-style: italic; }

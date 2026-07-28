@@ -218,12 +218,11 @@ chrome.storage.local.get(['ulabResults', 'ulabStudents', 'ulabSchedules'], (data
         scheduleViewMode = scheduleViewMode === 'urms' ? 'day' : 'urms';
         document.getElementById('view-toggle').textContent =
             scheduleViewMode === 'day' ? '📋 URMS order' : '📅 Day-wise view';
-        document.querySelectorAll('.student-card').forEach(card => {
-            const sid = card.dataset.sid;
-            const body = card.querySelector('.card-body');
-            body.innerHTML = buildRowsHTML(schedules[sid] || []);
-            if (card.classList.contains('open')) body.style.maxHeight = body.scrollHeight + 'px';
-        });
+        // If a student's schedule modal is currently open, refresh it in place
+        // so the view-mode toggle takes effect without needing to reopen it.
+        if (openStudentSid && document.getElementById('modal-overlay').classList.contains('open')) {
+            openStudentModal(openStudentSid);
+        }
     });
 
     for (const s of students) {
@@ -233,8 +232,6 @@ chrome.storage.local.get(['ulabResults', 'ulabStudents', 'ulabSchedules'], (data
         const col  = avatarColor(sid);
         const ini  = initials(name);
         const nc   = scheds.length;
-
-        let rows = buildRowsHTML(scheds);
 
         const card = document.createElement('div');
         card.className = 'student-card';
@@ -247,32 +244,26 @@ chrome.storage.local.get(['ulabResults', 'ulabStudents', 'ulabSchedules'], (data
                     <div class="card-name">${name}</div>
                 </div>
                 <div class="course-pill">${nc} course${nc !== 1 ? 's' : ''}</div>
-                <svg class="chevron" viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-                </svg>
+                <span class="view-details-hint">Details ›</span>
             </div>
-            <div class="card-body">${rows}</div>
         `;
-        card.querySelector('.card-header').addEventListener('click', () => toggleCard(card));
+        card.addEventListener('click', () => openStudentModal(sid));
         grid.appendChild(card);
     }
 
-    // ── Card toggle ─────────────────────────────────────────────
-    function toggleCard(el) {
-        const body   = el.querySelector('.card-body');
-        const isOpen = el.classList.contains('open');
-        if (isOpen) {
-            body.style.maxHeight = body.scrollHeight + 'px';
-            requestAnimationFrame(() => { body.style.maxHeight = '0'; });
-            el.classList.remove('open');
-        } else {
-            body.style.maxHeight = body.scrollHeight + 'px';
-            el.classList.add('open');
-            body.addEventListener('transitionend', function h() {
-                body.style.maxHeight = '400px';
-                body.removeEventListener('transitionend', h);
-            });
-        }
+    // ── Student schedule modal ───────────────────────────────────
+    let openStudentSid = null;
+    function openStudentModal(sid) {
+        const name = nameMap[sid] || 'Unknown Name';
+        const scheds = schedules[sid] || [];
+        openStudentSid = sid;
+
+        document.getElementById('modal-title').textContent = name;
+        document.getElementById('modal-subtitle').textContent =
+            `${sid} · ${scheds.length} course${scheds.length !== 1 ? 's' : ''}`;
+        document.getElementById('modal-body').innerHTML = buildRowsHTML(scheds);
+        document.getElementById('modal-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
 
     // ── Search ──────────────────────────────────────────────────
@@ -287,6 +278,7 @@ chrome.storage.local.get(['ulabResults', 'ulabStudents', 'ulabSchedules'], (data
 
     // ── Explain modal ────────────────────────────────────────────
     function openModal(day) {
+        openStudentSid = null; // this is the day-explain modal, not a student's schedule
         const busy     = explainData[day] || [];
         const daySlots = res.days[day]    || [];
         const freeSlots = daySlots.filter(s => s.isFree);

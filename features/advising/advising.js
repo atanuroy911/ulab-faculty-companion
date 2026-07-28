@@ -282,17 +282,27 @@
         while ((node = walker.nextNode())) combined += node.textContent + ' ';
         combined = combined.replace(/\s+/g, ' ').trim();
 
-        const pattern = /\bnot\b[^.]*\bpre-?registration\s+time\b/i.exec(combined)
-            || /\bregistration\s+is\s+not\s+open\b/i.exec(combined);
-        if (!pattern) return null;
+        // Reconstruct the known phrase directly rather than expanding out to
+        // "sentence boundaries" — this page has no period (or any other
+        // delimiter) between this notice and adjacent text like the logged-in
+        // user's name or a "Logout" link, so any expansion attempt ends up
+        // grabbing that unrelated neighboring text too (seen in practice:
+        // "SHUVAM ! Logout Student Registration It is not Pre-Registration
+        // time." instead of just the notice itself).
+        const m = /\b(it\s+is\s+)?not\s+pre-?registration\s+time\b\.?/i.exec(combined);
+        if (m) {
+            let text = m[0].trim().replace(/\.$/, '');
+            if (!/^it\s+is/i.test(text)) text = 'It is ' + text;
+            return text.charAt(0).toUpperCase() + text.slice(1) + '.';
+        }
 
-        // Expand the match out to sentence boundaries (nearest surrounding
-        // periods) so the surfaced notice reads as a full sentence.
-        const idx = pattern.index;
-        const start = combined.lastIndexOf('.', idx);
-        const endDot = combined.indexOf('.', idx);
-        const sentence = combined.slice(start === -1 ? 0 : start + 1, endDot === -1 ? combined.length : endDot + 1).trim();
-        return sentence.length <= 200 ? sentence : pattern[0].trim();
+        const m2 = /\bregistration\s+is\s+not\s+open\b\.?/i.exec(combined);
+        if (m2) {
+            const text = m2[0].trim().replace(/\.$/, '');
+            return text.charAt(0).toUpperCase() + text.slice(1) + '.';
+        }
+
+        return null;
     }
 
     function extractAdvisingInfo(doc) {

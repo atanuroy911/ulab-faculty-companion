@@ -64,6 +64,27 @@
             #${MODAL_ID} th, #${MODAL_ID} td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
             #${MODAL_ID} .ulab-fa-ok { color: #15803d; }
             #${MODAL_ID} .ulab-fa-note { color: #64748b; font-size: 12px; margin-bottom: 8px; }
+            #${MODAL_ID} .ulab-fa-email-btn {
+                float: right; margin-right: 32px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155;
+                border-radius: 8px; padding: 5px 12px; font: 600 12px system-ui, sans-serif; cursor: pointer;
+            }
+            #${MODAL_ID} .ulab-fa-email-btn:hover { background: #e2e8f0; }
+            #${MODAL_ID} .ulab-fa-back {
+                background: none; border: none; color: #0ea5e9; font: 600 13px system-ui, sans-serif;
+                cursor: pointer; padding: 0 0 10px; display: block;
+            }
+            #${MODAL_ID} label.ulab-fa-field-label { display: block; font-size: 12px; font-weight: 600; color: #334155; margin: 10px 0 4px; }
+            #${MODAL_ID} input.ulab-fa-input, #${MODAL_ID} textarea.ulab-fa-textarea {
+                width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;
+                font: 13px/1.4 system-ui, sans-serif; color: #0f172a;
+            }
+            #${MODAL_ID} textarea.ulab-fa-textarea { height: 260px; resize: vertical; }
+            #${MODAL_ID} .ulab-fa-email-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+            #${MODAL_ID} .ulab-fa-email-actions button, #${MODAL_ID} .ulab-fa-email-actions a {
+                background: #0ea5e9; color: #fff; border: none; border-radius: 8px; padding: 7px 14px;
+                font: 600 12.5px system-ui, sans-serif; cursor: pointer; text-decoration: none;
+            }
+            #${MODAL_ID} .ulab-fa-email-actions .secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
         `;
         document.head.appendChild(style);
     }
@@ -89,12 +110,33 @@
         });
     }
 
+    let currentInfo = null;
+    let currentAdvising = null;
+    let currentProgramId = null;
+
     function openModal(html) {
         ensureModalShell();
-        document.getElementById(MODAL_ID).innerHTML = html;
-        const closeBtn = document.getElementById(MODAL_ID).querySelector('.ulab-fa-close');
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        const modal = document.getElementById(MODAL_ID);
+        modal.innerHTML = html;
+        modal.querySelectorAll('[data-action]').forEach(el => {
+            el.addEventListener('click', handleModalAction);
+        });
         document.getElementById(`${MODAL_ID}-overlay`).classList.add('open');
+    }
+
+    function handleModalAction(e) {
+        const action = e.currentTarget.dataset.action;
+        if (action === 'email') {
+            openModal(renderEmailView(currentInfo, currentAdvising));
+        } else if (action === 'back') {
+            openModal(renderResult(currentInfo, currentAdvising, currentProgramId));
+        } else if (action === 'copy-to') {
+            copyText(document.getElementById('ulab-fa-email-to').value);
+        } else if (action === 'copy-body') {
+            copyText(document.getElementById('ulab-fa-email-body').value);
+        } else if (action === 'close') {
+            closeModal();
+        }
     }
 
     function closeModal() {
@@ -107,9 +149,125 @@
         return tier === 'unspecified' ? 'Probation (tier unspecified)' : `Probation — Tier ${tier}`;
     }
 
+    // Same disclaimer/note text as features/advising/results.js's bulk
+    // Advising email builder, kept in sync manually (this content script has
+    // no access to that page's closures).
+    const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';
+    const THEORY_DAY_NOTE = 'Note: Please avoid selecting 3 theory courses on the same day of the week — their final exams will then also fall on that same day, which is not recommended. Section changes are only permitted to resolve a 3-theory-in-one-day conflict if it arises by chance during pre-registration, registration, or add/drop; section changes are not approved for any other reason.';
+
+    function currentStudentId() {
+        const el = document.querySelector('input[name="GenaratedCourseList.StudentId"]');
+        return el ? el.value.trim() : '';
+    }
+
+    function buildStudentEmailText(info, advising) {
+        const name = info.urmsName || 'Student';
+        const sid = currentStudentId();
+        const lines = [];
+        lines.push(`Dear ${name},`);
+        lines.push('');
+        lines.push(`Please find your advising status below${sid ? ` (Student ID: ${sid})` : ''}.`);
+        lines.push('');
+
+        if (advising.probationTier !== null && advising.probationTier !== undefined) {
+            lines.push(`⚠️ PROBATION: You are currently on academic probation${advising.probationTier === 'unspecified' ? '' : ` (Tier ${advising.probationTier})`}. Please meet your advisor as soon as possible to discuss your academic plan.`);
+            lines.push('');
+        }
+
+        if (advising.finalProbation) {
+            lines.push('🚫 FINAL PROBATION (Probation 3 — CGPA below 2.00 for the last three consecutive terms): you will not be able to access the online registration system independently.');
+            lines.push('You may still register with the assistance of the Department Head or Coordinator — please send a request email or visit in person.');
+            lines.push('');
+        }
+
+        const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
+        if (openRetakes.length) {
+            lines.push('Courses you need to retake (previously failed, not yet passed):');
+            for (const r of openRetakes) lines.push(`  - ${r.courseId} (${r.title}) — attempts: ${r.attempts.join(', ')}`);
+            lines.push('');
+        }
+        const retakingNow = (advising.needsRetake || []).filter(r => r.retakingNow);
+        if (retakingNow.length) {
+            lines.push(`Note: you appear to be currently re-registered for: ${retakingNow.map(r => r.courseId).join(', ')}. Please confirm this is correct.`);
+            lines.push('');
+        }
+
+        if ((advising.prereqIssues || []).length) {
+            lines.push('Prerequisite issues found in the courses you have added this semester:');
+            for (const p of advising.prereqIssues) {
+                lines.push(`  - ${p.courseId} (${p.title}) requires: ${p.missing.map(m => `${m.courseId} (${m.title})`).join(', ')}`);
+            }
+            lines.push('Recommendation: consider registering for the missing prerequisite course(s) instead this semester.');
+            lines.push('');
+        }
+
+        if ((advising.labWithoutTheory || []).length) {
+            lines.push('Lab course(s) registered without their theory course:');
+            for (const l of advising.labWithoutTheory) {
+                lines.push(`  - ${l.labCourseId} (${l.labTitle}) — requires theory: ${l.theoryCourseId} (${l.theoryTitle})`);
+            }
+            lines.push('Recommendation: register for the theory course this semester alongside the lab.');
+            lines.push('');
+        }
+
+        if ((advising.theoryDayConflicts || []).length) {
+            lines.push('📅 Scheduling note: you have 3 or more theory courses on the same day:');
+            for (const c of advising.theoryDayConflicts) {
+                lines.push(`  - ${c.day}: ${c.courses.map(x => `${x.courseId} (${x.title})`).join(', ')}`);
+            }
+            lines.push('This means all of those finals will also fall on the same day — not recommended. A section change to fix this specific conflict is permitted since it arose during pre-registration/registration/add-drop.');
+            lines.push('');
+        }
+
+        if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+            && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
+            lines.push('No issues found — you are clear to proceed with registration as planned.');
+            lines.push('');
+        }
+
+        lines.push(THEORY_DAY_NOTE);
+        lines.push('');
+        lines.push(DISCLAIMER);
+        lines.push('');
+        lines.push('Regards,');
+        lines.push('Your Advisor');
+        return lines.join('\n');
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+        });
+    }
+
+    function renderEmailView(info, advising) {
+        const name = info.urmsName || 'Student';
+        const to = info.urmsEmail || '';
+        const body = buildStudentEmailText(info, advising);
+        return `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
+            <button class="ulab-fa-back" data-action="back">← Back to result</button>
+            <h2>✉️ Advising Email — ${name}</h2>
+            <div class="ulab-fa-sub">Beta feature — review before sending.</div>
+            <label class="ulab-fa-field-label">To</label>
+            <input class="ulab-fa-input" id="ulab-fa-email-to" value="${to.replace(/"/g, '&quot;')}" />
+            <label class="ulab-fa-field-label">Body</label>
+            <textarea class="ulab-fa-textarea" id="ulab-fa-email-body">${body.replace(/</g, '&lt;')}</textarea>
+            <div class="ulab-fa-email-actions">
+                <button class="secondary" data-action="copy-to">📋 Copy Address</button>
+                <button class="secondary" data-action="copy-body">📋 Copy Message</button>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1" target="_blank" rel="noopener">📧 Open Gmail</a>
+            </div>`;
+    }
+
     function renderResult(info, advising, programId) {
         const name = info.urmsName || 'Student';
-        let html = `<button class="ulab-fa-close" title="Close">✕</button>
+        let html = `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
+            <button class="ulab-fa-email-btn" data-action="email">✉️ Email</button>
             <h2>🎓 Advising Result — ${name}</h2>
             <div class="ulab-fa-sub">Program: ${programId || info.program || 'Unknown'} · Beta feature — verify before acting.</div>`;
 
@@ -176,6 +334,9 @@
             alert(`Could not determine a matching course catalogue for program "${info.program || 'unknown'}". Showing what could be checked without it.`);
         }
         const advising = core.analyzeStudent(info, cat);
+        currentInfo = info;
+        currentAdvising = advising;
+        currentProgramId = programId;
         openModal(renderResult(info, advising, programId));
     }
 

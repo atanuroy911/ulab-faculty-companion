@@ -66,6 +66,8 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     let retakeCount = 0;
     let prereqIssueCount = 0;
     let labIssueCount = 0;
+    let finalProbationCount = 0;
+    let theoryConflictCount = 0;
 
     const list = document.getElementById('students-list');
 
@@ -76,7 +78,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         const ini = initials(info.urmsName || s.name);
         const displayName = info.urmsName || s.name || 'Unknown';
 
-        const advising = info.advising || { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [], degreeProgress: null };
+        const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [], degreeProgress: null };
         if (info.probation) probationCount++;
         const hasCourses = (info.coursesToRegister || []).length > 0;
         if (!info.error && !hasCourses) noCoursesCount++;
@@ -84,9 +86,12 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         if (openRetakes.length) retakeCount++;
         if (advising.prereqIssues.length) prereqIssueCount++;
         if ((advising.labWithoutTheory || []).length) labIssueCount++;
+        if (advising.finalProbation) finalProbationCount++;
+        if ((advising.theoryDayConflicts || []).length) theoryConflictCount++;
 
         const isClean = !info.error && !info.probation && hasCourses
-            && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length;
+            && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length
+            && !(advising.theoryDayConflicts || []).length;
 
         const card = document.createElement('div');
         card.className = 'stu-card';
@@ -100,9 +105,11 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 ${flagBadge('Reg', flags.regOk)}
                 ${flagBadge('Pre-Reg', flags.preRegOk)}
                 ${info.probation ? `<span class="badge badge-warn">⚠️ ${probationLabel(advising.probationTier)}</span>` : ''}
+                ${advising.finalProbation ? `<span class="badge badge-bad">🚫 Final Probation — cannot self-register</span>` : ''}
                 ${openRetakes.length ? `<span class="badge badge-bad">↻ ${openRetakes.length} course(s) to retake</span>` : ''}
                 ${advising.prereqIssues.length ? `<span class="badge badge-bad">⛔ Prereq issue</span>` : ''}
                 ${(advising.labWithoutTheory || []).length ? `<span class="badge badge-bad">🧪 Lab without theory</span>` : ''}
+                ${(advising.theoryDayConflicts || []).length ? `<span class="badge badge-warn">📅 3+ theory in 1 day</span>` : ''}
                 ${!hasCourses ? `<span class="badge badge-warn">📝 No courses added</span>` : `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>`}
             `;
 
@@ -118,6 +125,26 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         } else {
             if (info.probation) {
                 bodyHTML += `<div class="probation-banner">⚠️ ${info.probation}</div>`;
+            }
+
+            if (advising.finalProbation) {
+                bodyHTML += `<div class="probation-banner">🚫 Final Probation (Probation 3 — CGPA below 2.00 for the last three consecutive terms): this student cannot access the online registration system independently. They may only register with the assistance of the Department Head or Coordinator, by sending a request email or visiting in person.</div>`;
+            }
+
+            if ((advising.theoryDayConflicts || []).length) {
+                bodyHTML += `<div class="section-label">📅 3+ theory courses on the same day</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Day</th><th>Theory Courses</th></tr></thead>
+                        <tbody>
+                            ${advising.theoryDayConflicts.map(c => `
+                                <tr>
+                                    <td>${c.day}</td>
+                                    <td class="grade-fail">${c.courses.map(x => `${x.courseId} (${x.title})`).join(', ')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="empty-note">3 theory courses on the same day means all 3 finals will also fall on that day — not recommended. Section change is only permitted to resolve this specific conflict if it arose by chance during pre-registration/registration/add-drop; otherwise section changes are not allowed.</div>`;
             }
 
             if (openRetakes.length) {
@@ -311,9 +338,15 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     document.getElementById('stat-retake').textContent = retakeCount;
     document.getElementById('stat-prereq').textContent = prereqIssueCount;
     document.getElementById('stat-lab').textContent = labIssueCount;
+    document.getElementById('stat-final-probation').textContent = finalProbationCount;
+    document.getElementById('stat-theory-conflict').textContent = theoryConflictCount;
 
     // ── Communication tools: bulk email, per-student email, CSV, email list ─
     const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';
+    // General note included in every email regardless of whether this
+    // particular student currently has a conflict — students should know the
+    // rule before they register, not just after they've already broken it.
+    const THEORY_DAY_NOTE = 'Note: Please avoid selecting 3 theory courses on the same day of the week — their final exams will then also fall on that same day, which is not recommended. Section changes are only permitted to resolve a 3-theory-in-one-day conflict if it arises by chance during pre-registration, registration, or add/drop; section changes are not approved for any other reason.';
 
     function buildStudentEmailText(s, info, advising, flags) {
         const name = (info && info.urmsName) || s.name || 'Student';
@@ -325,6 +358,12 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
 
         if (advising.probationTier !== null && advising.probationTier !== undefined) {
             lines.push(`⚠️ PROBATION: You are currently on academic probation${advising.probationTier === 'unspecified' ? '' : ` (Tier ${advising.probationTier})`}. Please meet your advisor as soon as possible to discuss your academic plan.`);
+            lines.push('');
+        }
+
+        if (advising.finalProbation) {
+            lines.push('🚫 FINAL PROBATION (Probation 3 — CGPA below 2.00 for the last three consecutive terms): you will not be able to access the online registration system independently.');
+            lines.push('You may still register with the assistance of the Department Head or Coordinator — please send a request email or visit in person.');
             lines.push('');
         }
 
@@ -358,7 +397,17 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
             lines.push('');
         }
 
-        if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length && advising.probationTier === null) {
+        if ((advising.theoryDayConflicts || []).length) {
+            lines.push('📅 Scheduling note: you have 3 or more theory courses on the same day:');
+            for (const c of advising.theoryDayConflicts) {
+                lines.push(`  - ${c.day}: ${c.courses.map(x => `${x.courseId} (${x.title})`).join(', ')}`);
+            }
+            lines.push('This means all of those finals will also fall on the same day — not recommended. A section change to fix this specific conflict is permitted since it arose during pre-registration/registration/add-drop.');
+            lines.push('');
+        }
+
+        if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+            && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
             lines.push('No issues found — you are clear to proceed with registration as planned.');
             lines.push('');
         }
@@ -366,6 +415,8 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         lines.push(`Registration status: ${flags.regOk === null ? '—' : (flags.regOk ? 'OK' : 'Not OK')}`);
         lines.push(`Pre-registration status: ${flags.preRegOk === null ? '—' : (flags.preRegOk ? 'OK' : 'Not OK')}`);
         if (flags.payDate) lines.push(`Payment due: ${flags.payDate}`);
+        lines.push('');
+        lines.push(THEORY_DAY_NOTE);
         lines.push('');
         lines.push(DISCLAIMER);
         lines.push('');
@@ -380,10 +431,12 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         lines.push('');
         lines.push('Find your advising status below. Locate the entry matching your Student ID and follow up on any action items before registration closes.');
         lines.push('');
+        lines.push(THEORY_DAY_NOTE);
+        lines.push('');
 
         students.forEach((s, idx) => {
             const info = details[s.id] || {};
-            const advising = info.advising || { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [] };
+            const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [] };
             const name = info.urmsName || s.name || 'Unknown';
             const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
 
@@ -400,6 +453,10 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 : 'Not on probation';
             lines.push(`   Status: ${probationText}`);
 
+            if (advising.finalProbation) {
+                lines.push('   🚫 FINAL PROBATION: cannot self-register online — must register via Department Head/Coordinator (request email or in person).');
+            }
+
             if (openRetakes.length) {
                 lines.push(`   Courses to retake: ${openRetakes.map(r => `${r.courseId} (${r.title})`).join(', ')}`);
             }
@@ -413,7 +470,11 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
             if ((advising.labWithoutTheory || []).length) {
                 lines.push(`   Lab without theory: ${advising.labWithoutTheory.map(l => `${l.labCourseId} needs ${l.theoryCourseId}`).join('; ')}`);
             }
-            if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length && advising.probationTier === null) {
+            if ((advising.theoryDayConflicts || []).length) {
+                lines.push(`   3+ theory in 1 day: ${advising.theoryDayConflicts.map(c => `${c.day} (${c.courses.map(x => x.courseId).join(', ')})`).join('; ')} — section change permitted to fix this`);
+            }
+            if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+                && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
                 lines.push('   No issues found — clear to proceed with registration.');
             }
             lines.push('');
@@ -427,11 +488,11 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     }
 
     function buildCSV() {
-        const headers = ['Student ID', 'Name', 'Email', 'Probation Tier', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
+        const headers = ['Student ID', 'Name', 'Email', 'Probation Tier', 'Final Probation (Restricted)', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', '3+ Theory In 1 Day', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
         const rows = [headers];
         for (const s of students) {
             const info = details[s.id] || {};
-            const advising = info.advising || { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [] };
+            const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [] };
             const flags = parseFlags(s.flags);
             const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
             rows.push([
@@ -439,9 +500,11 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 info.urmsName || s.name || '',
                 info.urmsEmail || s.email || '',
                 advising.probationTier === null || advising.probationTier === undefined ? '' : advising.probationTier,
+                advising.finalProbation ? 'Yes' : '',
                 openRetakes.map(r => r.courseId).join('; '),
                 (advising.prereqIssues || []).map(p => `${p.courseId} needs ${p.missing.map(m => m.courseId).join('/')}`).join('; '),
                 (advising.labWithoutTheory || []).map(l => `${l.labCourseId} needs ${l.theoryCourseId}`).join('; '),
+                (advising.theoryDayConflicts || []).map(c => `${c.day}: ${c.courses.map(x => x.courseId).join('/')}`).join('; '),
                 flags.regOk === null ? '' : (flags.regOk ? 'OK' : 'Not OK'),
                 flags.preRegOk === null ? '' : (flags.preRegOk ? 'OK' : 'Not OK'),
                 flags.payDate || '',

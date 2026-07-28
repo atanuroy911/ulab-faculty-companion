@@ -391,6 +391,10 @@
         showStep1();
     }
 
+    // Exposed so other features (e.g. Student Advising's theory-course /
+    // same-day check) can reuse this day/time parser instead of duplicating it.
+    window.ulabParseSchedule = parseScheduleString;
+
     window.ULAB_FEATURES = window.ULAB_FEATURES || [];
     window.ULAB_FEATURES.push({
         id: 'time',

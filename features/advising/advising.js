@@ -372,8 +372,46 @@
         return { progress };
     }
 
+    // Days of week code used by the schedule strings URMS returns (matches
+    // features/time/time.js's DAY_ORDER, kept in sync manually since that
+    // file's copy is module-private).
+    const DAY_ORDER = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+    // A student registering for 3+ theory courses that all meet on the same
+    // day of week means all 3 finals would also fall on that same day —
+    // discouraged, not a hard rule, so it's surfaced as a warning rather than
+    // blocking anything. Only counts Theory courses (see courseType on each
+    // catalogue entry) — labs don't have finals, so they don't count here.
+    function findTheoryDayConflicts(coursesToRegister, cat) {
+        if (!window.ulabParseSchedule) return []; // features/time/time.js not loaded
+        const byDay = {};
+        for (const c of (coursesToRegister || [])) {
+            const cid = canonicalCode(c.courseId, cat);
+            const course = cat && cat.resolve(cid);
+            const isTheory = course ? course.courseType !== 'Lab' : !/\blab\b/i.test(c.title || '');
+            if (!isTheory) continue;
+            const days = new Set(window.ulabParseSchedule(c.schedule || '').map(iv => iv.day));
+            for (const day of days) {
+                (byDay[day] = byDay[day] || []).push({ courseId: cid, title: c.title || (cat && cat.titleFor(cid)) || cid });
+            }
+        }
+        const conflicts = [];
+        for (const day of DAY_ORDER) {
+            if (byDay[day] && byDay[day].length >= 3) conflicts.push({ day, courses: byDay[day] });
+        }
+        return conflicts;
+    }
+
     function analyzeStudent(info, cat) {
-        const result = { probationTier: null, needsRetake: [], prereqIssues: [], labWithoutTheory: [], degreeProgress: null };
+        const result = {
+            probationTier: null,
+            finalProbation: false,
+            needsRetake: [],
+            prereqIssues: [],
+            labWithoutTheory: [],
+            theoryDayConflicts: [],
+            degreeProgress: null,
+        };
         if (!cat) return result;
 
         result.degreeProgress = computeDegreeProgress(cat, info.completedCourses || []);
@@ -382,6 +420,11 @@
         if (info.probation) {
             const m = info.probation.match(/number[-\s]*([0-9]+)/i);
             result.probationTier = m ? parseInt(m[1], 10) : 'unspecified';
+            // Final probation (Probation 3 — CGPA below 2.00 for the last 3
+            // consecutive terms): these students cannot self-register online;
+            // registration must go through their Department Head/Coordinator
+            // via request email or in person.
+            result.finalProbation = result.probationTier === 3;
         }
 
         // Group course history by canonical course code — resolved to the
@@ -457,6 +500,9 @@
                 });
             }
         }
+
+        // 3+ theory courses landing on the same day of the week.
+        result.theoryDayConflicts = findTheoryDayConflicts(info.coursesToRegister, cat);
 
         return result;
     }
@@ -572,4 +618,10 @@
         subtitle: 'Check probation, CGPA and registration status for a group of students',
         mount
     });
+
+    // Exposed so other injection points (e.g. the StudentRegistration page's
+    // floating "Run Advising [beta]" button, features/advising/student-page-content.js)
+    // can reuse this scraping/analysis logic against the already-loaded page
+    // instead of duplicating it or re-fetching over the network.
+    window.ULAB_ADVISING_CORE = { extractAdvisingInfo, analyzeStudent, canonicalCode, normCode };
 })();

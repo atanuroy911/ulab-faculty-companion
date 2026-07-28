@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Student Advising (CSE/BBA/English/MSJ/EEE/Bangla), Bulk Save, Capstone Eligibility (CSE) for ULAB faculty on URMS",
   "permissions": ["storage", "sidePanel"],
   "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
@@ -28,6 +28,23 @@
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadStudentFromExcel*"
       ],
       "js": ["features/mms-grades/urms-grade-fill-content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://urms-awp.ulab.edu.bd/StudentRegistration*"],
+      "js": [
+        "features/time/time.js",
+        "features/advising/catalogue-factory.js",
+        "features/advising/catalogues/cse.js",
+        "features/advising/catalogues/bba.js",
+        "features/advising/catalogues/english.js",
+        "features/advising/catalogues/msj.js",
+        "features/advising/catalogues/eee.js",
+        "features/advising/catalogues/bangla.js",
+        "features/advising/catalogues/registry.js",
+        "features/advising/advising.js",
+        "features/advising/student-page-content.js"
+      ],
       "run_at": "document_idle"
     }
   ],

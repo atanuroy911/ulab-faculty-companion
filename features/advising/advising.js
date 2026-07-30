@@ -1,119 +1,12 @@
-// features/advising/advising.js — Student Advising feature module.
-// Paste an "Advising Student" list from URMS, then check every student one
-// by one against their StudentRegistration/AddAndDrop page — surfacing
-// probation status, advisor, CGPA, credits, and pending course registration.
-// Runs entirely inside the side panel; no content script required.
+// features/advising/advising.js — Advising engine module (no side-panel UI).
+// Exposes scraping + analysis of a student's StudentRegistration/AddAndDrop
+// page (probation, prereqs, retakes, schedule conflicts) as
+// window.ULAB_ADVISING_CORE, consumed by:
+//   - features/advising-billing/wizard.js (side panel, runs the analysis for
+//     a pasted/uploaded student list)
+//   - features/advising/student-page-content.js (floating "Run Advising"
+//     button injected on the live URMS StudentRegistration page)
 (function () {
-    if (!document.getElementById('ulab-wizard-css')) {
-        const link = document.createElement('link');
-        link.id = 'ulab-wizard-css';
-        link.rel = 'stylesheet';
-        link.href = chrome.runtime.getURL('features/common/wizard.css');
-        document.head.appendChild(link);
-    }
-
-    let PARSED_STUDENTS = [];
-    let root = null;
-    let SELECTED_PROGRAM = null;
-
-    function $(id) { return root.querySelector('#' + id); }
-
-    function currentCatalogue() {
-        return (window.ULAB_CATALOGUES || {})[SELECTED_PROGRAM] || null;
-    }
-
-    // ── Step 0: Program picker ──────────────────────────────────────────────
-    function showStep0() {
-        const programs = window.ULAB_PROGRAMS || [];
-        root.innerHTML = `
-            <p class="ulab-step-desc">Which program are these students in?</p>
-            <div id="ulab-program-list" class="ulab-howto">
-                ${programs.map(p => `
-                    <div class="ulab-howto-item ulab-program-choice" data-id="${p.id}" style="cursor:pointer">
-                        <div class="ulab-howto-badge">${p.icon}</div>
-                        <div class="ulab-howto-body">
-                            <div class="ulab-howto-title">${p.short}</div>
-                            <div class="ulab-howto-sub">${p.name}</div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        root.querySelectorAll('.ulab-program-choice').forEach(el => {
-            el.addEventListener('click', () => {
-                SELECTED_PROGRAM = el.dataset.id;
-                showStep1();
-            });
-        });
-    }
-
-    // ── Step 1: Paste box ────────────────────────────────────────────────────
-    function showStep1() {
-        const program = (window.ULAB_PROGRAMS || []).find(p => p.id === SELECTED_PROGRAM);
-        root.innerHTML = `
-            <p class="ulab-step-desc">
-                Program: <strong>${program ? program.short : SELECTED_PROGRAM}</strong>
-                — <a href="#" id="ulab-change-program">change</a>
-            </p>
-            <div class="ulab-howto">
-                <div class="ulab-howto-item">
-                    <div class="ulab-howto-badge">1</div>
-                    <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Open the Advising Student page, then print it or save it as a PDF</div>
-                        <a class="ulab-link-chip" href="https://urms-awp.ulab.edu.bd/AdvisingStudent" target="_blank" rel="noopener">
-                            🔗 urms-awp.ulab.edu.bd/AdvisingStudent
-                        </a>
-                        <div class="ulab-howto-sub">Click <strong>Print</strong> on that page — either print it, or choose "Save as PDF" as the destination.</div>
-                    </div>
-                </div>
-                <div class="ulab-howto-item">
-                    <div class="ulab-howto-badge">2</div>
-                    <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Copy the printed table, or upload the saved PDF</div>
-                        <div class="ulab-howto-sub">Select it all (Ctrl/Cmd+A), copy, then paste into the box below — or use the PDF upload option instead.</div>
-                    </div>
-                </div>
-                <div class="ulab-howto-item">
-                    <div class="ulab-howto-badge">3</div>
-                    <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Parse it</div>
-                        <div class="ulab-howto-sub">Click <strong>Parse Students</strong> below to continue.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="ulab-format-box">
-                <div class="ulab-format-label">Expected format (one student per line)</div>
-                <div class="ulab-format-example">1 253014001 Md. Minhajur Rahman minhajur.rahman.cse@ulab.edu.bd 1855533355 OK 20 Apr 2026 OK
-2 253014002 Jannatul Ferduws jannatul.ferduws.cse@ulab.edu.bd 01932006166 OK 20 Apr 2026 OK</div>
-                <div class="ulab-format-hint">
-                    💡 Each line needs a <strong>9-digit Student ID</strong> and an
-                    <strong>@ulab.edu.bd email</strong> somewhere on it — everything else
-                    (name, contact, registration/payment flags) is parsed around those.
-                </div>
-            </div>
-            <textarea id="ulab-paste-box" placeholder="Paste the Advising Student table here…"></textarea>
-            <div id="ulab-parse-preview"></div>
-            <div id="ulab-pdf-upload-slot"></div>
-            <button class="ulab-primary-btn" id="ulab-step1-next">Parse Students →</button>
-        `;
-        $('ulab-step1-next').onclick = parseAndShowStep2;
-        $('ulab-change-program').addEventListener('click', (e) => { e.preventDefault(); showStep0(); });
-        if (window.ulabMountPdfUpload) ulabMountPdfUpload($('ulab-pdf-upload-slot'), $('ulab-paste-box'));
-
-        $('ulab-paste-box').addEventListener('input', () => {
-            const text = $('ulab-paste-box').value;
-            const students = parseAdvisingStudents(text);
-            const preview = $('ulab-parse-preview');
-            if (text.trim()) {
-                preview.innerHTML = students.length
-                    ? `<div class="ulab-preview-ok">✅ Found ${students.length} student(s) — click Parse to confirm</div>`
-                    : `<div class="ulab-preview-warn">⚠️ No 9-digit Student IDs found yet. Keep pasting.</div>`;
-            } else {
-                preview.innerHTML = '';
-            }
-        });
-    }
-
     // ── Parse pasted advising list into structured students ─────────────────
     function parseAdvisingStudents(text) {
         const emailRe = /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/;
@@ -143,65 +36,6 @@
             students.push({ id, name, email, contact, flags });
         }
         return students;
-    }
-
-    // ── Step 2: Confirm student list & run ──────────────────────────────────
-    function parseAndShowStep2() {
-        const text = $('ulab-paste-box').value;
-        PARSED_STUDENTS = parseAdvisingStudents(text);
-
-        if (PARSED_STUDENTS.length === 0) {
-            $('ulab-parse-preview').innerHTML =
-                `<div class="ulab-preview-warn">❌ No Student IDs found. Make sure you copied the full table.</div>`;
-            return;
-        }
-        renderStep2();
-    }
-
-    function renderStep2() {
-        const listHTML = PARSED_STUDENTS.map((s, i) => `
-            <div class="ulab-student-row">
-                <div class="ulab-student-idx">${i + 1}</div>
-                <div class="ulab-student-details">
-                    <input class="ulab-id-input"   value="${s.id}"   data-idx="${i}" placeholder="Student ID" maxlength="9" />
-                    <input class="ulab-name-input" value="${s.name}" data-idx="${i}" placeholder="Name (optional)" />
-                </div>
-                <button class="ulab-remove-btn" data-idx="${i}" title="Remove">✕</button>
-            </div>
-        `).join('');
-
-        root.innerHTML = `
-            <p class="ulab-step-desc">
-                Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect entries.
-            </p>
-            <div id="ulab-student-list">${listHTML}</div>
-            <div class="ulab-btn-row" style="margin-top:14px">
-                <button class="ulab-secondary-btn" id="ulab-step2-back">← Back</button>
-                <button class="ulab-primary-btn"   id="ulab-step2-run">🚀 Check Advising</button>
-            </div>
-            <div id="ulab-run-status"></div>
-        `;
-
-        $('ulab-step2-back').onclick = showStep1;
-        $('ulab-step2-run').onclick = runAdvising;
-
-        $('ulab-student-list').addEventListener('input', e => {
-            const idx = parseInt(e.target.dataset.idx);
-            if (e.target.classList.contains('ulab-id-input')) PARSED_STUDENTS[idx].id = e.target.value.trim();
-            if (e.target.classList.contains('ulab-name-input')) PARSED_STUDENTS[idx].name = e.target.value.trim();
-        });
-        $('ulab-student-list').addEventListener('click', e => {
-            if (e.target.classList.contains('ulab-remove-btn')) {
-                const idx = parseInt(e.target.dataset.idx);
-                PARSED_STUDENTS.splice(idx, 1);
-                renderStep2();
-            }
-        });
-    }
-
-    function setRunStatus(msg) {
-        const el = $('ulab-run-status');
-        if (el) el.innerHTML = `<div class="ulab-run-status-msg">${msg}</div>`;
     }
 
     // ── HTML scraping helpers (operate on a detached DOMParser document) ────
@@ -553,8 +387,7 @@
         return result;
     }
 
-    async function fetchAdvisingDetails(students) {
-        const cat = currentCatalogue();
+    async function fetchAdvisingDetails(students, cat, onProgress) {
         const parser = new DOMParser();
         const details = {};
         const BASE = 'https://urms-awp.ulab.edu.bd';
@@ -589,7 +422,7 @@
         const total = students.length;
         for (let i = 0; i < students.length; i++) {
             const s = students[i];
-            setRunStatus(`⏳ Checking ${i + 1}/${total}: ${s.name || s.id}`);
+            if (onProgress) onProgress(i + 1, total, s);
 
             try {
                 const params = new URLSearchParams();
@@ -622,52 +455,9 @@
         return details;
     }
 
-    async function runAdvising() {
-        const runBtn = $('ulab-step2-run');
-        if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'Running…'; }
-
-        const students = PARSED_STUDENTS.filter(s => /^\d{9}$/.test(s.id));
-        if (!students.length) {
-            setRunStatus('❌ No valid 9-digit IDs found. Please check your entries.');
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 Check Advising'; }
-            return;
-        }
-
-        try {
-            setRunStatus(`⏳ Checking ${students.length} students…`);
-            const details = await fetchAdvisingDetails(students);
-
-            setRunStatus('✅ Done! Opening results…');
-            chrome.storage.local.set({ ulabAdvisingStudents: students, ulabAdvisingDetails: details, ulabAdvisingProgram: SELECTED_PROGRAM }, () => {
-                chrome.runtime.sendMessage({ action: 'openAdvisingResults' });
-                if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 Check Advising'; }
-            });
-        } catch (err) {
-            console.error('[ULAB Advising]', err);
-            setRunStatus(`❌ Error: ${err.message}`);
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 Check Advising'; }
-        }
-    }
-
-    // ── Feature entry point ─────────────────────────────────────────────────
-    function mount(container) {
-        root = container;
-        SELECTED_PROGRAM = null;
-        showStep0();
-    }
-
-    window.ULAB_FEATURES = window.ULAB_FEATURES || [];
-    window.ULAB_FEATURES.push({
-        id: 'advising',
-        icon: '🎓',
-        title: 'Student Advising',
-        subtitle: 'Check probation, CGPA and registration status for a group of students',
-        mount
-    });
-
-    // Exposed so other injection points (e.g. the StudentRegistration page's
-    // floating "Run Advising" button, features/advising/student-page-content.js)
-    // can reuse this scraping/analysis logic against the already-loaded page
-    // instead of duplicating it or re-fetching over the network.
-    window.ULAB_ADVISING_CORE = { extractAdvisingInfo, analyzeStudent, canonicalCode, normCode };
+    // Exposed so other consumers (features/advising-billing/wizard.js in the
+    // side panel, and the StudentRegistration page's floating "Run Advising"
+    // button, features/advising/student-page-content.js) can reuse this
+    // scraping/analysis logic instead of duplicating it.
+    window.ULAB_ADVISING_CORE = { extractAdvisingInfo, analyzeStudent, canonicalCode, normCode, parseAdvisingStudents, fetchAdvisingDetails };
 })();

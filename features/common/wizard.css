@@ -1,3 +1,60 @@
+/* ── Typeform-style step shell (features/advising-billing/wizard.js) ──── */
+.ulab-progress-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+}
+.ulab-progress-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted);
+    white-space: nowrap;
+}
+.ulab-progress-dots { display: flex; gap: 6px; flex: 1; }
+.ulab-progress-dot {
+    height: 4px; border-radius: 2px; flex: 1; background: rgba(var(--overlay-rgb),0.1);
+    transition: background 0.25s;
+}
+.ulab-progress-dot.done   { background: linear-gradient(135deg, #818cf8, #6366f1); }
+.ulab-progress-dot.active { background: linear-gradient(135deg, #0ea5e9, #3b82f6); }
+
+.ulab-step-stage { position: relative; overflow: hidden; }
+.ulab-step-slide {
+    animation: ulabSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ulab-step-slide.back { animation-name: ulabSlideInBack; }
+@keyframes ulabSlideIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes ulabSlideInBack {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.ulab-step-title {
+    font-size: 17px; font-weight: 700; color: var(--text-strong); margin-bottom: 6px; line-height: 1.35;
+}
+.ulab-step-subtitle {
+    font-size: 12.5px; color: var(--text-tertiary); margin-bottom: 18px; line-height: 1.5;
+}
+
+.ulab-choice-tiles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.ulab-choice-tile {
+    display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+    background: rgba(var(--overlay-rgb),0.03); border: 1.5px solid rgba(var(--overlay-rgb),0.08);
+    border-radius: 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.ulab-choice-tile:hover { border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.05); transform: translateY(-1px); }
+.ulab-choice-tile.selected { border-color: #38bdf8; background: rgba(56,189,248,0.09); }
+.ulab-choice-tile-icon { font-size: 26px; flex-shrink: 0; }
+.ulab-choice-tile-body { flex: 1; min-width: 0; }
+.ulab-choice-tile-title { font-size: 14px; font-weight: 700; color: var(--text-strong); }
+.ulab-choice-tile-sub { font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; }
+
+.ulab-wizard-nav {
+    display: flex; gap: 8px; align-items: center; margin-top: 20px;
+    padding-top: 14px; border-top: 1px solid rgba(var(--overlay-rgb),0.06);
+}
+.ulab-wizard-nav .ulab-primary-btn { flex: 1; }
+.ulab-wizard-nav .ulab-secondary-btn { flex: 0 0 auto; }
+
 /* ── Time feature (Free Time Finder) ─────────────────────────── */
 .ulab-step-icon { font-size: 34px; text-align: center; margin-bottom: 14px; }
 .ulab-step-desc { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 12px; }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULAB Student Advising</title>
+    <title>ULAB Advising & Save/Bill</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -118,11 +118,40 @@
         }
         .hero-sub { color: var(--muted); font-size: 14px; }
 
-        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
         .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; }
         .stat-icon { font-size: 18px; }
         .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-value { font-size: 17px; font-weight: 700; color: var(--accent); }
+
+        /* ── Bulk Save/Bill action bar ────────────────────────────────────── */
+        .bulk-bar {
+            position: sticky; top: 20px; z-index: 100;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: var(--surface); border: 1px solid var(--badge2-border);
+            border-radius: 14px; padding: 14px 18px; margin-bottom: 20px;
+            box-shadow: 0 8px 24px -8px rgba(0,0,0,0.25);
+        }
+        .bulk-bar-text { flex: 1; min-width: 220px; font-size: 12.5px; color: var(--text); line-height: 1.5; }
+        .bulk-bar-text strong { color: var(--accent2); }
+        .bulk-save-btn {
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6); color: #fff; border: none;
+            font-weight: 700; font-size: 13px; padding: 11px 18px; border-radius: 10px;
+            cursor: pointer; white-space: nowrap; transition: opacity 0.2s; font-family: inherit;
+        }
+        .bulk-save-btn:hover:not(:disabled) { opacity: 0.9; }
+        .bulk-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .bulk-email-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+        #bulk-run-log {
+            width: 100%; margin-top: 8px; max-height: 160px; overflow-y: auto;
+            font-family: 'Courier New', monospace; font-size: 11px; border-top: 1px solid var(--border);
+            padding-top: 8px; display: none;
+        }
+        #bulk-run-log.show { display: block; }
+        .bulk-log-row { padding: 2px 0; }
+        .bulk-log-ok   { color: var(--ok-text); }
+        .bulk-log-fail { color: var(--bad-text); }
+        .bulk-log-skip { color: var(--warn-text); }
 
         .schedule-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
         .search-bar { width: 100%; padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; }
@@ -137,7 +166,7 @@
         .students-list { display: flex; flex-direction: column; gap: 14px; }
         .stu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: border-color 0.15s, transform 0.15s; }
         .stu-card:hover { border-color: var(--accent); transform: translateY(-1px); }
-        .stu-header { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; user-select: none; }
+        .stu-header { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; user-select: none; flex-wrap: wrap; }
         .avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
         .stu-info { flex: 1; min-width: 0; }
         .stu-name { font-size: 14px; font-weight: 700; color: var(--text); }
@@ -151,6 +180,71 @@
         .badge-warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
         .badge-bad  { background: var(--bad-bg);  border-color: var(--bad-border);  color: var(--bad-text); }
         .badge-muted { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+
+        /* ── Compact card-header cluster: minimal chips ───────────────────────
+           Replaces a row of wordy pills with one glance: a tiny course-count
+           chip, and (at most) one "N issues" chip that opens the categorized
+           Issues modal — instead of a separate pill per issue type. */
+        .chip {
+            display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid; line-height: 1.5;
+        }
+        .chip-ok    { background: var(--ok-bg);   border-color: var(--ok-border);   color: var(--ok-text); }
+        .chip-warn  { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+        .chip-bad   { background: var(--bad-bg);  border-color: var(--bad-border);  color: var(--bad-text); }
+        .chip-muted { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+        button.chip-clickable { cursor: pointer; font-family: inherit; transition: filter 0.15s; }
+        button.chip-clickable:hover { filter: brightness(1.15); }
+
+        /* ── Per-card Save/Bill action row ────────────────────────────────── */
+        .stu-actions { display: flex; align-items: center; gap: 8px; padding: 0 18px 14px; flex-wrap: wrap; }
+        .save-action-btn {
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2);
+            font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+            font-family: inherit; transition: background 0.2s; white-space: nowrap;
+        }
+        .save-action-btn:hover:not(:disabled) { background: rgba(129,140,248,0.22); }
+        .save-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .save-status { font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .save-status-ok      { color: var(--ok-text); }
+        .save-status-fail    { color: var(--bad-text); }
+        .save-status-skip    { color: var(--warn-text); }
+        .save-status-pending { color: var(--accent); }
+
+        .issues-btn {
+            background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text);
+            font-size: 11.5px; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+            font-family: inherit; transition: background 0.2s; white-space: nowrap;
+        }
+        .issues-btn:hover { background: rgba(245,158,11,0.18); }
+
+        /* ── Small "Issues" modal ─────────────────────────────────────────── */
+        .issues-modal-overlay {
+            position: fixed; inset: 0; z-index: 450; background: rgba(5,10,20,0.72);
+            backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+            padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .issues-modal-overlay.open { opacity: 1; pointer-events: all; }
+        .issues-modal {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+            width: 100%; max-width: 640px; max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 24px 64px -12px rgba(0,0,0,0.6); transform: translateY(14px) scale(0.98);
+            transition: transform 0.2s ease;
+        }
+        .issues-modal-overlay.open .issues-modal { transform: translateY(0) scale(1); }
+        .issues-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .issues-modal-header span { font-size: 15px; font-weight: 700; color: var(--text); }
+        .issues-modal-close {
+            width: 28px; height: 28px; border-radius: 7px; background: var(--surface2);
+            border: 1px solid var(--border); color: var(--muted); font-size: 14px; cursor: pointer;
+        }
+        .issues-modal-close:hover { color: var(--text); }
+        .issues-modal-body { padding: 16px 20px; overflow-y: auto; }
+        .issues-modal-body .section-label:first-child { margin-top: 0; }
+        .issues-modal-footer { padding: 12px 20px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
 
         .probation-banner {
             background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text);
@@ -295,7 +389,7 @@
 
 <div class="page">
     <header class="hero">
-        <div class="hero-eyebrow">ULAB Student Advising</div>
+        <div class="hero-eyebrow">ULAB Advising & Save/Bill</div>
         <h1>Advising Checklist</h1>
         <p class="hero-sub" id="n-students-text">Analyzing…</p>
     </header>
@@ -306,6 +400,13 @@
             <div>
                 <div class="stat-label">Students</div>
                 <div class="stat-value" id="stat-students">—</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <span class="stat-icon">✓</span>
+            <div>
+                <div class="stat-label">Clean (no issues)</div>
+                <div class="stat-value" id="stat-clean">—</div>
             </div>
         </div>
         <div class="stat-chip">
@@ -359,6 +460,18 @@
         </div>
     </div>
 
+    <div class="bulk-bar">
+        <div class="bulk-bar-text" title="Students with issues are skipped here — save those individually from their own card.">
+            💾 Auto-saves & bills only <strong>✓ Clean</strong> students below.
+        </div>
+        <label class="bulk-email-toggle">
+            <input type="checkbox" id="bulk-email-toggle" checked />
+            Email bill too
+        </label>
+        <button class="bulk-save-btn" id="btn-bulk-save">💾 Save & Email Bill — Clean Students (0)</button>
+        <div id="bulk-run-log"></div>
+    </div>
+
     <div class="comm-toolbar" id="comm-toolbar">
         <button class="tool-btn" id="btn-bulk-email">📧 Generate Bulk Email</button>
         <button class="tool-btn" id="btn-copy-emails">📋 Copy Advisee Emails</button>
@@ -405,6 +518,19 @@
     </div>
 </div>
 
+<div class="issues-modal-overlay" id="issues-modal-overlay">
+    <div class="issues-modal">
+        <div class="issues-modal-header">
+            <span id="issues-modal-title">Issues</span>
+            <button class="issues-modal-close" id="issues-modal-close">✕</button>
+        </div>
+        <div class="issues-modal-body" id="issues-modal-body"></div>
+        <div class="issues-modal-footer">
+            <button class="tool-btn" id="issues-modal-details-btn">Details ›</button>
+        </div>
+    </div>
+</div>
+
 <div class="email-modal-overlay" id="email-modal-overlay">
     <div class="email-modal">
         <div class="email-modal-header">
@@ -435,14 +561,15 @@
     </div>
 </div>
 
-<script src="catalogue-factory.js"></script>
-<script src="catalogues/cse.js"></script>
-<script src="catalogues/bba.js"></script>
-<script src="catalogues/english.js"></script>
-<script src="catalogues/msj.js"></script>
-<script src="catalogues/eee.js"></script>
-<script src="catalogues/bangla.js"></script>
-<script src="catalogues/registry.js"></script>
+<script src="../advising/catalogue-factory.js"></script>
+<script src="../advising/catalogues/cse.js"></script>
+<script src="../advising/catalogues/bba.js"></script>
+<script src="../advising/catalogues/english.js"></script>
+<script src="../advising/catalogues/msj.js"></script>
+<script src="../advising/catalogues/eee.js"></script>
+<script src="../advising/catalogues/bangla.js"></script>
+<script src="../advising/catalogues/registry.js"></script>
+<script src="../bulk-save/bulk-save.js"></script>
 <script src="results.js"></script>
 </body>
 </html>

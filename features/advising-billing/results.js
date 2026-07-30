@@ -1,19 +1,23 @@
-// results.js — loaded inside features/advising/results.html (chrome-extension page)
-chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAdvisingProgram'], (data) => {
-    if (!data.ulabAdvisingStudents) {
+// results.js — loaded inside features/advising-billing/results.html
+// (chrome-extension page). Combines the old advising report with live
+// Save/Bill actions against URMS, using window.ULAB_SAVE_ENGINE
+// (features/bulk-save/bulk-save.js) for the actual Load→Save→Email Bill
+// network calls.
+chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (data) => {
+    if (!data.ulabABStudents) {
         document.body.innerHTML = `
             <div style="color:#94a3b8;text-align:center;margin-top:120px;font-family:system-ui">
                 <div style="font-size:48px;margin-bottom:16px">📭</div>
                 <div style="font-size:20px;font-weight:600;color:#e2e8f0;margin-bottom:8px">No results yet</div>
-                <div>Open the <strong style="color:#38bdf8">Student Advising</strong> feature in the side panel and run a check.</div>
+                <div>Open the <strong style="color:#38bdf8">Advising & Save/Bill</strong> feature in the side panel and run a check.</div>
             </div>`;
         return;
     }
 
-    const students = data.ulabAdvisingStudents || [];
-    const details  = data.ulabAdvisingDetails  || {};
+    const students = data.ulabABStudents || [];
+    const details  = data.ulabABDetails  || {};
     const nStudents = students.length;
-    const programId = data.ulabAdvisingProgram || 'CSE';
+    const programId = data.ulabABProgram || 'CSE';
     const programMeta = (window.ULAB_PROGRAMS || []).find(p => p.id === programId);
     const programCat = (window.ULAB_CATALOGUES || {})[programId];
     const programLabel = programMeta ? programMeta.short : programId;
@@ -97,6 +101,35 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         if (e.key === 'Escape' && document.getElementById('detail-modal-overlay').classList.contains('open')) closeDetailModal();
     });
 
+    // ── Small "Issues" modal — just the issues + why, with a Details escape ──
+    let issuesModalCtx = null;
+    function openIssuesModal(ctx) {
+        issuesModalCtx = ctx;
+        const { displayName, buildIssuesBodyHTML } = ctx;
+        document.getElementById('issues-modal-title').textContent = `Issues — ${displayName}`;
+        document.getElementById('issues-modal-body').innerHTML = buildIssuesBodyHTML();
+        document.getElementById('issues-modal-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeIssuesModal() {
+        document.getElementById('issues-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+        issuesModalCtx = null;
+    }
+    document.getElementById('issues-modal-close').addEventListener('click', closeIssuesModal);
+    document.getElementById('issues-modal-overlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('issues-modal-overlay')) closeIssuesModal();
+    });
+    document.getElementById('issues-modal-details-btn').addEventListener('click', () => {
+        if (!issuesModalCtx) return;
+        const ctx = issuesModalCtx;
+        closeIssuesModal();
+        openDetailModal(ctx);
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('issues-modal-overlay').classList.contains('open')) closeIssuesModal();
+    });
+
     let probationCount = 0;
     let noCoursesCount = 0;
     let retakeCount = 0;
@@ -104,8 +137,10 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     let labIssueCount = 0;
     let finalProbationCount = 0;
     let theoryConflictCount = 0;
+    let cleanCount = 0;
 
     const list = document.getElementById('students-list');
+    const cleanStudents = []; // { s, cardEl } — eligible for the bulk Save+Bill action
 
     for (const s of students) {
         const info = details[s.id] || {};
@@ -128,6 +163,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         const isClean = !info.error && !info.probation && hasCourses
             && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length
             && !(advising.theoryDayConflicts || []).length;
+        if (isClean) cleanCount++;
 
         const card = document.createElement('div');
         card.className = 'stu-card';
@@ -135,18 +171,107 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
         card.dataset.name = displayName.toLowerCase();
         card.dataset.clean = isClean ? '1' : '0';
 
-        const headerBadges = info.error
+        // Issues modal body — one table per issue category (same shape as the
+        // detail modal's tables), instead of a single flattened list, so e.g.
+        // several retaken courses each get their own row with course/title/
+        // attempts columns rather than being squashed into one text blob.
+        // Deferred (like buildBodyHTML) since it's only needed if opened.
+        function buildIssuesBodyHTML() {
+            let html = '';
+            if (info.error) {
+                return `<div class="error-note">Could not load this student's page: ${info.error}</div>`;
+            }
+            if (info.probation) {
+                html += `<div class="probation-banner">⚠️ ${info.probation}</div>`;
+            }
+            if (advising.finalProbation) {
+                html += `<div class="probation-banner">🚫 Final Probation (Tier 3) — cannot self-register; must go through Dept. Head/Coordinator.</div>`;
+            }
+            if ((advising.theoryDayConflicts || []).length) {
+                html += `<div class="section-label">📅 3+ theory courses on the same day</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Day</th><th>Theory Courses</th></tr></thead>
+                        <tbody>
+                            ${advising.theoryDayConflicts.map(c => `
+                                <tr><td>${c.day}</td><td class="grade-fail">${c.courses.map(x => `${x.courseId} (${x.title})`).join(', ')}</td></tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            if (openRetakes.length) {
+                html += `<div class="section-label">↻ Courses to retake (failed, not yet passed)</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Course</th><th>Title</th><th>Attempts</th></tr></thead>
+                        <tbody>
+                            ${openRetakes.map(r => `
+                                <tr><td>${r.courseId}</td><td>${r.title}</td><td>${r.attempts.join(', ')}</td></tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            if (advising.prereqIssues.length) {
+                html += `<div class="section-label">⛔ Prerequisite issues in added courses</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Added Course</th><th>Missing Prerequisite(s)</th></tr></thead>
+                        <tbody>
+                            ${advising.prereqIssues.map(p => `
+                                <tr><td>${p.courseId} — ${p.title}</td><td class="grade-fail">${p.missing.map(m => `${m.courseId} (${m.title})`).join(', ')}</td></tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            if ((advising.labWithoutTheory || []).length) {
+                html += `<div class="section-label">🧪 Lab registered without its theory course</div>
+                    <table class="mini-table">
+                        <thead><tr><th>Lab Course</th><th>Missing Theory Course</th></tr></thead>
+                        <tbody>
+                            ${advising.labWithoutTheory.map(l => `
+                                <tr><td>${l.labCourseId} — ${l.labTitle}</td><td class="grade-fail">${l.theoryCourseId} (${l.theoryTitle})</td></tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            if (!hasCourses && !info.registrationNotice) {
+                html += `<div class="section-label">📝 No courses added</div>
+                    <div class="empty-note">This student has not added any courses for the semester yet.</div>`;
+            }
+            return html || `<div class="empty-note">No specific issues recorded.</div>`;
+        }
+
+        // Full verbose badge set — only shown inside the detail modal, where
+        // there's room and the user has explicitly asked to see everything.
+        const detailBadges = info.error
             ? `<span class="badge badge-bad">⚠️ Fetch failed</span>`
             : `
                 ${flagBadge('Reg', flags.regOk)}
-                ${flagBadge('Pre-Reg', flags.preRegOk)}
                 ${info.probation ? `<span class="badge badge-warn">⚠️ ${probationLabel(advising.probationTier)}</span>` : ''}
                 ${advising.finalProbation ? `<span class="badge badge-bad">🚫 Final Probation — cannot self-register</span>` : ''}
                 ${openRetakes.length ? `<span class="badge badge-bad">↻ ${openRetakes.length} course(s) to retake</span>` : ''}
                 ${advising.prereqIssues.length ? `<span class="badge badge-bad">⛔ Prereq issue</span>` : ''}
                 ${(advising.labWithoutTheory || []).length ? `<span class="badge badge-bad">🧪 Lab without theory</span>` : ''}
                 ${(advising.theoryDayConflicts || []).length ? `<span class="badge badge-warn">📅 3+ theory in 1 day</span>` : ''}
-                ${!hasCourses ? (info.registrationNotice ? `<span class="badge badge-muted">🕒 Pre-Reg not open yet</span>` : `<span class="badge badge-warn">📝 No courses added</span>`) : `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>`}
+                ${hasCourses ? `<span class="badge badge-ok">✓ ${info.coursesToRegister.length} course(s) added</span>` : (info.registrationNotice ? '' : `<span class="badge badge-warn">📝 No courses added</span>`)}
+                ${isClean ? `<span class="badge badge-ok">✓ Clean — auto Save+Bill eligible</span>` : ''}
+            `;
+
+        // Compact card-header cluster — one glance, minimal text. A small
+        // course-count chip, and a single clickable "N issues" chip that
+        // summarizes every issue category at once instead of one pill per
+        // category (details live in the Issues modal / detail modal on demand).
+        const issueCategoryCount = (info.probation ? 1 : 0) + (openRetakes.length ? 1 : 0)
+            + (advising.prereqIssues.length ? 1 : 0) + ((advising.labWithoutTheory || []).length ? 1 : 0)
+            + ((advising.theoryDayConflicts || []).length ? 1 : 0);
+
+        const compactBadges = info.error
+            ? `<span class="chip chip-bad">⚠️ Fetch failed</span>`
+            : `
+                ${hasCourses
+                    ? `<span class="chip chip-muted">📚 ${info.coursesToRegister.length} course${info.coursesToRegister.length === 1 ? '' : 's'} added</span>`
+                    : (info.registrationNotice ? '' : `<span class="chip chip-warn">📝 No courses added</span>`)}
+                ${advising.finalProbation ? `<span class="chip chip-bad" title="Final Probation — cannot self-register online">🚫 Restricted</span>` : ''}
+                ${isClean
+                    ? `<span class="chip chip-ok">✓ Clean</span>`
+                    : (issueCategoryCount ? `<button class="chip chip-warn chip-clickable" data-sid="${s.id}" title="Click to see the issues">⚠ ${issueCategoryCount} issue${issueCategoryCount > 1 ? 's' : ''}</button>` : '')}
             `;
 
         // Body HTML is expensive to build (several nested tables) and stays
@@ -168,7 +293,7 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
             }
 
             if (advising.finalProbation) {
-                bodyHTML += `<div class="probation-banner">🚫 Final Probation (Probation 3 — CGPA below 2.00 for the last three consecutive terms): this student cannot access the online registration system independently. They may only register with the assistance of the Department Head or Coordinator, by sending a request email or visiting in person.</div>`;
+                bodyHTML += `<div class="probation-banner">🚫 Final Probation (Tier 3) — cannot self-register; must go through Dept. Head/Coordinator.</div>`;
             }
 
             if ((advising.theoryDayConflicts || []).length) {
@@ -344,14 +469,20 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                     <div class="stu-name">${displayName}</div>
                     <div class="stu-id">${s.id}${s.email ? ' · ' + s.email : ''}</div>
                 </div>
-                <div class="stu-flags">${headerBadges}</div>
+                <div class="stu-flags">${compactBadges}</div>
                 ${!info.error ? `<button class="card-email-btn" data-sid="${s.id}" title="Copy this student's advising email">✉️ Email</button>` : ''}
                 <span class="view-details-hint">Details ›</span>
             </div>
+            <div class="stu-actions">
+                <button class="save-action-btn" data-sid="${s.id}" data-mode="save" ${info.error ? 'disabled' : ''}>💾 Save</button>
+                <button class="save-action-btn" data-sid="${s.id}" data-mode="bill" ${info.error ? 'disabled' : ''}>📧 Save + Bill</button>
+                <span class="save-status" id="save-status-${s.id}"></span>
+            </div>
         `;
+        const cardCtx = { s, info, advising, flags, displayName, ini, col, headerBadges: detailBadges, buildBodyHTML, buildIssuesBodyHTML };
         card.querySelector('.stu-header').addEventListener('click', (e) => {
-            if (e.target.closest('.card-email-btn')) return;
-            openDetailModal({ s, info, advising, flags, displayName, ini, col, headerBadges, buildBodyHTML });
+            if (e.target.closest('.card-email-btn') || e.target.closest('.chip-clickable')) return;
+            openDetailModal(cardCtx);
         });
         const emailBtn = card.querySelector('.card-email-btn');
         if (emailBtn) {
@@ -364,9 +495,25 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
                 });
             });
         }
+        const issuesChip = card.querySelector('.chip-clickable');
+        if (issuesChip) {
+            issuesChip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openIssuesModal(cardCtx);
+            });
+        }
+        card.querySelectorAll('.save-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                runSaveAction(s, btn.dataset.mode === 'bill', btn);
+            });
+        });
         list.appendChild(card);
+
+        if (isClean) cleanStudents.push(s);
     }
 
+    document.getElementById('stat-clean').textContent = cleanCount;
     document.getElementById('stat-probation').textContent = probationCount;
     document.getElementById('stat-nocourses').textContent = noCoursesCount;
     document.getElementById('stat-retake').textContent = retakeCount;
@@ -374,6 +521,89 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     document.getElementById('stat-lab').textContent = labIssueCount;
     document.getElementById('stat-final-probation').textContent = finalProbationCount;
     document.getElementById('stat-theory-conflict').textContent = theoryConflictCount;
+
+    // ── Save / Save+Bill actions — live against URMS via ULAB_SAVE_ENGINE ───
+    const BASE = 'https://urms-awp.ulab.edu.bd';
+    let sharedToken = null;
+    let sharedSemesterId;
+
+    function setSaveStatus(sid, msg, cls) {
+        const el = document.getElementById('save-status-' + sid);
+        if (el) { el.textContent = msg; el.className = `save-status save-status-${cls || ''}`; }
+    }
+
+    async function runSaveAction(s, emailBillEnabled, btn) {
+        const engine = window.ULAB_SAVE_ENGINE;
+        if (!engine) { setSaveStatus(s.id, '❌ Save engine not loaded', 'fail'); return; }
+        const card = btn.closest('.stu-card');
+        card.querySelectorAll('.save-action-btn').forEach(b => b.disabled = true);
+        setSaveStatus(s.id, '⏳ Saving…', 'pending');
+
+        const parser = new DOMParser();
+        try {
+            const result = await engine.saveOneStudent(s, { parser, BASE, emailBillEnabled, sharedToken, semesterId: sharedSemesterId });
+            sharedToken = result.token;
+            if (sharedSemesterId === undefined) sharedSemesterId = result.semesterId;
+            setSaveStatus(s.id, result.rowMsg, result.rowClass);
+        } catch (err) {
+            console.error('[ULAB Advising & Billing]', s.id, err);
+            setSaveStatus(s.id, `❌ ${err.message}`, 'fail');
+        } finally {
+            card.querySelectorAll('.save-action-btn').forEach(b => b.disabled = false);
+        }
+    }
+
+    // ── Bulk "Save & Email Bill — Clean Students" ────────────────────────────
+    const bulkBtn = document.getElementById('btn-bulk-save');
+    const bulkLog = document.getElementById('bulk-run-log');
+    bulkBtn.textContent = `💾 Save & Email Bill — Clean Students (${cleanStudents.length})`;
+    bulkBtn.disabled = cleanStudents.length === 0;
+
+    function appendBulkLog(sid, name, cls, msg) {
+        bulkLog.classList.add('show');
+        const row = document.createElement('div');
+        row.className = `bulk-log-row bulk-log-${cls}`;
+        row.textContent = `${sid} ${name ? '(' + name + ')' : ''} — ${msg}`;
+        bulkLog.appendChild(row);
+        bulkLog.scrollTop = bulkLog.scrollHeight;
+    }
+
+    bulkBtn.addEventListener('click', async () => {
+        const engine = window.ULAB_SAVE_ENGINE;
+        if (!engine || !cleanStudents.length) return;
+        const emailBillEnabled = document.getElementById('bulk-email-toggle').checked;
+
+        bulkBtn.disabled = true;
+        bulkBtn.textContent = '⏳ Running…';
+        bulkLog.innerHTML = '';
+        bulkLog.classList.add('show');
+
+        const parser = new DOMParser();
+        try {
+            if (!sharedToken) {
+                const shared = await engine.fetchSharedToken(parser, BASE);
+                sharedToken = shared.token;
+                sharedSemesterId = shared.semesterId;
+            }
+
+            for (const s of cleanStudents) {
+                setSaveStatus(s.id, '⏳ Saving…', 'pending');
+                try {
+                    const result = await engine.saveOneStudent(s, { parser, BASE, emailBillEnabled, sharedToken, semesterId: sharedSemesterId });
+                    sharedToken = result.token;
+                    setSaveStatus(s.id, result.rowMsg, result.rowClass);
+                    appendBulkLog(s.id, s.name, result.rowClass, result.detail || result.rowMsg);
+                } catch (err) {
+                    console.error('[ULAB Advising & Billing]', s.id, err);
+                    setSaveStatus(s.id, `❌ ${err.message}`, 'fail');
+                    appendBulkLog(s.id, s.name, 'fail', err.message);
+                }
+            }
+        } finally {
+            bulkBtn.disabled = false;
+            bulkBtn.textContent = `💾 Save & Email Bill — Clean Students (${cleanStudents.length})`;
+        }
+    });
 
     // ── Communication tools: bulk email, per-student email, CSV, email list ─
     const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';
@@ -531,17 +761,22 @@ chrome.storage.local.get(['ulabAdvisingStudents', 'ulabAdvisingDetails', 'ulabAd
     }
 
     function buildCSV() {
-        const headers = ['Student ID', 'Name', 'Email', 'Probation Tier', 'Final Probation (Restricted)', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', '3+ Theory In 1 Day', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
+        const headers = ['Student ID', 'Name', 'Email', 'Clean (Auto Save+Bill Eligible)', 'Probation Tier', 'Final Probation (Restricted)', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', '3+ Theory In 1 Day', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
         const rows = [headers];
         for (const s of students) {
             const info = details[s.id] || {};
             const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [] };
             const flags = parseFlags(s.flags);
             const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
+            const hasCourses = (info.coursesToRegister || []).length > 0;
+            const isClean = !info.error && !info.probation && hasCourses
+                && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length
+                && !(advising.theoryDayConflicts || []).length;
             rows.push([
                 s.id,
                 info.urmsName || s.name || '',
                 info.urmsEmail || s.email || '',
+                isClean ? 'Yes' : 'No',
                 advising.probationTier === null || advising.probationTier === undefined ? '' : advising.probationTier,
                 advising.finalProbation ? 'Yes' : '',
                 openRetakes.map(r => r.courseId).join('; '),

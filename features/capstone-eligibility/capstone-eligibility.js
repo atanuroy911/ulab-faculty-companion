@@ -41,35 +41,43 @@
 
     let PARSED_STUDENTS = [];
     let root = null;
+    let stage = null;
+    let currentStep = 1;
+    const TOTAL_STEPS = 3;
 
     function $(id) { return root.querySelector('#' + id); }
 
-    // ── Step 1: Paste box (same list format as Advising / Bulk Save) ────────
-    function showStep1() {
+    // ── Shell: progress dots + sliding stage (same pattern as the merged
+    // Advising & Save/Bill wizard, features/advising-billing/wizard.js) ─────
+    function renderShell(bodyHTML, { direction } = {}) {
         root.innerHTML = `
-            <div class="ulab-howto">
-                <div class="ulab-howto-item">
-                    <div class="ulab-howto-badge">1</div>
-                    <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Get the list of students to check</div>
-                        <div class="ulab-howto-sub">
-                            Whatever list you're working from — a department roster, an advising list,
-                            an Excel column of IDs — paste the Student IDs below, one per line.
-                        </div>
-                    </div>
+            <div class="ulab-progress-row">
+                <span class="ulab-progress-label">STEP ${currentStep}/${TOTAL_STEPS}</span>
+                <div class="ulab-progress-dots">
+                    ${Array.from({ length: TOTAL_STEPS }, (_, i) => {
+                        const n = i + 1;
+                        const cls = n < currentStep ? 'done' : (n === currentStep ? 'active' : '');
+                        return `<div class="ulab-progress-dot ${cls}"></div>`;
+                    }).join('')}
                 </div>
-                <div class="ulab-howto-item">
-                    <div class="ulab-howto-badge">2</div>
-                    <div class="ulab-howto-body">
-                        <div class="ulab-howto-title">Parse and check</div>
-                        <div class="ulab-howto-sub">
-                            Click <strong>Parse Students</strong>, then <strong>Check Eligibility</strong> — each
-                            student's transcript is loaded (read-only) and checked against the Capstone
-                            requirements: 105+ total credits and <strong>CSE2200, CSE3103, CSE3200, CSE3203</strong>
-                            all passed or in progress.
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="ulab-step-stage">
+                <div class="ulab-step-slide ${direction === 'back' ? 'back' : ''}" id="ulab-stage-inner">${bodyHTML}</div>
+            </div>
+        `;
+        stage = $('ulab-stage-inner');
+    }
+
+    // ── Step 1: Get the list — instructions + paste box, one screen ─────────
+    function showStep1(direction) {
+        currentStep = 1;
+        renderShell(`
+            <div class="ulab-step-title">Get the list of students to check</div>
+            <div class="ulab-step-subtitle">
+                Whatever list you're working from — a department roster, an advising list, an Excel
+                column of IDs — paste the Student IDs below, one per line. Each student's transcript is
+                then checked (read-only) against the Capstone requirements: 105+ total credits and
+                <strong>CSE2200, CSE3103, CSE3200, CSE3203</strong> all passed or in progress.
             </div>
             <div class="ulab-format-box">
                 <div class="ulab-format-label">Expected format (one student per line)</div>
@@ -83,21 +91,25 @@
             </div>
             <textarea id="ulab-paste-box" placeholder="Paste or type Student IDs here, one per line…"></textarea>
             <div id="ulab-parse-preview"></div>
-            <button class="ulab-primary-btn" id="ulab-step1-next">Parse Students →</button>
-        `;
-        $('ulab-step1-next').onclick = parseAndShowStep2;
+            <div class="ulab-wizard-nav">
+                <button class="ulab-primary-btn" id="ulab-next" disabled>Parse Students →</button>
+            </div>
+        `, { direction });
+        $('ulab-next').onclick = parseAndShowStep2;
 
         $('ulab-paste-box').addEventListener('input', () => {
             const text = $('ulab-paste-box').value;
             const students = parseStudentList(text);
             const preview = $('ulab-parse-preview');
+            const nextBtn = $('ulab-next');
             if (text.trim()) {
                 preview.innerHTML = students.length
-                    ? `<div class="ulab-preview-ok">✅ Found ${students.length} student(s) — click Parse to confirm</div>`
+                    ? `<div class="ulab-preview-ok">✅ Found ${students.length} student(s) — click Parse Students to confirm</div>`
                     : `<div class="ulab-preview-warn">⚠️ No 9-digit Student IDs found yet. Keep pasting.</div>`;
             } else {
                 preview.innerHTML = '';
             }
+            if (nextBtn) nextBtn.disabled = students.length === 0;
         });
     }
 
@@ -125,7 +137,7 @@
         return students;
     }
 
-    // ── Step 2: Confirm list, run ────────────────────────────────────────────
+    // ── Step 2: Confirm & edit list ──────────────────────────────────────────
     function parseAndShowStep2() {
         const text = $('ulab-paste-box').value;
         PARSED_STUDENTS = parseStudentList(text);
@@ -134,10 +146,11 @@
                 `<div class="ulab-preview-warn">❌ No Student IDs found. Make sure you copied the full table.</div>`;
             return;
         }
-        renderStep2();
+        showStep2();
     }
 
-    function renderStep2() {
+    function showStep2(direction) {
+        currentStep = 2;
         const listHTML = PARSED_STUDENTS.map((s, i) => `
             <div class="ulab-student-row">
                 <div class="ulab-student-idx">${i + 1}</div>
@@ -149,37 +162,50 @@
             </div>
         `).join('');
 
-        root.innerHTML = `
-            <p class="ulab-step-desc">
-                Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect entries.
-            </p>
+        renderShell(`
+            <div class="ulab-step-title">Confirm the student list</div>
+            <div class="ulab-step-subtitle">Found <strong>${PARSED_STUDENTS.length}</strong> students. Edit or remove any incorrect entries.</div>
             <div id="ulab-student-list">${listHTML}</div>
             <div class="ulab-info-box">
                 🎓 This only <strong>reads</strong> each student's transcript — nothing is submitted or
                 changed in URMS. Results open in a report tab you can export as CSV or Excel.
             </div>
-            <div class="ulab-btn-row" style="margin-top:14px">
-                <button class="ulab-secondary-btn" id="ulab-step2-back">← Back</button>
-                <button class="ulab-primary-btn" id="ulab-step2-run">Check Eligibility</button>
+            <div class="ulab-wizard-nav">
+                <button class="ulab-secondary-btn" id="ulab-back">← Back</button>
+                <button class="ulab-primary-btn" id="ulab-next">🎓 Check Eligibility →</button>
             </div>
-            <div id="ulab-run-status"></div>
-        `;
+        `, { direction });
 
-        $('ulab-step2-back').onclick = showStep1;
-        $('ulab-step2-run').onclick = runEligibilityCheck;
+        $('ulab-back').onclick = () => showStep1('back');
+        $('ulab-next').onclick = showStep3;
 
         $('ulab-student-list').addEventListener('input', e => {
-            const idx = parseInt(e.target.dataset.idx);
+            const idx = parseInt(e.target.dataset.idx, 10);
             if (e.target.classList.contains('ulab-id-input')) PARSED_STUDENTS[idx].id = e.target.value.trim();
             if (e.target.classList.contains('ulab-name-input')) PARSED_STUDENTS[idx].name = e.target.value.trim();
         });
         $('ulab-student-list').addEventListener('click', e => {
             if (e.target.classList.contains('ulab-remove-btn')) {
-                const idx = parseInt(e.target.dataset.idx);
+                const idx = parseInt(e.target.dataset.idx, 10);
                 PARSED_STUDENTS.splice(idx, 1);
-                renderStep2();
+                showStep2();
             }
         });
+    }
+
+    // ── Step 3: Run the eligibility check, then hand off to the report tab ──
+    function showStep3(direction) {
+        currentStep = 3;
+        renderShell(`
+            <div class="ulab-step-title">Checking each student…</div>
+            <div class="ulab-step-subtitle">Reading each student's transcript (read-only). May take a moment for large lists.</div>
+            <div id="ulab-run-status"></div>
+            <div class="ulab-wizard-nav">
+                <button class="ulab-secondary-btn" id="ulab-back">← Back</button>
+            </div>
+        `, { direction });
+        $('ulab-back').onclick = () => showStep2('back');
+        runEligibilityCheck();
     }
 
     function setRunStatus(msg) {
@@ -405,13 +431,9 @@
     }
 
     async function runEligibilityCheck() {
-        const runBtn = $('ulab-step2-run');
-        if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'Checking…'; }
-
         const students = PARSED_STUDENTS.filter(s => /^\d{9}$/.test(s.id));
         if (!students.length) {
-            setRunStatus('❌ No valid 9-digit IDs found.');
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Check Eligibility'; }
+            setRunStatus('❌ No valid 9-digit IDs found. Please go back and check your entries.');
             return;
         }
 
@@ -444,17 +466,17 @@
             setRunStatus('✅ Done! Opening report…');
             chrome.storage.local.set({ ulabCapstoneResults: results }, () => {
                 chrome.runtime.sendMessage({ action: 'openCapstoneResults' });
-                if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Check Eligibility'; }
             });
         } catch (err) {
             console.error('[ULAB Capstone Eligibility]', err);
             setRunStatus(`❌ Error: ${err.message}`);
-            if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Check Eligibility'; }
         }
     }
 
     function mount(container) {
         root = container;
+        PARSED_STUDENTS = [];
+        currentStep = 1;
         showStep1();
     }
 

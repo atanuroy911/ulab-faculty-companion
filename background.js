@@ -15,10 +15,8 @@ chrome.sidePanel
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'openResults') {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/time/results.html') });
-    } else if (request.action === 'openAdvisingResults') {
-        chrome.tabs.create({ url: chrome.runtime.getURL('features/advising/results.html') });
-    } else if (request.action === 'openBulkSaveResults') {
-        chrome.tabs.create({ url: chrome.runtime.getURL('features/bulk-save/results.html') });
+    } else if (request.action === 'openAdvisingBillingResults') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('features/advising-billing/results.html') });
     } else if (request.action === 'openCapstoneResults') {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/capstone-eligibility/results.html') });
     } else if (request.action === 'openCatalogueViewer') {

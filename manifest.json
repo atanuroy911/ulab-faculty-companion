@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "2.0.0",
-  "description": "Student Advising (CSE/BBA/English/MSJ/EEE/Bangla), Bulk Save, Capstone Eligibility (CSE) for ULAB faculty on URMS",
+  "version": "2.1.0",
+  "description": "Advising & Save/Bill (CSE/BBA/English/MSJ/EEE/Bangla), Capstone Eligibility (CSE) for ULAB faculty on URMS",
   "permissions": ["storage", "sidePanel"],
   "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
   "externally_connectable": {

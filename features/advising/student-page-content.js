@@ -147,7 +147,7 @@
         return tier === 'unspecified' ? 'Probation (tier unspecified)' : `Probation — Tier ${tier}`;
     }
 
-    // Same disclaimer/note text as features/advising/results.js's bulk
+    // Same disclaimer/note text as features/advising-billing/results.js's bulk
     // Advising email builder, kept in sync manually (this content script has
     // no access to that page's closures).
     const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';

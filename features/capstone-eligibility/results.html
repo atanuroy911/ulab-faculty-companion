@@ -170,6 +170,7 @@
         .hist-passed, .hist-taken { color: var(--ok-text); }
         .hist-not-completed, .hist-unknown-grade { color: var(--bad-text); }
         .hist-in-progress { color: var(--accent2); }
+        .hist-transferred-waived { color: var(--ok-text); }
         .status-pill { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid; white-space: nowrap; }
         .status-eligible { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
         .status-not-eligible { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad-text); }
@@ -234,7 +235,7 @@
                 <tr>
                     <th></th><th>Student ID</th><th>Name</th><th>Eligibility</th>
                     <th>CSE2200</th><th>CSE3103</th><th>CSE3200</th><th>CSE3203</th>
-                    <th>Earned Credit</th><th>Current Credit</th><th>Total Credit</th>
+                    <th>Earned Credit</th><th>Current Credit</th><th>Transferred Credit</th><th>Total Credit</th>
                     <th>Email</th><th>Mobile</th><th>Extra Courses</th>
                 </tr>
             </thead>
@@ -243,7 +244,7 @@
     </div>
 
     <p class="disclaimer">
-        Eligibility requires 105+ total credit hours (earned + currently in progress) and CSE2200,
+        Eligibility requires 105+ total credit hours (earned + currently in progress + transferred/waived) and CSE2200,
         CSE3103, CSE3200, CSE3203 each passed or currently in progress. "Extra Courses" lists any
         transcript entry outside the expected course-code list — worth a manual look, not necessarily
         a problem. This report reflects a read-only check of URMS at the time it was run.

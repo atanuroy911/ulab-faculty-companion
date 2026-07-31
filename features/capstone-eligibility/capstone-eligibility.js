@@ -327,6 +327,9 @@
         const t4Tables = doc.querySelectorAll('#T4');
         const completedCourses = parseGenericTable(t4Tables[0]);
 
+        const transferredCard = findCardByTitle(doc, 'Transferred/Waived Courses');
+        const transferredCourses = parseGenericTable(transferredCard ? transferredCard.querySelector('table') : null);
+
         const infoCard = findCardByTitle(doc, 'Student Information');
         const studentInfo = parseKeyValueTable(infoCard ? infoCard.querySelector('table') : null);
         const earnedCredit = parseFloat(studentInfo['Total Credit Hours Completed']) || 0;
@@ -376,6 +379,32 @@
                 isExtra: !ALLOWED_CANONICAL.has(code),
             });
         }
+        let transferredCredit = 0;
+        for (const row of transferredCourses) {
+            const rawId = (row['CourseID'] || row['CourseId'] || '').trim();
+            if (!rawId) continue;
+            const code = canonicalCode(rawId);
+            seenCodes.add(code);
+            const grade = (row['Grade'] || '').trim();
+            const credit = parseFloat(row['Credit']) || 0;
+            transferredCredit += credit;
+
+            const cat = window.ULAB_CATALOGUE;
+            const title = (cat && cat.titleFor(code)) || '';
+
+            courseHistory.push({
+                semester: 'Transferred/Waived',
+                courseId: rawId,
+                canonicalCode: code,
+                title,
+                credit,
+                grade,
+                status: 'Transferred/Waived',
+                isGating: GATING_COURSES.map(canonicalCode).includes(code),
+                isExtra: !ALLOWED_CANONICAL.has(code),
+            });
+        }
+
         courseHistory.sort((a, b) => semesterRank(a.semester) - semesterRank(b.semester));
 
         function statusFor(code) {
@@ -391,7 +420,7 @@
         const courseStatus = {};
         for (const code of GATING_COURSES) courseStatus[code] = statusFor(canonicalCode(code));
 
-        const totalCredit = earnedCredit + currentCredit;
+        const totalCredit = earnedCredit + currentCredit + transferredCredit;
         const coursesOk = GATING_COURSES.every(code => ['Passed', 'Taken'].includes(courseStatus[code]));
         const eligible = totalCredit >= MIN_TOTAL_CREDIT && coursesOk;
 
@@ -402,8 +431,8 @@
         const explanation = [];
         explanation.push(
             totalCredit >= MIN_TOTAL_CREDIT
-                ? `✅ Total credit is ${totalCredit} (${earnedCredit} completed + ${currentCredit} in progress) — meets the ${MIN_TOTAL_CREDIT}-credit minimum.`
-                : `❌ Total credit is ${totalCredit} (${earnedCredit} completed + ${currentCredit} in progress) — short of the ${MIN_TOTAL_CREDIT}-credit minimum by ${(MIN_TOTAL_CREDIT - totalCredit).toFixed(2)}.`
+                ? `✅ Total credit is ${totalCredit} (${earnedCredit} completed + ${currentCredit} in progress + ${transferredCredit} transferred/waived) — meets the ${MIN_TOTAL_CREDIT}-credit minimum.`
+                : `❌ Total credit is ${totalCredit} (${earnedCredit} completed + ${currentCredit} in progress + ${transferredCredit} transferred/waived) — short of the ${MIN_TOTAL_CREDIT}-credit minimum by ${(MIN_TOTAL_CREDIT - totalCredit).toFixed(2)}.`
         );
         for (const code of GATING_COURSES) {
             const status = courseStatus[code];
@@ -423,6 +452,7 @@
             courseStatus,
             earnedCredit,
             currentCredit,
+            transferredCredit,
             totalCredit,
             extraCourses,
             explanation,

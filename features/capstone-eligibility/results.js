@@ -31,7 +31,7 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
     }
 
     function histClass(status) {
-        return 'hist-' + status.toLowerCase().replace(/\s+/g, '-');
+        return 'hist-' + status.toLowerCase().replace(/[\s/]+/g, '-');
     }
 
     function buildDetailBodyHTML(r) {
@@ -96,7 +96,7 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
                 <td>${r.id}</td>
                 <td>${r.name || '—'}</td>
                 <td><span class="status-pill status-error">Error</span></td>
-                <td colspan="10">${r.error}</td>
+                <td colspan="11">${r.error}</td>
             `;
             tr.addEventListener('click', () => openDetailModal(r));
             tbody.appendChild(tr);
@@ -118,6 +118,7 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
             ${coursesHTML}
             <td>${r.earnedCredit ?? ''}</td>
             <td>${r.currentCredit ?? ''}</td>
+            <td>${r.transferredCredit ?? ''}</td>
             <td>${r.totalCredit ?? ''}</td>
             <td>${r.email || ''}</td>
             <td>${r.mobile || ''}</td>
@@ -129,16 +130,16 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
 
     const HEADERS = [
         'Student ID', 'Name', 'Eligibility', 'CSE2200', 'CSE3103', 'CSE3200', 'CSE3203',
-        'Earned Credit', 'Current Credit', 'Total Credit', 'Email', 'Mobile', 'Extra Courses',
+        'Earned Credit', 'Current Credit', 'Transferred Credit', 'Total Credit', 'Email', 'Mobile', 'Extra Courses',
     ];
 
     function rowValues(r) {
-        if (r.error) return [r.id, r.name || '', 'Error', '', '', '', '', '', '', '', '', '', r.error];
+        if (r.error) return [r.id, r.name || '', 'Error', '', '', '', '', '', '', '', '', '', '', r.error];
         const cs = r.courseStatus || {};
         return [
             r.id, r.name || '', r.eligibility,
             cs.CSE2200 || '', cs.CSE3103 || '', cs.CSE3200 || '', cs.CSE3203 || '',
-            r.earnedCredit ?? '', r.currentCredit ?? '', r.totalCredit ?? '',
+            r.earnedCredit ?? '', r.currentCredit ?? '', r.transferredCredit ?? '', r.totalCredit ?? '',
             r.email || '', r.mobile || '', (r.extraCourses || []).join(', '),
         ];
     }
@@ -155,7 +156,7 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
         const ws = XLSX.utils.aoa_to_sheet(rows);
         ws['!cols'] = [
             { wch: 12 }, { wch: 26 }, { wch: 13 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
-            { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 28 }, { wch: 14 }, { wch: 40 },
+            { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 28 }, { wch: 14 }, { wch: 40 },
         ];
 
         const GREEN = { fgColor: { rgb: '92D050' } };
@@ -181,7 +182,7 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
                     }
                 });
                 if ((r.totalCredit || 0) < 105) {
-                    const cell = ws[XLSX.utils.encode_cell({ r: rowIdx, c: 9 })];
+                    const cell = ws[XLSX.utils.encode_cell({ r: rowIdx, c: 10 })];
                     if (cell) cell.s = { fill: YELLOW };
                 }
             }

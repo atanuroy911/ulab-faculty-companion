@@ -139,6 +139,31 @@
         return null;
     }
 
+    // URMS blocks the course table with "Pre-registration payment status is
+    // not OK. System cannot proceed." for students who haven't cleared their
+    // pre-registration payment — a per-student billing issue, distinct from
+    // findRegistrationNotice's system-wide "not open yet" timing notices, so
+    // it's surfaced (and filterable) as its own flag.
+    function findPaymentNotice(doc) {
+        if (!doc.body) return null;
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                const tag = node.parentElement && node.parentElement.tagName;
+                return (tag === 'SCRIPT' || tag === 'STYLE') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        let combined = '';
+        let node;
+        while ((node = walker.nextNode())) combined += node.textContent + ' ';
+        combined = combined.replace(/\s+/g, ' ').trim();
+
+        const m = /pre-?registration\s+payment\s+status\s+is\s+not\s+ok\b\.?\s*(system\s+cannot\s+proceed\b\.?)?/i.exec(combined);
+        if (!m) return null;
+        let text = m[0].trim();
+        if (!/\.$/.test(text)) text += '.';
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
     function extractAdvisingInfo(doc) {
         const probationEl = doc.querySelector('p.bg-warning.text-dark');
         const t1Rows = Array.from(doc.querySelectorAll('#T1 tbody tr')).map(tr => {
@@ -173,6 +198,7 @@
             program: labeledValue(doc, 'Program'),
             probation: probationEl ? probationEl.textContent.replace(/\s+/g, ' ').trim() : null,
             registrationNotice: findRegistrationNotice(doc),
+            paymentNotice: findPaymentNotice(doc),
             coursesToRegister: t1Rows,
             totalCreditRegistering: totalCreditEl ? totalCreditEl.value : '',
             completedCourses,

@@ -94,6 +94,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         openEmailModal({
             title: `Advising Email — ${displayName}`,
             to: info.urmsEmail || s.email || '',
+            subject: `Advising Status — ${displayName} (${s.id})`,
             body: buildStudentEmailText(s, info, advising, flags),
         });
     });
@@ -137,10 +138,12 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     let labIssueCount = 0;
     let finalProbationCount = 0;
     let theoryConflictCount = 0;
+    let paymentIssueCount = 0;
     let cleanCount = 0;
 
     const list = document.getElementById('students-list');
-    const cleanStudents = []; // { s, cardEl } — eligible for the bulk Save+Bill action
+    const bulkEligible = []; // { s, name, categories } — candidates for the bulk Save & Email Bill modal (see below)
+    const bulkExcluded = []; // { s, name, reasons } — never offered in the bulk modal; surfaced as a "left out" reminder instead
 
     for (const s of students) {
         const info = details[s.id] || {};
@@ -159,17 +162,59 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         if ((advising.labWithoutTheory || []).length) labIssueCount++;
         if (advising.finalProbation) finalProbationCount++;
         if ((advising.theoryDayConflicts || []).length) theoryConflictCount++;
+        if (info.paymentNotice) paymentIssueCount++;
 
-        const isClean = !info.error && !info.probation && hasCourses
+        const isClean = !info.error && !info.probation && !info.paymentNotice && hasCourses
             && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length
             && !(advising.theoryDayConflicts || []).length;
         if (isClean) cleanCount++;
+
+        // One or more issue-category keys this student matches — drives the
+        // "Filter by issue" panel (see applyFilters below). Kept in sync with
+        // the categories surfaced in the stats row / issues modal.
+        const issueKeys = [];
+        if (info.error) issueKeys.push('error');
+        if (isClean) issueKeys.push('clean');
+        if (!isClean) issueKeys.push('anyissue');
+        if (info.probation) issueKeys.push('probation');
+        if (advising.finalProbation) issueKeys.push('finalprobation');
+        if (!info.error && !hasCourses) issueKeys.push('nocourses');
+        if (openRetakes.length) issueKeys.push('retake');
+        if (advising.prereqIssues.length) issueKeys.push('prereq');
+        if ((advising.labWithoutTheory || []).length) issueKeys.push('lab');
+        if ((advising.theoryDayConflicts || []).length) issueKeys.push('theoryconflict');
+        if (info.paymentNotice) issueKeys.push('payment');
+
+        // Candidates for the bulk Save & Email Bill modal — anyone whose
+        // course list actually exists and isn't blocked by an open retake.
+        // A retake-pending student's registration is presumptively wrong
+        // (they should be retaking the failed course, not what they added),
+        // and "no courses added" has nothing to save — so both are hard
+        // exclusions, never offered as checklist options.
+        const bulkBlocked = !!info.error || !hasCourses || openRetakes.length > 0;
+        if (!bulkBlocked) {
+            bulkEligible.push({
+                s,
+                name: displayName,
+                categories: issueKeys.filter(k => ['clean', 'probation', 'finalprobation', 'prereq', 'lab', 'theoryconflict'].includes(k)),
+            });
+        } else {
+            // Never offered in the bulk checklist — the advisor has to reach
+            // these students individually (see the "Left out" panel in the
+            // bulk modal), so keep the reason around for that reminder.
+            const reasons = [];
+            if (info.error) reasons.push('error');
+            if (!info.error && !hasCourses) reasons.push('nocourses');
+            if (openRetakes.length) reasons.push('retake');
+            bulkExcluded.push({ s, name: displayName, reasons });
+        }
 
         const card = document.createElement('div');
         card.className = 'stu-card';
         card.dataset.sid = s.id;
         card.dataset.name = displayName.toLowerCase();
         card.dataset.clean = isClean ? '1' : '0';
+        card.dataset.issues = issueKeys.join(' ');
 
         // Issues modal body — one table per issue category (same shape as the
         // detail modal's tables), instead of a single flattened list, so e.g.
@@ -186,6 +231,9 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             }
             if (advising.finalProbation) {
                 html += `<div class="probation-banner">🚫 Final Probation (Tier 3) — cannot self-register; must go through Dept. Head/Coordinator.</div>`;
+            }
+            if (info.paymentNotice) {
+                html += `<div class="probation-banner">💳 ${info.paymentNotice}</div>`;
             }
             if ((advising.theoryDayConflicts || []).length) {
                 html += `<div class="section-label">📅 3+ theory courses on the same day</div>
@@ -246,6 +294,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
                 ${flagBadge('Reg', flags.regOk)}
                 ${info.probation ? `<span class="badge badge-warn">⚠️ ${probationLabel(advising.probationTier)}</span>` : ''}
                 ${advising.finalProbation ? `<span class="badge badge-bad">🚫 Final Probation — cannot self-register</span>` : ''}
+                ${info.paymentNotice ? `<span class="badge badge-bad">💳 Pre-reg payment issue</span>` : ''}
                 ${openRetakes.length ? `<span class="badge badge-bad">↻ ${openRetakes.length} course(s) to retake</span>` : ''}
                 ${advising.prereqIssues.length ? `<span class="badge badge-bad">⛔ Prereq issue</span>` : ''}
                 ${(advising.labWithoutTheory || []).length ? `<span class="badge badge-bad">🧪 Lab without theory</span>` : ''}
@@ -260,7 +309,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         // category (details live in the Issues modal / detail modal on demand).
         const issueCategoryCount = (info.probation ? 1 : 0) + (openRetakes.length ? 1 : 0)
             + (advising.prereqIssues.length ? 1 : 0) + ((advising.labWithoutTheory || []).length ? 1 : 0)
-            + ((advising.theoryDayConflicts || []).length ? 1 : 0);
+            + ((advising.theoryDayConflicts || []).length ? 1 : 0) + (info.paymentNotice ? 1 : 0);
 
         const compactBadges = info.error
             ? `<span class="chip chip-bad">⚠️ Fetch failed</span>`
@@ -286,6 +335,10 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         } else {
             if (info.registrationNotice) {
                 bodyHTML += `<div class="info-banner">🕒 ${info.registrationNotice}</div>`;
+            }
+
+            if (info.paymentNotice) {
+                bodyHTML += `<div class="probation-banner">💳 ${info.paymentNotice} Pre-registration payment needs to be cleared before the course list can be checked.</div>`;
             }
 
             if (info.probation) {
@@ -509,8 +562,6 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             });
         });
         list.appendChild(card);
-
-        if (isClean) cleanStudents.push(s);
     }
 
     document.getElementById('stat-clean').textContent = cleanCount;
@@ -521,6 +572,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     document.getElementById('stat-lab').textContent = labIssueCount;
     document.getElementById('stat-final-probation').textContent = finalProbationCount;
     document.getElementById('stat-theory-conflict').textContent = theoryConflictCount;
+    document.getElementById('stat-payment').textContent = paymentIssueCount;
 
     // ── Save / Save+Bill actions — live against URMS via ULAB_SAVE_ENGINE ───
     const BASE = 'https://urms-awp.ulab.edu.bd';
@@ -553,28 +605,159 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         }
     }
 
-    // ── Bulk "Save & Email Bill — Clean Students" ────────────────────────────
-    const bulkBtn = document.getElementById('btn-bulk-save');
-    const bulkLog = document.getElementById('bulk-run-log');
-    bulkBtn.textContent = `💾 Save & Email Bill — Clean Students (${cleanStudents.length})`;
-    bulkBtn.disabled = cleanStudents.length === 0;
+    // ── Bulk "Save & Email Bill" modal ───────────────────────────────────────
+    // Opens a checklist modal instead of saving immediately: Clean is checked
+    // by default, but Probation / Final Probation / Prerequisite issues /
+    // Lab without theory / 3+ theory in 1 day can each be opted in too.
+    // Students with an open retake or no courses added are never offered —
+    // they're excluded from bulkEligible entirely (see the main student loop).
+    const CATEGORY_LABELS = {
+        clean: '✓ Clean (no issues)',
+        probation: '⚠️ On probation',
+        finalprobation: '🚫 Final probation (restricted)',
+        prereq: '⛔ Prerequisite issues',
+        lab: '🧪 Lab without theory',
+        theoryconflict: '📅 3+ theory in 1 day',
+    };
 
-    function appendBulkLog(sid, name, cls, msg) {
+    const bulkModalOverlay = document.getElementById('bulk-save-modal-overlay');
+    const bulkChecklist = document.getElementById('bulk-save-checklist');
+    const bulkCountEl = document.getElementById('bulk-save-count');
+    const bulkStartBtn = document.getElementById('bulk-save-start');
+    const bulkStartLabel = document.getElementById('bulk-save-start-label');
+    const bulkProgressWrap = document.getElementById('bulk-save-progress-wrap');
+    const bulkProgressBar = document.getElementById('bulk-save-progress-bar');
+    const bulkProgressText = document.getElementById('bulk-save-progress-text');
+    const bulkLog = document.getElementById('bulk-run-log');
+    const bulkEmailToggle = document.getElementById('bulk-email-toggle');
+    const bulkLeftoutHeader = document.getElementById('bulk-leftout-header');
+    const bulkLeftoutBody = document.getElementById('bulk-leftout-body');
+    const bulkLeftoutCount = document.getElementById('bulk-leftout-count');
+    let bulkStopRequested = false;
+    let bulkRunning = false;
+
+    const REASON_LABELS = {
+        retake: '↻ Needs to retake a course',
+        nocourses: '📝 No courses added',
+        error: '⚠️ Fetch failed',
+        unselected: 'Category not checked for this run',
+    };
+
+    // "Left out" = hard-excluded (retake/no courses/fetch error, never
+    // offered) plus anyone eligible but whose category isn't currently
+    // checked — the whole point being a standing reminder that these
+    // students still need a human advisor to reach out and email them,
+    // since the bulk action won't touch them.
+    function renderLeftOut() {
+        const checked = Array.from(document.querySelectorAll('.bulk-cat-check')).filter(cb => cb.checked).map(cb => cb.dataset.key);
+        const unselected = bulkEligible.filter(e => !e.categories.some(c => checked.includes(c)));
+        const rows = [
+            ...bulkExcluded.map(e => ({ s: e.s, name: e.name, reasons: e.reasons })),
+            ...unselected.map(e => ({ s: e.s, name: e.name, reasons: ['unselected'] })),
+        ];
+        bulkLeftoutCount.textContent = rows.length;
+        bulkLeftoutBody.innerHTML = rows.length
+            ? rows.map(r => `<div class="leftout-row">
+                    <span>${r.s.id} ${r.name ? '(' + r.name + ')' : ''}</span>
+                    <span class="leftout-reason">${r.reasons.map(k => REASON_LABELS[k] || k).join(', ')}</span>
+                </div>`).join('')
+            : `<div class="empty-note">Nobody left out — every student is either included above or has no advising record to act on.</div>`;
+    }
+    bulkLeftoutHeader.addEventListener('click', () => {
+        bulkLeftoutHeader.classList.toggle('open');
+        bulkLeftoutBody.classList.toggle('open');
+    });
+
+    // Only offer checklist rows for categories that actually have at least
+    // one eligible student, so e.g. a cohort with no probation cases doesn't
+    // show a dead checkbox.
+    const categoriesPresent = Object.keys(CATEGORY_LABELS).filter(key =>
+        bulkEligible.some(e => e.categories.includes(key))
+    );
+    bulkChecklist.innerHTML = categoriesPresent.map(key => {
+        const n = bulkEligible.filter(e => e.categories.includes(key)).length;
+        return `<label class="filter-option">
+            <input type="checkbox" class="bulk-cat-check" data-key="${key}" ${key === 'clean' ? 'checked' : ''}>
+            ${CATEGORY_LABELS[key]} (${n})
+        </label>`;
+    }).join('') || `<div class="empty-note">No eligible students (everyone either needs a retake or has no courses added).</div>`;
+
+    function selectedBulkStudents() {
+        const checked = Array.from(document.querySelectorAll('.bulk-cat-check')).filter(cb => cb.checked).map(cb => cb.dataset.key);
+        if (!checked.length) return [];
+        const seen = new Set();
+        const out = [];
+        for (const e of bulkEligible) {
+            if (seen.has(e.s.id)) continue;
+            if (e.categories.some(c => checked.includes(c))) { out.push(e); seen.add(e.s.id); }
+        }
+        return out;
+    }
+
+    function refreshBulkCount() {
+        const n = selectedBulkStudents().length;
+        bulkCountEl.textContent = n;
+        bulkStartBtn.disabled = n === 0 || bulkRunning;
+        renderLeftOut();
+    }
+    document.getElementById('btn-bulk-save').addEventListener('click', () => {
+        if (!categoriesPresent.length) return;
+        refreshBulkCount();
+        bulkProgressWrap.style.display = 'none';
+        bulkLog.innerHTML = '';
+        bulkLog.classList.remove('show');
+        bulkModalOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    });
+    bulkChecklist.addEventListener('change', refreshBulkCount);
+
+    function closeBulkModal() {
+        if (bulkRunning) { bulkStopRequested = true; return; }
+        bulkModalOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.getElementById('bulk-save-modal-close').addEventListener('click', closeBulkModal);
+    bulkModalOverlay.addEventListener('click', (e) => { if (e.target === bulkModalOverlay) closeBulkModal(); });
+
+    // Accordion-style log row: the header is the one-line status (same as
+    // before), collapsed by default; clicking it reveals the verbose detail
+    // (full engine response text, and which issue categories put this
+    // student in the run) instead of cramming everything into one line.
+    function appendBulkLog(sid, name, cls, msg, verbose) {
         bulkLog.classList.add('show');
-        const row = document.createElement('div');
-        row.className = `bulk-log-row bulk-log-${cls}`;
-        row.textContent = `${sid} ${name ? '(' + name + ')' : ''} — ${msg}`;
-        bulkLog.appendChild(row);
+        const item = document.createElement('div');
+        item.className = 'log-accordion-item';
+        const header = document.createElement('button');
+        header.type = 'button';
+        header.className = `log-accordion-header bulk-log-${cls}`;
+        header.innerHTML = `<span>${sid} ${name ? '(' + name + ')' : ''} — ${msg}</span>${verbose ? '<span class="accordion-caret">▾</span>' : ''}`;
+        item.appendChild(header);
+        if (verbose) {
+            const body = document.createElement('div');
+            body.className = 'log-accordion-body';
+            body.textContent = verbose;
+            item.appendChild(body);
+            header.addEventListener('click', () => {
+                header.classList.toggle('open');
+                body.classList.toggle('open');
+            });
+        }
+        bulkLog.appendChild(item);
         bulkLog.scrollTop = bulkLog.scrollHeight;
     }
 
-    bulkBtn.addEventListener('click', async () => {
+    bulkStartBtn.addEventListener('click', async () => {
         const engine = window.ULAB_SAVE_ENGINE;
-        if (!engine || !cleanStudents.length) return;
-        const emailBillEnabled = document.getElementById('bulk-email-toggle').checked;
+        const targets = selectedBulkStudents();
+        if (!engine || !targets.length) return;
+        const emailBillEnabled = bulkEmailToggle.checked;
 
-        bulkBtn.disabled = true;
-        bulkBtn.textContent = '⏳ Running…';
+        bulkRunning = true;
+        bulkStopRequested = false;
+        bulkStartBtn.disabled = true;
+        bulkStartLabel.textContent = '⏳ Running…';
+        document.querySelectorAll('.bulk-cat-check').forEach(cb => cb.disabled = true);
+        bulkProgressWrap.style.display = '';
         bulkLog.innerHTML = '';
         bulkLog.classList.add('show');
 
@@ -586,22 +769,32 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
                 sharedSemesterId = shared.semesterId;
             }
 
-            for (const s of cleanStudents) {
+            for (let i = 0; i < targets.length; i++) {
+                if (bulkStopRequested) { appendBulkLog('', '', 'skip', `Stopped — ${targets.length - i} student(s) not run.`); break; }
+                const { s, categories } = targets[i];
+                const categoryText = `Included for: ${categories.map(c => CATEGORY_LABELS[c] || c).join(', ')}`;
+                bulkProgressText.textContent = `${i + 1} / ${targets.length} — ${s.name || s.id}`;
+                bulkProgressBar.style.width = `${Math.round((i / targets.length) * 100)}%`;
                 setSaveStatus(s.id, '⏳ Saving…', 'pending');
                 try {
                     const result = await engine.saveOneStudent(s, { parser, BASE, emailBillEnabled, sharedToken, semesterId: sharedSemesterId });
                     sharedToken = result.token;
                     setSaveStatus(s.id, result.rowMsg, result.rowClass);
-                    appendBulkLog(s.id, s.name, result.rowClass, result.detail || result.rowMsg);
+                    appendBulkLog(s.id, s.name, result.rowClass, result.rowMsg, `${categoryText}\n${result.detail || result.rowMsg}`);
                 } catch (err) {
                     console.error('[ULAB Advising & Billing]', s.id, err);
                     setSaveStatus(s.id, `❌ ${err.message}`, 'fail');
-                    appendBulkLog(s.id, s.name, 'fail', err.message);
+                    appendBulkLog(s.id, s.name, 'fail', 'Failed', `${categoryText}\n${err.message}`);
                 }
+                bulkProgressBar.style.width = `${Math.round(((i + 1) / targets.length) * 100)}%`;
             }
+            if (!bulkStopRequested) bulkProgressText.textContent = `Done — ${targets.length} / ${targets.length}`;
         } finally {
-            bulkBtn.disabled = false;
-            bulkBtn.textContent = `💾 Save & Email Bill — Clean Students (${cleanStudents.length})`;
+            bulkRunning = false;
+            document.querySelectorAll('.bulk-cat-check').forEach(cb => cb.disabled = false);
+            bulkStartLabel.textContent = '▶ Start Save & Email Bill';
+            refreshBulkCount();
+            if (bulkStopRequested) closeBulkModal();
         }
     });
 
@@ -622,6 +815,11 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
 
         if (info.registrationNotice) {
             lines.push(`🕒 ${info.registrationNotice} Your course list can't be checked yet — this email covers everything else on your record.`);
+            lines.push('');
+        }
+
+        if (info.paymentNotice) {
+            lines.push(`💳 ${info.paymentNotice} Your pre-registration payment needs to be cleared before your course list can be checked.`);
             lines.push('');
         }
 
@@ -675,7 +873,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             lines.push('');
         }
 
-        if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+        if (!info.paymentNotice && !openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
             && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
             lines.push('No issues found — you are clear to proceed with registration as planned.');
             lines.push('');
@@ -694,7 +892,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         return lines.join('\n');
     }
 
-    function buildBulkEmailText() {
+    function buildBulkEmailText(recipients) {
         const lines = [];
         lines.push('Dear Advisees,');
         lines.push('');
@@ -703,7 +901,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         lines.push(THEORY_DAY_NOTE);
         lines.push('');
 
-        students.forEach((s, idx) => {
+        (recipients || students).forEach((s, idx) => {
             const info = details[s.id] || {};
             const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [] };
             const name = info.urmsName || s.name || 'Unknown';
@@ -730,6 +928,10 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
                 lines.push(`   🕒 ${info.registrationNotice} Course list can't be checked yet.`);
             }
 
+            if (info.paymentNotice) {
+                lines.push(`   💳 ${info.paymentNotice} Pre-registration payment needs to be cleared.`);
+            }
+
             if (openRetakes.length) {
                 lines.push(`   Courses to retake: ${openRetakes.map(r => `${r.courseId} (${r.title})`).join(', ')}`);
             }
@@ -746,7 +948,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             if ((advising.theoryDayConflicts || []).length) {
                 lines.push(`   3+ theory in 1 day: ${advising.theoryDayConflicts.map(c => `${c.day} (${c.courses.map(x => x.courseId).join(', ')})`).join('; ')} — section change permitted to fix this`);
             }
-            if (!openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+            if (!info.paymentNotice && !openRetakes.length && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
                 && !(advising.theoryDayConflicts || []).length && advising.probationTier === null) {
                 lines.push('   No issues found — clear to proceed with registration.');
             }
@@ -761,7 +963,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     }
 
     function buildCSV() {
-        const headers = ['Student ID', 'Name', 'Email', 'Clean (Auto Save+Bill Eligible)', 'Probation Tier', 'Final Probation (Restricted)', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', '3+ Theory In 1 Day', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
+        const headers = ['Student ID', 'Name', 'Email', 'Clean (Auto Save+Bill Eligible)', 'Probation Tier', 'Final Probation (Restricted)', 'Courses To Retake', 'Prerequisite Issues', 'Lab Without Theory', '3+ Theory In 1 Day', 'Pre-Registration Payment Issue', 'Registration OK', 'Pre-Reg OK', 'Payment Due'];
         const rows = [headers];
         for (const s of students) {
             const info = details[s.id] || {};
@@ -769,7 +971,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             const flags = parseFlags(s.flags);
             const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
             const hasCourses = (info.coursesToRegister || []).length > 0;
-            const isClean = !info.error && !info.probation && hasCourses
+            const isClean = !info.error && !info.probation && !info.paymentNotice && hasCourses
                 && !openRetakes.length && !advising.prereqIssues.length && !(advising.labWithoutTheory || []).length
                 && !(advising.theoryDayConflicts || []).length;
             rows.push([
@@ -783,6 +985,7 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
                 (advising.prereqIssues || []).map(p => `${p.courseId} needs ${p.missing.map(m => m.courseId).join('/')}`).join('; '),
                 (advising.labWithoutTheory || []).map(l => `${l.labCourseId} needs ${l.theoryCourseId}`).join('; '),
                 (advising.theoryDayConflicts || []).map(c => `${c.day}: ${c.courses.map(x => x.courseId).join('/')}`).join('; '),
+                info.paymentNotice ? 'Yes' : '',
                 flags.regOk === null ? '' : (flags.regOk ? 'OK' : 'Not OK'),
                 flags.preRegOk === null ? '' : (flags.preRegOk ? 'OK' : 'Not OK'),
                 flags.payDate || '',
@@ -820,8 +1023,11 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
 
     let currentEmail = null;
 
-    function openEmailModal({ title, to, body }) {
-        currentEmail = { to, body };
+    // `bulk: true` sends recipients as Bcc instead of To when prefilling
+    // Gmail — a multi-student email put in To would expose every
+    // recipient's address to every other recipient.
+    function openEmailModal({ title, to, subject, body, bulk }) {
+        currentEmail = { to, subject: subject || 'Advising Status Update', body, bulk: !!bulk };
         document.getElementById('email-modal-title').textContent = title;
         document.getElementById('email-modal-to').value = to;
         document.getElementById('email-modal-body').value = body;
@@ -852,26 +1058,59 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         copyText(currentEmail.body);
         flashCopied('email-copy-body-feedback');
     });
-    document.getElementById('email-open-gmail').addEventListener('click', () => {
-        window.open('https://mail.google.com/mail/?view=cm&fs=1', '_blank');
+    const gmailIdxInput = document.getElementById('gmail-account-idx');
+    gmailIdxInput.value = localStorage.getItem('ulab-gmail-account-idx') || '0';
+    gmailIdxInput.addEventListener('change', () => {
+        const idx = Math.max(0, parseInt(gmailIdxInput.value, 10) || 0);
+        gmailIdxInput.value = idx;
+        localStorage.setItem('ulab-gmail-account-idx', String(idx));
     });
 
+    document.getElementById('email-open-gmail').addEventListener('click', () => {
+        if (!currentEmail) return;
+        const idx = Math.max(0, parseInt(gmailIdxInput.value, 10) || 0);
+        const params = new URLSearchParams({ view: 'cm', fs: '1', su: currentEmail.subject, body: currentEmail.body });
+        params.set(currentEmail.bulk ? 'bcc' : 'to', currentEmail.to);
+        window.open(`https://mail.google.com/mail/u/${idx}/?${params.toString()}`, '_blank');
+    });
+
+    // Both bulk actions below target whichever students currently pass the
+    // search box + "Filter by issue" panel (see applyFilters) — so checking
+    // e.g. "⛔ Prerequisite issues" and hitting "Generate Bulk Email" sends
+    // only to that subset, instead of always the full roster. Uses the
+    // rendered cards' visibility rather than re-deriving the filter logic,
+    // so the two stay in sync automatically.
+    function getVisibleStudents() {
+        const visibleIds = new Set(
+            Array.from(document.querySelectorAll('.stu-card'))
+                .filter(c => c.style.display !== 'none')
+                .map(c => c.dataset.sid)
+        );
+        return students.filter(s => visibleIds.has(s.id));
+    }
+
     document.getElementById('btn-bulk-email').addEventListener('click', () => {
-        const emails = students
+        const recipients = getVisibleStudents();
+        const emails = recipients
             .map(s => (details[s.id] && details[s.id].urmsEmail) || s.email)
             .filter(Boolean);
+        const filtered = recipients.length !== students.length;
         openEmailModal({
-            title: `Bulk Advising Email — ${students.length} Students`,
+            title: `Bulk Advising Email — ${recipients.length} Student${recipients.length === 1 ? '' : 's'}${filtered ? ' (filtered)' : ''}`,
             to: emails.join(', '),
-            body: buildBulkEmailText(),
+            subject: 'Advising Status Update',
+            body: buildBulkEmailText(recipients),
+            bulk: true,
         });
     });
 
     document.getElementById('btn-copy-emails').addEventListener('click', () => {
-        const emails = students
+        const recipients = getVisibleStudents();
+        const emails = recipients
             .map(s => (details[s.id] && details[s.id].urmsEmail) || s.email)
             .filter(Boolean);
-        showOutput(`Advisee Emails (${emails.length})`, emails.join(', '));
+        const filtered = recipients.length !== students.length;
+        showOutput(`Advisee Emails (${emails.length})${filtered ? ' — filtered' : ''}`, emails.join(', '));
     });
 
     document.getElementById('btn-export-csv').addEventListener('click', () => {
@@ -897,18 +1136,45 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         document.getElementById('comm-output').style.display = 'none';
     });
 
+    // ── Filter-by-issue dropdown ──────────────────────────────────────────
+    // Replaces the old single "hide clean students" checkbox: any number of
+    // issue categories can be selected at once (OR — a card shows if it
+    // matches ANY checked category); with nothing checked, everyone shows,
+    // same as the old unchecked default.
+    const filterChecks = Array.from(document.querySelectorAll('.filter-check'));
+    const filterBtn = document.getElementById('filter-btn');
+    const filterPanel = document.getElementById('filter-panel');
+    const filterCountEl = document.getElementById('filter-count');
+
     function applyFilters() {
         const q = document.getElementById('search').value.toLowerCase();
-        const hideClean = document.getElementById('hide-clean').checked;
+        const selected = filterChecks.filter(cb => cb.checked).map(cb => cb.dataset.key);
+
+        filterCountEl.style.display = selected.length ? '' : 'none';
+        filterCountEl.textContent = selected.length;
+
         document.querySelectorAll('.stu-card').forEach(c => {
             const matchesSearch = !q || c.dataset.sid.includes(q) || c.dataset.name.includes(q);
-            const matchesClean = !hideClean || c.dataset.clean === '0';
-            c.style.display = matchesSearch && matchesClean ? '' : 'none';
+            const cardIssues = (c.dataset.issues || '').split(' ');
+            const matchesFilter = !selected.length || selected.some(key => cardIssues.includes(key));
+            c.style.display = matchesSearch && matchesFilter ? '' : 'none';
         });
     }
 
     document.getElementById('search').addEventListener('input', applyFilters);
-    document.getElementById('hide-clean').addEventListener('change', applyFilters);
+    filterChecks.forEach(cb => cb.addEventListener('change', applyFilters));
+
+    filterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterPanel.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!filterPanel.contains(e.target) && e.target !== filterBtn) filterPanel.classList.remove('open');
+    });
+    document.getElementById('filter-clear').addEventListener('click', () => {
+        filterChecks.forEach(cb => { cb.checked = false; });
+        applyFilters();
+    });
 
     // ── Theme toggle ─────────────────────────────────────────────
     const htmlEl = document.documentElement;

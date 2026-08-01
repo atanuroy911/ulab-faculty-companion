@@ -172,6 +172,11 @@
             lines.push('');
         }
 
+        if (info.paymentNotice) {
+            lines.push(`💳 ${info.paymentNotice} Your pre-registration payment needs to be cleared before your course list can be checked.`);
+            lines.push('');
+        }
+
         if (advising.probationTier !== null && advising.probationTier !== undefined) {
             lines.push(`⚠️ PROBATION: You are currently on academic probation${advising.probationTier === 'unspecified' ? '' : ` (Tier ${advising.probationTier})`}. Please meet your advisor as soon as possible to discuss your academic plan.`);
             lines.push('');
@@ -222,7 +227,7 @@
             lines.push('');
         }
 
-        if (!info.registrationNotice && !openRetakes.length && !(advising.prereqIssues || []).length
+        if (!info.registrationNotice && !info.paymentNotice && !openRetakes.length && !(advising.prereqIssues || []).length
             && !(advising.labWithoutTheory || []).length && !(advising.theoryDayConflicts || []).length
             && advising.probationTier === null) {
             lines.push('No issues found — you are clear to proceed with registration as planned.');
@@ -277,6 +282,8 @@
 
         if (info.registrationNotice) html += `<div class="ulab-fa-banner info">🕒 ${info.registrationNotice}</div>`;
 
+        if (info.paymentNotice) html += `<div class="ulab-fa-banner">💳 ${info.paymentNotice}</div>`;
+
         if (info.probation) html += `<div class="ulab-fa-banner">⚠️ ${info.probation}</div>`;
 
         if (advising.finalProbation) {
@@ -313,7 +320,7 @@
                 <div class="ulab-fa-note">Not recommended — all 3 finals would fall on this day too. Section change is only permitted to resolve this specific conflict since it arose during pre-registration/registration/add-drop.</div>`;
         }
 
-        if (!info.registrationNotice && !info.probation && !advising.finalProbation && !openRetakes.length
+        if (!info.registrationNotice && !info.paymentNotice && !info.probation && !advising.finalProbation && !openRetakes.length
             && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
             && !(advising.theoryDayConflicts || []).length) {
             html += `<div class="ulab-fa-note ulab-fa-ok">✓ No issues found.</div>`;

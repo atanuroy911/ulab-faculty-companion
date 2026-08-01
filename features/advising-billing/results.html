@@ -153,15 +153,80 @@
         .bulk-log-fail { color: var(--bad-text); }
         .bulk-log-skip { color: var(--warn-text); }
 
+        .bulk-progress-track {
+            width: 100%; height: 8px; border-radius: 999px; background: var(--surface2);
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .bulk-progress-fill {
+            height: 100%; width: 0%; background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            transition: width 0.2s ease;
+        }
+        .bulk-progress-text { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+        /* ── Accordion (bulk-modal "left out" panel + verbose run log) ────── */
+        .accordion { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+        .accordion-header {
+            width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            background: var(--warn-bg); border: none; color: var(--warn-text);
+            font-size: 12.5px; font-weight: 700; padding: 10px 12px; cursor: pointer; font-family: inherit;
+            text-align: left;
+        }
+        .accordion-header .accordion-caret { transition: transform 0.15s; flex-shrink: 0; }
+        .accordion-header.open .accordion-caret { transform: rotate(180deg); }
+        .accordion-body { display: none; padding: 8px 12px 10px; background: var(--surface2); }
+        .accordion-body.open { display: block; }
+        .leftout-row { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 12px; border-bottom: 1px solid var(--border2); }
+        .leftout-row:last-child { border-bottom: none; }
+        .leftout-reason { color: var(--muted); font-size: 11px; white-space: nowrap; }
+
+        .log-accordion-item { border-bottom: 1px solid var(--border2); }
+        .log-accordion-item:last-child { border-bottom: none; }
+        .log-accordion-header {
+            width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            background: none; border: none; font-family: 'Courier New', monospace; font-size: 11px;
+            padding: 4px 2px; cursor: pointer; text-align: left;
+        }
+        .log-accordion-body { display: none; padding: 4px 2px 8px 14px; font-size: 11px; color: var(--muted); white-space: pre-wrap; }
+        .log-accordion-body.open { display: block; }
+
         .schedule-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
         .search-bar { width: 100%; padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; }
         .search-bar:focus { border-color: var(--accent); }
         .search-bar::placeholder { color: var(--muted); }
-        .hide-clean-toggle {
-            display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
-            font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none;
+        /* ── Filter-by-issue dropdown ─────────────────────────────────────── */
+        .filter-dropdown { position: relative; flex-shrink: 0; }
+        .filter-btn {
+            display: flex; align-items: center; gap: 6px; white-space: nowrap;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+            padding: 9px 14px; font-size: 12.5px; font-weight: 600; color: var(--text);
+            cursor: pointer; font-family: inherit;
         }
-        .hide-clean-toggle input { cursor: pointer; }
+        .filter-btn:hover { border-color: var(--accent); }
+        .filter-btn .filter-count {
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2);
+            border-radius: 999px; font-size: 10.5px; font-weight: 700; padding: 1px 7px;
+        }
+        .filter-panel {
+            position: absolute; top: calc(100% + 6px); right: 0; z-index: 120; min-width: 250px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: 0 12px 32px -8px rgba(0,0,0,0.3); padding: 10px; display: none;
+        }
+        .filter-panel.open { display: block; }
+        .filter-option {
+            display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px;
+            font-size: 12.5px; color: var(--text); cursor: pointer; user-select: none;
+        }
+        .filter-option:hover { background: var(--surface2); }
+        .filter-option input { cursor: pointer; }
+        .filter-panel-footer {
+            display: flex; justify-content: space-between; padding: 8px 8px 2px; margin-top: 4px;
+            border-top: 1px solid var(--border);
+        }
+        .filter-clear-btn {
+            background: none; border: none; color: var(--accent); font-size: 11.5px; font-weight: 600;
+            cursor: pointer; font-family: inherit; padding: 6px 4px;
+        }
+        .filter-clear-btn:hover { text-decoration: underline; }
 
         .students-list { display: flex; flex-direction: column; gap: 14px; }
         .stu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: border-color 0.15s, transform 0.15s; }
@@ -458,23 +523,25 @@
                 <div class="stat-value" id="stat-theory-conflict">—</div>
             </div>
         </div>
+        <div class="stat-chip">
+            <span class="stat-icon">💳</span>
+            <div>
+                <div class="stat-label">Pre-registration incomplete</div>
+                <div class="stat-value" id="stat-payment">—</div>
+            </div>
+        </div>
     </div>
 
     <div class="bulk-bar">
-        <div class="bulk-bar-text" title="Students with issues are skipped here — save those individually from their own card.">
-            💾 Auto-saves & bills only <strong>✓ Clean</strong> students below.
+        <div class="bulk-bar-text">
+            💾 Save & Email Bill in bulk — choose which students to include below.
         </div>
-        <label class="bulk-email-toggle">
-            <input type="checkbox" id="bulk-email-toggle" checked />
-            Email bill too
-        </label>
-        <button class="bulk-save-btn" id="btn-bulk-save">💾 Save & Email Bill — Clean Students (0)</button>
-        <div id="bulk-run-log"></div>
+        <button class="bulk-save-btn" id="btn-bulk-save">💾 Save & Email Bill…</button>
     </div>
 
     <div class="comm-toolbar" id="comm-toolbar">
-        <button class="tool-btn" id="btn-bulk-email">📧 Generate Bulk Email</button>
-        <button class="tool-btn" id="btn-copy-emails">📋 Copy Advisee Emails</button>
+        <button class="tool-btn" id="btn-bulk-email" title="Sends to whichever students match the search box + Filter panel above — narrow it down first (e.g. check just ⛔ Prerequisite issues) to email only that group.">📧 Generate Bulk Email</button>
+        <button class="tool-btn" id="btn-copy-emails" title="Copies emails for whichever students match the search box + Filter panel above.">📋 Copy Advisee Emails</button>
         <button class="tool-btn" id="btn-export-csv">⬇️ Export CSV</button>
     </div>
     <div class="comm-output" id="comm-output" style="display:none">
@@ -490,10 +557,27 @@
 
     <div class="schedule-toolbar">
         <input class="search-bar" id="search" placeholder="🔍  Search by Student ID or Name…">
-        <label class="hide-clean-toggle">
-            <input type="checkbox" id="hide-clean">
-            Hide clean students
-        </label>
+        <div class="filter-dropdown">
+            <button class="filter-btn" id="filter-btn" type="button">
+                🔎 Filter <span class="filter-count" id="filter-count" style="display:none">0</span>
+            </button>
+            <div class="filter-panel" id="filter-panel">
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="anyissue"> ⚠ Any issue (not clean)</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="clean"> ✓ Clean (no issues)</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="probation"> ⚠️ On probation</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="finalprobation"> 🚫 Final probation (restricted)</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="nocourses"> 📝 No courses added</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="retake"> ↻ Needs to retake a course</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="prereq"> ⛔ Prerequisite issues</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="lab"> 🧪 Lab without theory</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="theoryconflict"> 📅 3+ theory in 1 day</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="payment"> 💳 Pre-registration incomplete (payment)</label>
+                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="error"> ⚠️ Fetch failed</label>
+                <div class="filter-panel-footer">
+                    <button class="filter-clear-btn" id="filter-clear" type="button">Clear all</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="students-list" id="students-list"></div>
 
@@ -544,7 +628,7 @@
             </div>
             <div class="email-modal-actions">
                 <button class="email-action-btn" id="email-copy-to">📋 Copy Address(es)</button>
-                <button class="email-action-btn primary" id="email-open-gmail">📧 Open in Gmail</button>
+                <button class="email-action-btn primary" id="email-open-gmail">📧 Open in Gmail (prefilled)</button>
                 <span class="email-copy-feedback" id="email-copy-to-feedback">Copied!</span>
             </div>
 
@@ -555,8 +639,52 @@
                 <span class="email-copy-feedback" id="email-copy-body-feedback">Copied!</span>
             </div>
             <p style="font-size:11px;color:var(--muted);margin-top:8px">
-                "Open in Gmail" opens a blank compose window — copy the address(es) and message above and paste them in.
+                "Open in Gmail" opens a compose window with the address(es), subject and message already filled in — review, then hit Send yourself.
+                Signed into multiple Google accounts?
+                Gmail account #
+                <input id="gmail-account-idx" type="number" min="0" value="0" style="width:36px;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;">
+                (0 = first account you signed into, in the order shown in Gmail's account switcher — set this once).
             </p>
+        </div>
+    </div>
+</div>
+
+<div class="email-modal-overlay" id="bulk-save-modal-overlay">
+    <div class="email-modal">
+        <div class="email-modal-header">
+            <span>💾 Save & Email Bill — Bulk</span>
+            <button class="email-modal-close" id="bulk-save-modal-close">✕</button>
+        </div>
+        <div class="email-modal-body">
+            <div class="email-modal-label">Include students with</div>
+            <div id="bulk-save-checklist"></div>
+            <p style="font-size:11px;color:var(--muted);margin-top:6px">
+                Students with an open retake or no courses added are never included here — handle those individually from their own card.
+            </p>
+
+            <div class="accordion" id="bulk-leftout-accordion">
+                <button class="accordion-header" id="bulk-leftout-header" type="button">
+                    <span>⚠️ <span id="bulk-leftout-count">0</span> student(s) left out — advise & email them yourself</span>
+                    <span class="accordion-caret">▾</span>
+                </button>
+                <div class="accordion-body" id="bulk-leftout-body"></div>
+            </div>
+
+            <label class="bulk-email-toggle" style="margin-top:14px">
+                <input type="checkbox" id="bulk-email-toggle" checked />
+                Email bill too
+            </label>
+
+            <div class="email-modal-actions" style="margin-top:14px">
+                <button class="email-action-btn primary" id="bulk-save-start" disabled><span id="bulk-save-start-label">▶ Start Save & Email Bill</span> (<span id="bulk-save-count">0</span>)</button>
+            </div>
+
+            <div id="bulk-save-progress-wrap" style="display:none;margin-top:14px">
+                <div class="bulk-progress-track"><div class="bulk-progress-fill" id="bulk-save-progress-bar"></div></div>
+                <div class="bulk-progress-text" id="bulk-save-progress-text"></div>
+            </div>
+
+            <div id="bulk-run-log"></div>
         </div>
     </div>
 </div>

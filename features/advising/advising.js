@@ -349,7 +349,13 @@
                 const norm = canonicalCode(p, cat);
                 const attempts = byCourse[norm];
                 if (!attempts) return true;
-                return !attempts.some(a => a.grade && !/^F$/i.test(a.grade));
+                const hasPass = attempts.some(a => a.grade && !/^F$/i.test(a.grade));
+                if (hasPass) return false;
+                // An attempt with no grade yet (blank/"—") means the course is
+                // currently in progress this semester — not failed, just
+                // ungraded — so don't flag it as a missing prerequisite.
+                const inProgress = attempts.some(a => !a.grade);
+                return !inProgress;
             });
             if (missing.length) {
                 result.prereqIssues.push({

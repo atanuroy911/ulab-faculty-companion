@@ -351,12 +351,19 @@
 
         const registeringSet = new Set((info.coursesToRegister || []).map(c => canonicalCode(c.courseId, cat)));
 
-        // Courses that were failed and never passed since.
+        // Courses that were failed and never passed since. A blank-grade
+        // attempt (e.g. "Fall 2025: F, Summer 2026: —") means the student is
+        // already re-taking it this semester and grades just haven't posted
+        // yet — not still-needs-retaking — so that counts the same as a pass
+        // here, and also marks retakingNow (on top of the coursesToRegister
+        // check) since the course-history table can show the in-progress
+        // retake even when it isn't separately listed in coursesToRegister.
         for (const courseId in byCourse) {
             const attempts = byCourse[courseId].slice().sort((a, b) => a.rank - b.rank);
             const hasFail = attempts.some(a => /^F$/i.test(a.grade));
             const hasPass = attempts.some(a => a.grade && !/^F$/i.test(a.grade));
-            if (hasFail && !hasPass) {
+            const hasInProgress = attempts.some(a => !a.grade);
+            if (hasFail && !hasPass && !hasInProgress) {
                 result.needsRetake.push({
                     courseId,
                     title: cat.titleFor(courseId) || courseId,

@@ -98,6 +98,15 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             body: buildStudentEmailText(s, info, advising, flags),
         });
     });
+    document.getElementById('detail-modal-pdf-btn').addEventListener('click', () => {
+        if (!detailModalCtx) return;
+        const { s, info, advising } = detailModalCtx;
+        const html = window.ULAB_ADVISING_REPORT.buildReportHTML(
+            [{ s, info, advising, cat: programCat, programLabel }],
+            { title: `Advising Report — ${detailModalCtx.displayName}` }
+        );
+        window.ULAB_ADVISING_REPORT.openPrintableReport(html);
+    });
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && document.getElementById('detail-modal-overlay').classList.contains('open')) closeDetailModal();
     });
@@ -799,11 +808,24 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     });
 
     // ── Communication tools: bulk email, per-student email, CSV, email list ─
-    const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';
+    const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions. Credit totals and category breakdowns above are estimated from your course history and the department catalogue — always confirm your remaining requirements against the official major completion guidelines / course catalogue on the ULAB website (ulab.edu.bd) before finalizing your registration plan.';
     // General note included in every email regardless of whether this
     // particular student currently has a conflict — students should know the
     // rule before they register, not just after they've already broken it.
     const THEORY_DAY_NOTE = 'Note: Please avoid selecting 3 theory courses on the same day of the week — their final exams will then also fall on that same day, which is not recommended. Section changes are only permitted to resolve a 3-theory-in-one-day conflict if it arises by chance during pre-registration, registration, or add/drop; section changes are not approved for any other reason.';
+
+    // Total/earned/remaining credits toward graduation, summed across the
+    // catalogue's degree-requirement categories — same numbers shown in the
+    // "🎓 Degree Progress" panel, condensed to one line for the email.
+    function creditsSummaryLine(advising) {
+        if (!advising || !advising.degreeProgress || !programCat || !programCat.degreeRequirements) return null;
+        const total = programCat.degreeRequirements.total;
+        if (!total) return null;
+        const earned = advising.degreeProgress.progress.reduce((sum, p) => sum + p.earnedCredits, 0);
+        const inProgress = advising.degreeProgress.progress.reduce((sum, p) => sum + p.inProgressCredits, 0);
+        const remaining = Math.max(0, total - earned - inProgress);
+        return `🎓 Credits toward graduation: ${earned} earned${inProgress ? ` + ${inProgress} in progress` : ''} of ${total} required (${remaining} remaining).`;
+    }
 
     function buildStudentEmailText(s, info, advising, flags) {
         const name = (info && info.urmsName) || s.name || 'Student';
@@ -883,6 +905,13 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         lines.push(`Pre-registration status: ${flags.preRegOk === null ? '—' : (flags.preRegOk ? 'OK' : 'Not OK')}`);
         if (flags.payDate) lines.push(`Payment due: ${flags.payDate}`);
         lines.push('');
+
+        const creditsLine = creditsSummaryLine(advising);
+        if (creditsLine) {
+            lines.push(creditsLine);
+            lines.push('');
+        }
+
         lines.push(THEORY_DAY_NOTE);
         lines.push('');
         lines.push(DISCLAIMER);
@@ -919,6 +948,9 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
                 ? `Probation${advising.probationTier === 'unspecified' ? '' : ` — Tier ${advising.probationTier}`}`
                 : 'Not on probation';
             lines.push(`   Status: ${probationText}`);
+
+            const creditsLine = creditsSummaryLine(advising);
+            if (creditsLine) lines.push(`   ${creditsLine}`);
 
             if (advising.finalProbation) {
                 lines.push('   🚫 FINAL PROBATION: cannot self-register online — must register via Department Head/Coordinator (request email or in person).');
@@ -1102,6 +1134,20 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             body: buildBulkEmailText(recipients),
             bulk: true,
         });
+    });
+
+    document.getElementById('btn-bulk-pdf').addEventListener('click', () => {
+        const recipients = getVisibleStudents();
+        const entries = recipients.map(s => {
+            const info = details[s.id] || {};
+            const advising = info.advising || { probationTier: null, finalProbation: false, needsRetake: [], prereqIssues: [], labWithoutTheory: [], theoryDayConflicts: [], degreeProgress: null };
+            return { s, info, advising, cat: programCat, programLabel };
+        });
+        const filtered = recipients.length !== students.length;
+        const html = window.ULAB_ADVISING_REPORT.buildReportHTML(entries, {
+            title: `Advising Report — ${recipients.length} Student${recipients.length === 1 ? '' : 's'}${filtered ? ' (filtered)' : ''}`,
+        });
+        window.ULAB_ADVISING_REPORT.openPrintableReport(html);
     });
 
     document.getElementById('btn-copy-emails').addEventListener('click', () => {

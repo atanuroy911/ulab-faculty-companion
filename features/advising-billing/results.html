@@ -542,6 +542,7 @@
     <div class="comm-toolbar" id="comm-toolbar">
         <button class="tool-btn" id="btn-bulk-email" title="Sends to whichever students match the search box + Filter panel above — narrow it down first (e.g. check just ⛔ Prerequisite issues) to email only that group.">📧 Generate Bulk Email</button>
         <button class="tool-btn" id="btn-copy-emails" title="Copies emails for whichever students match the search box + Filter panel above.">📋 Copy Advisee Emails</button>
+        <button class="tool-btn" id="btn-bulk-pdf" title="Opens a printable report (one page per student) for whichever students match the search box + Filter panel above — use your browser's print dialog to Save as PDF.">📄 Generate Bulk PDF</button>
         <button class="tool-btn" id="btn-export-csv">⬇️ Export CSV</button>
     </div>
     <div class="comm-output" id="comm-output" style="display:none">
@@ -594,6 +595,7 @@
             </div>
             <div class="detail-modal-header-actions">
                 <button class="card-email-btn" id="detail-modal-email-btn" title="Copy this student's advising email">✉️ Email</button>
+                <button class="card-email-btn" id="detail-modal-pdf-btn" title="Open a printable report for this student (Save as PDF from the print dialog)">📄 PDF</button>
                 <button class="detail-modal-close" id="detail-modal-close">✕</button>
             </div>
         </div>
@@ -697,6 +699,7 @@
 <script src="../advising/catalogues/eee.js"></script>
 <script src="../advising/catalogues/bangla.js"></script>
 <script src="../advising/catalogues/registry.js"></script>
+<script src="../advising/report-pdf.js"></script>
 <script src="../bulk-save/bulk-save.js"></script>
 <script src="results.js"></script>
 </body>

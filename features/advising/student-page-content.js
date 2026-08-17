@@ -134,6 +134,14 @@
             copyText(document.getElementById('ulab-fa-email-body').value);
         } else if (action === 'close') {
             closeModal();
+        } else if (action === 'pdf') {
+            const cat = currentProgramId ? (window.ULAB_CATALOGUES || {})[currentProgramId] : null;
+            const s = { id: currentStudentId(), name: currentInfo.urmsName };
+            const html = window.ULAB_ADVISING_REPORT.buildReportHTML(
+                [{ s, info: currentInfo, advising: currentAdvising, cat, programLabel: currentProgramId }],
+                { title: `Advising Report — ${currentInfo.urmsName || 'Student'}` }
+            );
+            window.ULAB_ADVISING_REPORT.openPrintableReport(html);
         }
     }
 
@@ -150,12 +158,26 @@
     // Same disclaimer/note text as features/advising-billing/results.js's bulk
     // Advising email builder, kept in sync manually (this content script has
     // no access to that page's closures).
-    const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions.';
+    const DISCLAIMER = 'This is an automated advising check generated from your URMS record. Please verify the details with your advisor before making any registration decisions. Credit totals and category breakdowns above are estimated from your course history and the department catalogue — always confirm your remaining requirements against the official major completion guidelines / course catalogue on the ULAB website (ulab.edu.bd) before finalizing your registration plan.';
     const THEORY_DAY_NOTE = 'Note: Please avoid selecting 3 theory courses on the same day of the week — their final exams will then also fall on that same day, which is not recommended. Section changes are only permitted to resolve a 3-theory-in-one-day conflict if it arises by chance during pre-registration, registration, or add/drop; section changes are not approved for any other reason.';
 
     function currentStudentId() {
         const el = document.querySelector('input[name="GenaratedCourseList.StudentId"]');
         return el ? el.value.trim() : '';
+    }
+
+    // Same computation as features/advising-billing/results.js's
+    // creditsSummaryLine, kept in sync manually (this content script has no
+    // access to that page's closures).
+    function creditsSummaryLine(advising) {
+        const cat = currentProgramId ? (window.ULAB_CATALOGUES || {})[currentProgramId] : null;
+        if (!advising || !advising.degreeProgress || !cat || !cat.degreeRequirements) return null;
+        const total = cat.degreeRequirements.total;
+        if (!total) return null;
+        const earned = advising.degreeProgress.progress.reduce((sum, p) => sum + p.earnedCredits, 0);
+        const inProgress = advising.degreeProgress.progress.reduce((sum, p) => sum + p.inProgressCredits, 0);
+        const remaining = Math.max(0, total - earned - inProgress);
+        return `🎓 Credits toward graduation: ${earned} earned${inProgress ? ` + ${inProgress} in progress` : ''} of ${total} required (${remaining} remaining).`;
     }
 
     function buildStudentEmailText(info, advising) {
@@ -234,6 +256,12 @@
             lines.push('');
         }
 
+        const creditsLine = creditsSummaryLine(advising);
+        if (creditsLine) {
+            lines.push(creditsLine);
+            lines.push('');
+        }
+
         lines.push(THEORY_DAY_NOTE);
         lines.push('');
         lines.push(DISCLAIMER);
@@ -277,6 +305,7 @@
         const name = info.urmsName || 'Student';
         let html = `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
             <button class="ulab-fa-email-btn" data-action="email">✉️ Email</button>
+            <button class="ulab-fa-email-btn" data-action="pdf">📄 PDF</button>
             <h2>🎓 Advising Result — ${name}</h2>
             <div class="ulab-fa-sub">Program: ${programId || info.program || 'Unknown'} · Automated check — verify before acting.</div>`;
 

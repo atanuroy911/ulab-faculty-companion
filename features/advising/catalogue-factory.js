@@ -42,15 +42,21 @@
         // Lab/theory pairing — derived generically from UNESCO numbering
         // (every lab is numbered exactly one above its theory course) rather
         // than hand-listed, so it stays correct if `courses` changes.
+        // Classification uses the catalogue's own `courseType` field (1-credit
+        // Lab vs 3-credit Theory, as transcribed from the official catalogue)
+        // rather than guessing from the title text — titles are inconsistent
+        // ("Structured Programming LAB" vs "Physics I Lab" vs courses that
+        // mention "lab" without being one), so name-matching produced wrong
+        // pairings that credit/type-based classification doesn't.
         const labTheoryMap = {};
         for (const c of courses) {
-            if (!/\blab\b/i.test(c.title)) continue;
+            if (c.courseType !== 'Lab') continue;
             const m = c.unescoCode.match(/^(\d+-\d+-)(\d+)$/);
             if (!m) continue;
             const [, prefix, numStr] = m;
             const theoryUnesco = prefix + String(parseInt(numStr, 10) - 1).padStart(numStr.length, '0');
             const theoryCourse = byUnesco[normalizeUnesco(theoryUnesco)];
-            if (theoryCourse && !/\blab\b/i.test(theoryCourse.title)) {
+            if (theoryCourse && theoryCourse.courseType !== 'Lab') {
                 labTheoryMap[normalizeUnesco(c.unescoCode)] = theoryCourse;
             }
         }

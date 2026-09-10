@@ -289,5 +289,51 @@
         };
     }
 
-    window.ULAB_ScheduleParser = { parseWorkbookForTeacher, parseTimeRange, DAY_ORDER };
+    // ── Semester start-date defaults ────────────────────────────────────
+    // ULAB's terms don't start on a fixed calendar date — each one starts
+    // on a specific Sunday that shifts slightly year to year — so rather
+    // than hardcode one semester's dates, this derives "the Nth Sunday of
+    // <anchor month>" per term, which the university's own registration
+    // calendar follows closely. Explicitly an approximation (confirmed by
+    // the person who gave these rules) — the resulting date is only ever a
+    // pre-filled default in the UI; the Semester start date field stays
+    // freely editable so a real published academic calendar always wins.
+    const SEMESTER_ANCHORS = {
+        Spring: { month: 0, nth: 3, weeks: 14 },  // 3rd Sunday of January
+        Summer: { month: 4, nth: 3, weeks: 14 },  // 3rd Sunday of May
+        Fall: { month: 8, nth: 2, weeks: 13 },    // 2nd Sunday of September
+    };
+
+    function nthSundayOfMonth(year, month0, n) {
+        const d = new Date(year, month0, 1);
+        const offsetToFirstSunday = (7 - d.getDay()) % 7;
+        d.setDate(1 + offsetToFirstSunday + (n - 1) * 7);
+        return d;
+    }
+
+    // Best-effort "Semester Year" detection from the uploaded file's name
+    // (e.g. "Class Schedule For Fall 2026 (UG) ....xlsx" → Fall 2026).
+    // Returns null if either piece can't be found — callers should fall
+    // back to letting the user pick manually rather than guessing.
+    function detectSemesterFromFilename(name) {
+        if (!name) return null;
+        const semMatch = name.match(/\b(spring|summer|fall)\b/i);
+        const yearMatch = name.match(/\b(20\d{2})\b/);
+        if (!semMatch || !yearMatch) return null;
+        const semester = semMatch[1][0].toUpperCase() + semMatch[1].slice(1).toLowerCase();
+        return { semester, year: parseInt(yearMatch[1], 10) };
+    }
+
+    // { startDate: Date, weeks: number } for a given semester/year, or null
+    // if the semester name isn't one of Spring/Summer/Fall.
+    function semesterDefaults(semester, year) {
+        const anchor = SEMESTER_ANCHORS[semester];
+        if (!anchor || !year) return null;
+        return { startDate: nthSundayOfMonth(year, anchor.month, anchor.nth), weeks: anchor.weeks };
+    }
+
+    window.ULAB_ScheduleParser = {
+        parseWorkbookForTeacher, parseTimeRange, DAY_ORDER,
+        detectSemesterFromFilename, semesterDefaults,
+    };
 })();

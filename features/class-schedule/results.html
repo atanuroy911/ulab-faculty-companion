@@ -86,6 +86,142 @@
             table.sched-table td.time-col { background: #f1f1f1; }
         }
 
+        /* ── Consultation schedule modal ─────────────────────────────── */
+        .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(8,12,22,0.72); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 95vw; max-width: 1400px; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; box-shadow: 0 28px 72px -14px rgba(0,0,0,0.65); transform: translateY(14px) scale(0.98); transition: transform 0.2s ease; }
+        /* Small dialogs (e.g. the export-options confirm) shouldn't inherit
+           the big schedule modal's near-fullscreen sizing — they size to
+           their own (short) content instead. */
+        .modal.modal-compact { width: auto; height: auto; max-width: 420px; max-height: 90vh; }
+        .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .modal-title { font-size: 17px; font-weight: 800; color: var(--text); }
+        .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .modal-close { width: 30px; height: 30px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 14px; cursor: pointer; flex-shrink: 0; }
+        .modal-close:hover { color: var(--text); background: var(--border); }
+        .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; background: var(--bg); }
+        .consult-modal-footer { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+        .consult-footer-hint { font-size: 11px; color: var(--muted); }
+        .export-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+        .export-btn-primary:hover { opacity: 0.92; background: var(--accent); }
+
+        /* Header "letterhead" card — accent bar + photo + structured fields */
+        .consult-header-card { position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 18px; background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .consult-header-accent { height: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+        .consult-header-inner { display: flex; gap: 20px; align-items: flex-start; padding: 18px 20px 20px; }
+        .consult-header-photo { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+        .consult-photo { width: 96px; height: 96px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .consult-photo-placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--badge2-bg), var(--surface2)); color: var(--accent2); font-size: 26px; font-weight: 800; }
+        .consult-photo-upload-btn { font-size: 10.5px; color: var(--accent); cursor: pointer; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px dashed var(--accent); }
+        .consult-photo-upload-btn:hover { background: var(--badge2-bg); }
+        .consult-header-text { flex: 1; min-width: 0; }
+        .consult-field-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 2px; }
+        .consult-h-name { font-size: 18px; font-weight: 800; color: var(--text); padding: 3px 6px; margin-bottom: 8px; }
+        .consult-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+        .consult-h-title, .consult-h-dept, .consult-h-line { font-size: 12.5px; color: var(--text); padding: 5px 7px; min-height: 1.4em; }
+
+        /* Every editable field gets a persistent, visible outline — not
+           revealed only on hover — so what's editable is obvious at a
+           glance (HCI: affordance should be discoverable without probing). */
+        .consult-outlined-field { outline: none; border: 1.5px dashed var(--accent2); border-radius: 6px; cursor: text; transition: border-color 0.15s, background 0.15s, box-shadow 0.15s; background: var(--surface2); }
+        .consult-outlined-field:hover { border-color: var(--accent); background: var(--badge2-bg); }
+        .consult-outlined-field:focus { border-style: solid; border-color: var(--accent); box-shadow: 0 0 0 3px var(--badge2-bg); background: var(--surface); }
+        .consult-outlined-field:empty:before { content: attr(data-placeholder); color: var(--muted); font-style: italic; }
+
+        .consult-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+        table.consult-table { width: 100%; border-collapse: collapse; min-width: 720px; table-layout: fixed; }
+        table.consult-table th, table.consult-table td { border: 1px solid var(--border); padding: 9px 11px; font-size: 12.5px; vertical-align: middle; text-align: center; overflow-wrap: break-word; word-break: break-word; }
+        table.consult-table thead th { background: var(--surface2); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent2); font-weight: 700; }
+        table.consult-table col.consult-col-day { width: 9%; }
+        table.consult-table col.consult-col-course { width: 24%; }
+        table.consult-table col.consult-col-time { width: 15%; }
+        table.consult-table col.consult-col-room { width: 9%; }
+        .consult-locked-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.3px; color: var(--muted); text-transform: none; margin-left: 4px; }
+        .consult-room-label { font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); margin-top: 4px; }
+        .consult-room-label .consult-outlined-field { display: inline-block; padding: 1px 6px; font-size: 10.5px; font-weight: 700; color: var(--text); }
+        .consult-day-cell { font-weight: 800; text-align: center; background: var(--surface2); color: var(--accent2); }
+        .consult-cell { white-space: pre-wrap; line-height: 1.4; text-align: center; }
+        .consult-subtitle { display: block; font-size: 10.5px; color: var(--muted); font-weight: 400; margin-top: 2px; white-space: normal; }
+        .consult-nowrap { white-space: pre-wrap; }
+        /* Class-hours cells are fixed — a flat, slightly muted look
+           (no dashed outline) visually distinguishes "given" from
+           "editable" content, reinforced by the "🔒 fixed" header badge. */
+        .consult-locked { background: var(--surface2); color: var(--text); cursor: default; }
+
+        /* Course/time button + its "×" sit in one centered, wrapping row —
+           this (not relying on the button's own box to somehow both center
+           itself and fit the cell) is what keeps the pill compact instead
+           of stretching to fill the column and pushing the "×" onto its
+           own line. */
+        .consult-pill-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+        .consult-icon-btn { width: 20px; height: 20px; flex-shrink: 0; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; font-size: 11px; line-height: 1; }
+        .consult-icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .consult-icon-btn-danger:hover { color: #ef4444; border-color: #ef4444; }
+
+        /* A filled course/time cell looks like plain text-with-a-pill, not
+           an empty "click to add" affordance — solid border, no muted/
+           italic styling, and importantly NOT flex (the base .consult-
+           course-btn/.consult-time-btn rules use inline-flex for the
+           single-line "+ Add …" case; a flex row would lay the code and
+           the subtitle span out side-by-side instead of stacked). */
+        .consult-course-btn-filled, .consult-time-btn-filled {
+            display: inline-block; border-style: solid !important; color: var(--text) !important;
+            font-weight: 600 !important; max-width: 100%; text-align: left; white-space: normal;
+        }
+
+        /* ── Print output for the consultation schedule (separate from the
+           weekly-grid print rules above) — swapped into view only while
+           body.printing-consultation is set, right before window.print().
+           #consult-print-area MUST be a direct child of <body> (not nested
+           inside another wrapper) for this selector to actually reach it. */
+        #consult-print-area { display: none; }
+        body.printing-consultation > *:not(#consult-print-area) { display: none !important; }
+        body.printing-consultation #consult-print-area { display: block !important; }
+        .consult-print-page { color: #111; font-family: 'Inter', system-ui, sans-serif; padding: 12px; }
+
+        /* Plain letterhead — name/title/contact as real typography, not
+           the editable card (no dashed boxes, no "FULL NAME" labels). */
+        .consult-print-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 2.5px solid #1F4E79; }
+        .consult-print-name { font-size: 24px; font-weight: 800; color: #1F4E79; }
+        .consult-print-role { font-size: 13px; color: #444; margin-top: 3px; }
+        .consult-print-contact { font-size: 11.5px; color: #666; margin-top: 6px; }
+        .consult-print-photo { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0; }
+        .consult-print-photo-placeholder { display: flex; align-items: center; justify-content: center; background: #eef1f6; color: #1F4E79; font-size: 22px; font-weight: 800; }
+
+        /* table-layout switches to auto for print — the modal's fixed
+           percentage columns are tuned for a 95vw modal, not a narrow
+           printed page, and were squeezing "Wednesday" onto two lines. */
+        .consult-print-page table.consult-table { table-layout: auto; }
+        .consult-print-page table.consult-table th, .consult-print-page table.consult-table td { border-color: #333; color: #111; }
+        .consult-print-page table.consult-table thead th { background: #eef1f6; color: #111; }
+        .consult-print-page .consult-day-cell { background: #f5f6f8; color: #111; white-space: nowrap; }
+        .consult-print-footer { margin-top: 16px; font-size: 11px; color: #333; border-top: 1px solid #ccc; padding-top: 10px; }
+
+        /* Keep a day's rows (and the header) together instead of letting
+           the browser split a table row — or the header from its first
+           row — across a page boundary. */
+        .consult-print-page table.consult-table thead { display: table-header-group; }
+        .consult-print-page table.consult-table tr { page-break-inside: avoid; break-inside: avoid; }
+        .consult-print-header { page-break-after: avoid; break-after: avoid; }
+        @media print {
+            body.printing-consultation { background: #fff; padding: 0; margin: 0; }
+            @page { size: landscape; margin: 12mm; }
+        }
+
+        /* Narrower windows: stack the letterhead photo above the text, and
+           drop the two-column field grid to one column so nothing gets
+           squeezed. Modal itself already scrolls (.modal-body), this just
+           keeps the content inside it usable at any width. */
+        @media (max-width: 680px) {
+            .modal:not(.modal-compact) { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+            .modal.modal-compact { width: 92vw; max-width: 380px; }
+            .consult-header-inner { flex-direction: column; align-items: center; text-align: center; }
+            .consult-field-row { grid-template-columns: 1fr; }
+            .consult-modal-footer { flex-wrap: wrap; }
+            .consult-footer-hint { flex-basis: 100%; }
+        }
+
         .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 30px 0 10px; }
         .list-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
         .list-row { display: flex; gap: 14px; padding: 10px 16px; font-size: 13px; align-items: center; }
@@ -144,12 +280,13 @@
             <input type="number" id="cal-weeks" min="1" max="26" value="16">
         </div>
         <button class="gcal-all-btn" id="gcal-all-btn">📆 Add All to Google Calendar (.ics)</button>
-        <div class="cal-hint">Pick the first day of classes, then either download the .ics file below and import it into Google Calendar, or click a single "+ Google Calendar" link next to any class to add just that one.</div>
+        <div class="cal-hint" id="cal-semester-hint">Pick the first day of classes, then either download the .ics file below and import it into Google Calendar, or click a single "+ Google Calendar" link next to any class to add just that one.</div>
     </div>
 
     <div class="export-row">
         <button class="export-btn" id="export-pdf-btn">🖨️ Export as PDF</button>
         <button class="export-btn" id="export-docx-btn">📝 Export as DOCX</button>
+        <button class="export-btn" id="export-consult-btn">📋 Export Teaching &amp; Consultation Schedule</button>
     </div>
 
     <div class="grid-wrap">
@@ -169,7 +306,12 @@
 <script src="../advising/catalogues/msj.js"></script>
 <script src="../advising/catalogues/eee.js"></script>
 <script src="../advising/catalogues/bangla.js"></script>
+<script src="schedule-parser.js"></script>
 <script src="export-docx.js"></script>
+<script src="consultation-schedule.js"></script>
+<script src="time-picker.js"></script>
+<script src="course-picker.js"></script>
+<script src="consultation-modal.js"></script>
 <script src="results.js"></script>
 </body>
 </html>

@@ -250,3 +250,17 @@ kbd {
 .ulab-log-ok { color: #34d399; }
 .ulab-log-fail { color: #f87171; }
 .ulab-log-skip { color: #f59e0b; }
+
+/* ── Saved-schedule history pills (features/class-schedule) ──────────── */
+.ulab-history-pill {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0 6px 6px 0;
+    padding: 5px 6px 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+    background: rgba(129,140,248,0.12); border: 1px solid rgba(129,140,248,0.3); color: #a5b4fc;
+}
+.ulab-history-pill-open { cursor: pointer; }
+.ulab-history-pill-open:hover { color: #c7d2fe; }
+.ulab-history-pill-remove {
+    width: 16px; height: 16px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255,255,255,0.08); color: inherit; font-size: 11px; line-height: 1;
+}
+.ulab-history-pill-remove:hover { background: rgba(239,68,68,0.35); color: #fff; }

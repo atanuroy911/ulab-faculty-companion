@@ -1,14 +1,28 @@
 // results.js — loaded inside features/class-schedule/results.html
-chrome.storage.local.get(['ulabClassSchedule'], (data) => {
+chrome.storage.local.get(['ulabClassSchedule', 'ulabConsultationToOpen'], (data) => {
     const sched = data.ulabClassSchedule;
+    const pendingConsultation = data.ulabConsultationToOpen;
+    if (pendingConsultation) chrome.storage.local.remove('ulabConsultationToOpen');
 
     if (!sched || !sched.entries || !sched.entries.length) {
-        document.body.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📭</div>
-                <div style="font-size:20px;font-weight:600;margin-bottom:8px">No schedule generated yet</div>
-                <div>Go to <strong>📅 Generate My Schedule</strong> in the side panel first.</div>
-            </div>`;
+        if (pendingConsultation) {
+            // Opened straight from a sidebar "history" pill — no fresh xlsx
+            // parse behind it, so skip the weekly-grid view entirely and
+            // just bring the saved consultation schedule straight up.
+            document.body.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <div style="font-size:20px;font-weight:600;margin-bottom:8px">Opening your saved schedule…</div>
+                </div>`;
+            window.ULAB_ConsultationModal.openSaved(pendingConsultation);
+        } else {
+            document.body.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div style="font-size:20px;font-weight:600;margin-bottom:8px">No schedule generated yet</div>
+                    <div>Go to <strong>📅 Generate My Schedule</strong> in the side panel first.</div>
+                </div>`;
+        }
         return;
     }
 
@@ -185,7 +199,12 @@ chrome.storage.local.get(['ulabClassSchedule'], (data) => {
             }
         }
         if (!title) {
-            const altMatch = entry.raw.match(/\d{3,4}-\d{3}-\d{3,4}/);
+            // Optional whitespace around each hyphen — the sheet isn't
+            // consistent about it (e.g. "0613-014- 1202" with a stray space
+            // after the second hyphen). The catalogue's own normalizeUnesco
+            // strips whitespace anyway, so passing the match through as-is
+            // (spaces included) still resolves correctly.
+            const altMatch = entry.raw.match(/\d{3,4}\s*-\s*\d{3}\s*-\s*\d{3,4}/);
             if (altMatch) title = resolveTitle(altMatch[0]);
         }
         titleCache.set(entry.raw, title);
@@ -268,22 +287,46 @@ chrome.storage.local.get(['ulabClassSchedule'], (data) => {
         return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    // Default the start-date picker to the coming Sunday so the calendar
+    // Default the start-date picker (and weeks count) so the calendar
     // links work immediately without the user having to know the exact
-    // semester start date.
+    // semester start date. Prefers the semester/year captured on upload
+    // (detected from the file name, or set manually there) — ULAB's term
+    // start is approximated as "the Nth Sunday of an anchor month" per
+    // features/class-schedule/schedule-parser.js; falls back to "the
+    // coming Sunday" when no semester/year is known. Either way this is
+    // just a starting point — both fields stay fully editable below.
     (function setDefaultStartDate() {
         const input = document.getElementById('cal-start-date');
+        const weeksInput = document.getElementById('cal-weeks');
+        const hint = document.getElementById('cal-semester-hint');
+
+        const known = sched.semester && sched.year
+            ? window.ULAB_ScheduleParser.semesterDefaults(sched.semester, sched.year)
+            : null;
+
+        if (known) {
+            input.value = `${known.startDate.getFullYear()}-${pad2(known.startDate.getMonth() + 1)}-${pad2(known.startDate.getDate())}`;
+            weeksInput.value = known.weeks;
+            if (hint) hint.textContent = `📅 Defaulted to ${sched.semester} ${sched.year}'s approximate start (an estimate — confirm against the published academic calendar).`;
+            return;
+        }
+
         const today = new Date();
         const offset = (0 - today.getDay() + 7) % 7; // next Sunday (0 if today is Sunday)
         const nextSunday = new Date(today);
         nextSunday.setDate(today.getDate() + offset);
         input.value = `${nextSunday.getFullYear()}-${pad2(nextSunday.getMonth() + 1)}-${pad2(nextSunday.getDate())}`;
+        if (hint) hint.textContent = "⚠️ Semester wasn't detected — defaulted to the coming Sunday. Set the real start date above.";
     })();
 
     document.getElementById('cal-start-date').addEventListener('change', renderAll);
     document.getElementById('cal-weeks').addEventListener('change', renderAll);
 
     document.getElementById('export-pdf-btn').addEventListener('click', () => window.print());
+
+    document.getElementById('export-consult-btn').addEventListener('click', () => {
+        window.ULAB_ConsultationModal.open(sched);
+    });
 
     document.getElementById('export-docx-btn').addEventListener('click', () => {
         const cellLinesFor = (day, slot) => sched.entries
@@ -324,6 +367,8 @@ chrome.storage.local.get(['ulabClassSchedule'], (data) => {
     });
 
     renderAll();
+
+    if (pendingConsultation) window.ULAB_ConsultationModal.openSaved(pendingConsultation);
 
     // ── Theme toggle ─────────────────────────────────────────────
     const htmlEl = document.documentElement;

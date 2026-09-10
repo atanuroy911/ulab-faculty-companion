@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULAB My Class Schedule</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        [data-theme="dark"] {
+            --bg:            #0c1220;
+            --surface:       #131e30;
+            --surface2:      #1a2840;
+            --border:        rgba(255,255,255,0.07);
+            --text:          #e2e8f0;
+            --muted:         #64748b;
+            --accent:        #38bdf8;
+            --accent2:       #818cf8;
+            --badge2-bg:     rgba(129,140,248,0.12);
+            --badge2-border: rgba(129,140,248,0.25);
+            --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+            --odd-row:       rgba(255,255,255,0.025);
+        }
+        [data-theme="light"] {
+            --bg:            #f1f5f9;
+            --surface:       #ffffff;
+            --surface2:      #f8fafc;
+            --border:        rgba(0,0,0,0.08);
+            --text:          #0f172a;
+            --muted:         #94a3b8;
+            --accent:        #0284c7;
+            --accent2:       #6366f1;
+            --badge2-bg:     rgba(99,102,241,0.08);
+            --badge2-border: rgba(99,102,241,0.25);
+            --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+            --odd-row:       rgba(0,0,0,0.03);
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 60px; }
+        .page { max-width: 1080px; margin: 0 auto; padding: 40px 24px 24px; }
+
+        .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 200; display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; font-size: 12px; color: var(--text); }
+        .theme-toggle .toggle-moon { display: none; }
+        [data-theme="dark"] .theme-toggle .toggle-sun { display: none; }
+        [data-theme="dark"] .theme-toggle .toggle-moon { display: inline; }
+
+        header.hero { text-align: center; margin-bottom: 26px; }
+        .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+        h1 { font-size: 30px; font-weight: 800; background: var(--hero-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hero-sub { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+        .stats { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+        .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; }
+        .stat-icon { font-size: 18px; }
+        .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+
+        .grid-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+        table.sched-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        table.sched-table th, table.sched-table td { border: 1px solid var(--border); padding: 8px 10px; vertical-align: top; font-size: 12px; }
+        table.sched-table th { background: var(--surface2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent2); text-align: left; white-space: nowrap; }
+        table.sched-table td.time-col { white-space: nowrap; color: var(--muted); font-weight: 600; background: var(--surface2); }
+        .course-chip { background: var(--badge2-bg); border: 1px solid var(--badge2-border); border-radius: 8px; padding: 6px 8px; margin-bottom: 5px; font-size: 12px; line-height: 1.4; }
+        .course-chip:last-child { margin-bottom: 0; }
+        .course-chip .code { font-weight: 700; color: var(--accent2); display: block; }
+        .empty-cell { color: var(--muted); font-size: 11px; }
+
+        .gcal-link { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 700; color: var(--accent); text-decoration: none; }
+        .gcal-link:hover { text-decoration: underline; }
+
+        .view-toggle-btn { flex-shrink: 0; white-space: nowrap; padding: 9px 16px; background: var(--badge2-bg); border: 1px solid var(--badge2-border); color: var(--accent2); font-size: 12px; font-weight: 600; border-radius: 9px; cursor: pointer; font-family: inherit; transition: background 0.2s; align-self: center; }
+        .view-toggle-btn:hover { background: rgba(129,140,248,0.22); }
+        .view-toggle-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+        .course-title-full { display: block; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+
+        .export-row { display: flex; gap: 10px; justify-content: center; margin: 18px 0 26px; flex-wrap: wrap; }
+        .export-btn { flex-shrink: 0; white-space: nowrap; padding: 9px 16px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; border-radius: 9px; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+        .export-btn:hover { background: var(--surface2); }
+
+        @media print {
+            .theme-toggle, .cal-toolbar, #full-name-toggle, .export-row, footer, .gcal-link { display: none !important; }
+            body { background: #fff; color: #000; padding-bottom: 0; }
+            .grid-wrap { border: none; }
+            table.sched-table th, table.sched-table td { border: 1px solid #999; color: #000; }
+            table.sched-table td.time-col { background: #f1f1f1; }
+        }
+
+        .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 30px 0 10px; }
+        .list-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .list-row { display: flex; gap: 14px; padding: 10px 16px; font-size: 13px; align-items: center; }
+        .list-row.odd { background: var(--odd-row); }
+        .list-day { width: 44px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+        .list-time { width: 150px; color: var(--muted); flex-shrink: 0; }
+        .list-course { flex: 1; }
+        .list-gcal { flex-shrink: 0; }
+
+        .cal-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 22px; }
+        .cal-field { display: flex; flex-direction: column; gap: 4px; }
+        .cal-field label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+        .cal-field input { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); }
+        .cal-field input[type="number"] { width: 70px; }
+        .gcal-all-btn { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 16px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .gcal-all-btn:hover { opacity: 0.9; }
+        .cal-hint { flex-basis: 100%; font-size: 11px; color: var(--muted); }
+
+        .empty-state { text-align: center; margin-top: 120px; color: var(--muted); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+
+        footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 150; background: var(--surface); border-top: 1px solid var(--border); padding: 8px 16px; text-align: center; font-size: 11px; color: var(--muted); }
+        footer a { color: inherit; text-decoration: none; }
+        footer a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<div class="page">
+    <header class="hero">
+        <div class="hero-eyebrow">ULAB Class Schedule</div>
+        <h1 id="page-title">My Schedule</h1>
+        <p class="hero-sub" id="hero-sub">—</p>
+    </header>
+
+    <div class="stats">
+        <div class="stat-chip"><span class="stat-icon">🧑‍🏫</span><div><div class="stat-label">Short form</div><div class="stat-value" id="stat-short">—</div></div></div>
+        <div class="stat-chip"><span class="stat-icon">📚</span><div><div class="stat-label">Class slots</div><div class="stat-value" id="stat-count">—</div></div></div>
+        <div class="stat-chip"><span class="stat-icon">📄</span><div><div class="stat-label">Source file</div><div class="stat-value" id="stat-file">—</div></div></div>
+        <button class="view-toggle-btn" id="full-name-toggle">📖 Show full course names</button>
+    </div>
+
+    <div class="cal-toolbar">
+        <div class="cal-field">
+            <label for="cal-start-date">Semester start date</label>
+            <input type="date" id="cal-start-date">
+        </div>
+        <div class="cal-field">
+            <label for="cal-weeks">Weeks</label>
+            <input type="number" id="cal-weeks" min="1" max="26" value="16">
+        </div>
+        <button class="gcal-all-btn" id="gcal-all-btn">📆 Add All to Google Calendar (.ics)</button>
+        <div class="cal-hint">Pick the first day of classes, then either download the .ics file below and import it into Google Calendar, or click a single "+ Google Calendar" link next to any class to add just that one.</div>
+    </div>
+
+    <div class="export-row">
+        <button class="export-btn" id="export-pdf-btn">🖨️ Export as PDF</button>
+        <button class="export-btn" id="export-docx-btn">📝 Export as DOCX</button>
+    </div>
+
+    <div class="grid-wrap">
+        <table class="sched-table" id="sched-table"></table>
+    </div>
+
+    <p class="section-title">All classes (list view)</p>
+    <div class="list-wrap" id="list-view"></div>
+</div>
+
+<footer>Made by <a href="https://atanusroy.com" target="_blank" rel="noopener">Atanu Shuvam Roy</a> · with Shah Jafor Sadeek Quaderi</footer>
+
+<script src="../advising/catalogue-factory.js"></script>
+<script src="../advising/catalogues/cse.js"></script>
+<script src="../advising/catalogues/bba.js"></script>
+<script src="../advising/catalogues/english.js"></script>
+<script src="../advising/catalogues/msj.js"></script>
+<script src="../advising/catalogues/eee.js"></script>
+<script src="../advising/catalogues/bangla.js"></script>
+<script src="export-docx.js"></script>
+<script src="results.js"></script>
+</body>
+</html>

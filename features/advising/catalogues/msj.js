@@ -41,10 +41,10 @@
         // ── Major 1: Digital Journalism (9 courses / 27 credits) ────────────
         { code: 'MSJ2251', unescoCode: 'MSJ2251', title: 'Journalism and Society', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
         { code: 'MSJ2252', unescoCode: 'MSJ2252', title: 'Digital Audience', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ3151', unescoCode: 'MSJ3151', title: 'News Sourcing and Gathering', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3151', unescoCode: 'MSJ3151', title: 'News Sourcing and Gathering', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11321'] },
         { code: 'MSJ3152', unescoCode: 'MSJ3152', title: 'Online Journalism', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
         { code: 'MSJ3251', unescoCode: 'MSJ3251', title: 'Mobile Journalism', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ3252', unescoCode: 'MSJ3252', title: 'News Editing and Translation', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3252', unescoCode: 'MSJ3252', title: 'News Editing and Translation', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11322'] },
         { code: 'MSJ3253', unescoCode: 'MSJ3253', title: 'Data Journalism', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ3253'] },
         { code: 'MSJ4151', unescoCode: 'MSJ4151', title: 'Investigative Journalism-I', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
         { code: 'MSJ4152', unescoCode: 'MSJ4152', title: 'Investigative Journalism-II', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
@@ -52,23 +52,23 @@
         // ── Major 2: Digital Film and TV Production (9 courses / 27 credits) ─
         { code: 'MSJ2231', unescoCode: 'MSJ2231', title: 'Visual Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11231'] },
         { code: 'MSJ2232', unescoCode: 'MSJ2232', title: 'Cinema Studies', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11331'] },
-        { code: 'MSJ3131', unescoCode: 'MSJ3131', title: 'Media Presentation and Performance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3131', unescoCode: 'MSJ3131', title: 'Media Presentation and Performance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11332'] },
         { code: 'MSJ3132', unescoCode: 'MSJ3132', title: 'Writing for Film and Television', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ3231', unescoCode: 'MSJ3231', title: 'Digital Cinematography', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ3232', unescoCode: 'MSJ3232', title: 'Digital Postproduction', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3231', unescoCode: 'MSJ3231', title: 'Digital Cinematography', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11334'] },
+        { code: 'MSJ3232', unescoCode: 'MSJ3232', title: 'Digital Postproduction', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11335'] },
         { code: 'MSJ3233', unescoCode: 'MSJ3233', title: 'TV Infotainment Production', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11336'] },
-        { code: 'MSJ4131', unescoCode: 'MSJ4131', title: 'Documentary Production', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ4131', unescoCode: 'MSJ4131', title: 'Documentary Production', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11431'] },
         { code: 'MSJ4132', unescoCode: 'MSJ4132', title: 'Fictional Narrative Production', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11432'] },
 
         // ── Major 3: Public Relations (9 courses / 27 credits) ──────────────
         { code: 'MSJ2241', unescoCode: 'MSJ2241', title: 'Interpersonal and Intercultural Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11241'] },
         { code: 'MSJ2242', unescoCode: 'MSJ2242', title: 'Strategic Public Relations', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11341'] },
-        { code: 'MSJ3141', unescoCode: 'MSJ3141', title: 'Public Relations Research', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3141', unescoCode: 'MSJ3141', title: 'Public Relations Research', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11342'] },
         { code: 'MSJ3142', unescoCode: 'MSJ3142', title: 'Media Relations', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11343'] },
-        { code: 'MSJ3241', unescoCode: 'MSJ3241', title: 'Organizational Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ3242', unescoCode: 'MSJ3242', title: 'Created Private Media', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ3241', unescoCode: 'MSJ3241', title: 'Organizational Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11344'] },
+        { code: 'MSJ3242', unescoCode: 'MSJ3242', title: 'Created Private Media', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11345'] },
         { code: 'MSJ3243', unescoCode: 'MSJ3243', title: 'Speech Writing and Public Speaking', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11346'] },
-        { code: 'MSJ4141', unescoCode: 'MSJ4141', title: 'Advertising', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ4141', unescoCode: 'MSJ4141', title: 'Advertising', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11441'] },
         { code: 'MSJ4142', unescoCode: 'MSJ4142', title: 'Public Relations Campaign', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: ['MSJ11442'] },
 
         // ── Major 4: Communication for Development (9 courses / 27 credits) ─
@@ -83,8 +83,8 @@
         { code: 'MSJ4162', unescoCode: 'MSJ4162', title: 'Environmental Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
 
         // ── Internship and Portfolio (2 courses / 10 credits) ───────────────
-        { code: 'MSJ4298', unescoCode: 'MSJ4298', title: 'Internship', prereq: [], category: 'Internship', courseType: 'Theory', oldCodes: [] },
-        { code: 'MSJ4299', unescoCode: 'MSJ4299', title: 'Portfolio', prereq: [], category: 'Internship', courseType: 'Theory', oldCodes: [] },
+        { code: 'MSJ4298', unescoCode: 'MSJ4298', title: 'Internship', prereq: [], category: 'Internship', courseType: 'Theory', oldCodes: ['MSJ11498'] },
+        { code: 'MSJ4299', unescoCode: 'MSJ4299', title: 'Portfolio', prereq: [], category: 'Internship', courseType: 'Theory', oldCodes: ['MSJ11499'] },
     ];
 
     // Degree requirements for BSS in Media Studies and Journalism (133

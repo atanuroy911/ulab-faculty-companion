@@ -100,6 +100,87 @@
         { code: 'CSE4099A', unescoCode: '0613-014-4099A', title: 'Internship', prereq: ['CSE4098C'], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
         { code: 'CSE4099B', unescoCode: '0613-014-4099B', title: 'Thesis', prereq: ['CSE4098C'], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
 
+        // ── Major Elective: all 7 concentration groups from the official
+        // catalogue's elective table (transcribed via `pdftotext -table` on
+        // "UD Course Catalogue -UNESCO CODE (CSE)_updated (1).pdf", pp.47-50
+        // — that mode keeps columns aligned where plain -layout garbles this
+        // section across a page break). Individually named here (as opposed
+        // to the generic classifyByPattern() fallback below) so titleFor()
+        // resolves them — this whole block was previously missing entirely,
+        // which is why e.g. CSE4419/CSE4459 showed no title while CSE4417/
+        // CSE4418 (added earlier, piecemeal) did. "Topics of Current
+        // Interest in ..." entries have no UNESCO code in the catalogue, so
+        // their own course code is used as unescoCode too (same convention
+        // as the no-UNESCO legacy electives below).
+        // Computational Theory Group
+        { code: 'CSE4401', unescoCode: '0613-014-4101', title: 'Computer Graphics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4402', unescoCode: '0613-014-4402', title: 'Computer Graphics Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4403', unescoCode: '0613-014-4403', title: 'Advanced Algorithm', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4405', unescoCode: '0613-014-4205', title: 'Compiler Design', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4406', unescoCode: '0613-014-4206', title: 'Compiler Design Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4407', unescoCode: '0613-014-4207', title: 'Basic Graph Theory', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4409', unescoCode: '0613-014-4209', title: 'Mathematical Analysis for Computer Science', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4411', unescoCode: '0613-014-4211', title: 'Computational Geometry', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4413', unescoCode: 'CSE4413', title: 'Topics of Current Interest in Computational Theory', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Network and Communications Group
+        { code: 'CSE4415', unescoCode: '0612-014-4115', title: 'Data Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4416', unescoCode: '0612-014-4116', title: 'Data Communication Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4417', unescoCode: '0613-014-4417', title: 'Internet of Things', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4418', unescoCode: '0613-014-4418', title: 'Internet of Things Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4419', unescoCode: '0612-014-4219', title: 'Network Security', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4420', unescoCode: '0612-014-4220', title: 'Network Security Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4421', unescoCode: '0612-014-4221', title: 'Wireless and Cellular Communication', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4423', unescoCode: '0688-014-4223', title: 'Digital Signal Processing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4425', unescoCode: '0612-014-4225', title: 'Advanced Network Services and Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4427', unescoCode: 'CSE4427', title: 'Topics of Current Interest in Network and Communications', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Security Group
+        { code: 'CSE4429', unescoCode: '0613-014-4129', title: 'Software Security', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4430', unescoCode: '0613-014-4130', title: 'Software Security Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4431', unescoCode: '0688-014-4131', title: 'Blockchain', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4433', unescoCode: '0612-014-4233', title: 'Cryptography', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4435', unescoCode: '0688-014-4235', title: 'ICT Law, Policy and Ethics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4437', unescoCode: '0688-014-4237', title: 'Digital Forensics and Incident Response', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4439', unescoCode: 'CSE4439', title: 'Topics of Current Interest in Security', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Computer Systems Group
+        { code: 'CSE4441', unescoCode: '0613-014-4141', title: 'Real-time Embedded Systems', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4442', unescoCode: '0613-014-4142', title: 'Real-time Embedded Systems Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4443', unescoCode: '0612-014-4143', title: 'Distributed Systems', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4445', unescoCode: '0613-014-4145', title: 'Simulation and Modeling', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4446', unescoCode: '0613-014-4146', title: 'Simulation and Modeling Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4447', unescoCode: '0688-014-4247', title: 'Introduction to Robotics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4449', unescoCode: '0612-014-4249', title: 'Cloud Computing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4451', unescoCode: '0612-014-4251', title: 'Advanced Database Management Systems', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4453', unescoCode: 'CSE4453', title: 'Topics of Current Interest in Computer Systems', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Data Science Group
+        { code: 'CSE4455', unescoCode: '0619-014-3355', title: 'Data Mining', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4457', unescoCode: '0619-014-4157', title: 'Data Science', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4458', unescoCode: '0619-014-4158', title: 'Data Science Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4459', unescoCode: '0619-014-4159', title: 'Big Data Analytics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4460', unescoCode: '0619-014-4160', title: 'Big Data Analytics Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4461', unescoCode: '0613-014-4261', title: 'Digital Image Processing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4462', unescoCode: '0613-014-4262', title: 'Digital Image Processing Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4463', unescoCode: '0688-014-4263', title: 'Introduction to Bioinformatics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4465', unescoCode: '0619-014-4265', title: 'Natural Language Processing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4467', unescoCode: 'CSE4467', title: 'Topics of Current Interest in Data Science', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Software Engineering Group
+        { code: 'CSE4469', unescoCode: '0613-014-4169', title: 'Software Requirements Specification and Analysis', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4471', unescoCode: '0613-014-4171', title: 'Design Patterns', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4473', unescoCode: '0613-014-4173', title: 'Software Testing and Quality Assurance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4474', unescoCode: '0613-014-4174', title: 'Software Testing and Quality Assurance Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4475', unescoCode: '0613-014-4275', title: 'Mobile Application Development', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4477', unescoCode: '0613-014-4277', title: 'Advanced Programming', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4478', unescoCode: '0613-014-4278', title: 'Advanced Programming Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4479', unescoCode: '0613-014-4279', title: 'Human Computer Interaction', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4481', unescoCode: 'CSE4481', title: 'Topics of Current Interest in Software Engineering', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Information and Communication Technology Group
+        { code: 'CSE4483', unescoCode: '0688-014-4183', title: 'Enterprise Systems: Concepts and Practice', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4484', unescoCode: '0688-014-4184', title: 'Enterprise Systems: Concepts and Practice Lab', prereq: [], category: 'MajorElective', courseType: 'Lab', oldCodes: [] },
+        { code: 'CSE4485', unescoCode: '0688-014-4185', title: 'Electronic Business', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4487', unescoCode: '0613-014-4287', title: 'UI: Concepts and Design', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4489', unescoCode: '0688-014-4289', title: 'IT Audit: Concepts and Practice', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4491', unescoCode: '0688-014-4291', title: 'ICT for Development', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'CSE4493', unescoCode: 'CSE4493', title: 'Topics of Current Interest in Information and Communication Technology', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+
         // ── Legacy-only concentration electives (docs/4. CSE equivalence
         // course List.xlsx lists these with a Previous Code but no New/UNESCO
         // Code — no confirmed successor course was found, so they may be

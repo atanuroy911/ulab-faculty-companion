@@ -64,6 +64,17 @@
         { code: 'EEE2310', unescoCode: 'EEE2310', title: 'Electrical Machines Lab', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: ['EEE 210'] },
         { code: 'EEE2313', unescoCode: 'EEE2313', title: 'Signals and Systems', prereq: ['MAT2103'], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
         { code: 'EEE3313', unescoCode: 'EEE3313', title: 'Electromagnetic Fields and Waves', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['EEE 313'] },
+        // NOT adding MAT2101 here: it appears in this semester's Class
+        // Schedule and in the EEE term-plan table (titled "Linear Algebra"
+        // there), but courses-scrapped-urms.txt has the same code titled
+        // "Differential Equations and Numerical Analysis" — a different
+        // subject — and this file already carries MAT2103 "Linear Algebra
+        // and Numerical Analysis" (prereq'd by EEE2313/EEE2216/EEE4485
+        // above), which may or may not be the same course under an older
+        // number. Three disagreeing signals; guessing a category here would
+        // risk miscounting a real student's Mathematics-requirement credit
+        // in Advising. Left unresolved — flag for confirmation against the
+        // department directly before adding.
         { code: 'EEE2216', unescoCode: 'EEE2216', title: 'Numerical Techniques Simulation Lab', prereq: ['MAT2103'], category: 'MajorCore', courseType: 'Lab', oldCodes: [] },
         { code: 'ME2201', unescoCode: '0715-016-2201', title: 'Introductory Mechanical Engineering', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
         { code: 'EEE2301', unescoCode: 'EEE2301', title: 'Digital Electronics', prereq: ['EEE1301'], category: 'MajorCore', courseType: 'Theory', oldCodes: ['EEE 301'] },

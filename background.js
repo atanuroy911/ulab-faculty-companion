@@ -21,6 +21,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/capstone-eligibility/results.html') });
     } else if (request.action === 'openCatalogueViewer') {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/catalogue-viewer/viewer.html') });
+    } else if (request.action === 'openClassScheduleResults') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('features/class-schedule/results.html') });
     } else if (request.type === 'URMS_PARAMS_READY') {
         handleUrmsParamsReady(request, sender, sendResponse);
         return true; // keep the message channel open for the async response
@@ -34,6 +36,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 console.error('[Faculty Companion] Failed to relay grade-fill status to MMS tab', error);
             }
         }
+    } else if (request.action === 'gcExpectDownload') {
+        gcPendingRename = { baseName: request.baseName, tabId: sender.tab?.id };
+        sendResponse({ ok: true });
     }
 });
 
@@ -290,4 +295,54 @@ function decodeEntities(str) {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
         .replace(/&nbsp;/g, ' ');
+}
+
+// --- Google Classroom: rename Drive's own per-row download as it lands ---
+// The content script simulates a click on Drive's native row "Download"
+// button (rather than re-fetching the file itself) so it gets exactly what
+// Drive would normally save. Right before each click it tells us the
+// desired base filename via 'gcExpectDownload'; we apply it to the very
+// next download Chrome starts and tell the content script's tab once that
+// download finishes, so it can move on to the next row.
+
+/** @type {{ baseName: string, tabId?: number } | null} */
+let gcPendingRename = null;
+let gcActiveDownloadId = null;
+let gcActiveTabId = null;
+
+chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+    if (!gcPendingRename) {
+        suggest();
+        return;
+    }
+    const dot = item.filename.lastIndexOf('.');
+    const ext = dot > -1 ? item.filename.slice(dot) : '';
+    // Preserve any subfolder Chrome would have used, only rename the leaf.
+    const slash = item.filename.lastIndexOf('/');
+    const dir = slash > -1 ? item.filename.slice(0, slash + 1) : '';
+
+    gcActiveDownloadId = item.id;
+    gcActiveTabId = gcPendingRename.tabId;
+    const baseName = gcPendingRename.baseName;
+    gcPendingRename = null;
+
+    suggest({ filename: dir + baseName + ext, conflictAction: 'uniquify' });
+});
+
+chrome.downloads.onChanged.addListener((delta) => {
+    if (delta.id !== gcActiveDownloadId) return;
+    if (delta.state && delta.state.current === 'complete') {
+        notifyGcTab(gcActiveTabId, { action: 'gcDownloadComplete', downloadId: delta.id, ok: true });
+        gcActiveDownloadId = null;
+        gcActiveTabId = null;
+    } else if (delta.error && delta.error.current) {
+        notifyGcTab(gcActiveTabId, { action: 'gcDownloadComplete', downloadId: delta.id, ok: false, error: delta.error.current });
+        gcActiveDownloadId = null;
+        gcActiveTabId = null;
+    }
+});
+
+function notifyGcTab(tabId, message) {
+    if (!tabId) return;
+    chrome.tabs.sendMessage(tabId, message).catch(() => {});
 }

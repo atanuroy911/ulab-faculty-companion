@@ -89,6 +89,111 @@
         { code: 'SCM4503', unescoCode: '0416-051-605', title: 'Procurement Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
         { code: 'SCM4507', unescoCode: 'SCM4507', title: 'Global Supply Chain Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
         { code: 'SCM4510', unescoCode: 'SCM4510', title: 'Maritime Logistics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+
+        // ── Remaining Major Elective (Concentration) courses, transcribed
+        // from "Course-Catalogue-Undergraduate-Summer-2026.pdf"'s BBA
+        // concentration tables (Accounting, Finance, HRM, Marketing, SCM,
+        // Banking & Insurance, Economics, Management, Entrepreneurship,
+        // MIS/e-Business) — the rest of the ~90-course pool the comment
+        // above referred to that never turned up in the URMS scrape.
+        // unescoCode falls back to the local code (unverified, same
+        // convention already used above for un-scraped courses) since these
+        // have no confirmed UNESCO mapping. SCM prerequisites are transcribed
+        // as printed in the catalogue; everything else has none listed.
+        // Accounting
+        { code: 'BUS4122', unescoCode: 'BUS4122', title: 'Bank & Insurance Accounting', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4123', unescoCode: 'BUS4123', title: 'Taxation', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4124', unescoCode: 'BUS4124', title: 'International Financial Reporting Standards', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Finance
+        { code: 'BUS4134', unescoCode: 'BUS4134', title: 'International Financial Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4143', unescoCode: 'BUS4143', title: 'Lease Finance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4144', unescoCode: 'BUS4144', title: 'Financial Derivatives', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4145', unescoCode: 'BUS4145', title: 'Venture Capital Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Human Resource Management
+        { code: 'BUS4153', unescoCode: 'BUS4153', title: 'Human Resource Planning', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4161', unescoCode: 'BUS4161', title: 'Industrial Psychology', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4163', unescoCode: 'BUS4163', title: 'Change Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4164', unescoCode: 'BUS4164', title: 'Compensation Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Marketing
+        { code: 'BUS4174', unescoCode: 'BUS4174', title: 'Digital Marketing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4181', unescoCode: 'BUS4181', title: 'Strategic Marketing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4182', unescoCode: 'BUS4182', title: 'Marketing Research', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4185', unescoCode: 'BUS4185', title: 'Supply Chain Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Supply Chain Management
+        { code: 'SCM4504', unescoCode: 'SCM4504', title: 'Project Management', prereq: ['SCM4503'], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'SCM4505', unescoCode: 'SCM4505', title: 'Sustainable SCM', prereq: ['SCM4501'], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'SCM4506', unescoCode: 'SCM4506', title: 'Accounting and Financial SCM', prereq: ['SCM4501'], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'SCM4508', unescoCode: 'SCM4508', title: 'TQM and Process Improvement', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'SCM4509', unescoCode: 'SCM4509', title: 'Supply Chain Analytics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Banking and Insurance
+        { code: 'BUS4191', unescoCode: 'BUS4191', title: 'Banking and Insurance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4192', unescoCode: 'BUS4192', title: 'Banking Law', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4193', unescoCode: 'BUS4193', title: 'Bank Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4194', unescoCode: 'BUS4194', title: 'Insurance and Risk Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4196', unescoCode: 'BUS4196', title: 'Financial Market and Institutions', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4197', unescoCode: 'BUS4197', title: "Banks' Product Marketing", prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4198', unescoCode: 'BUS4198', title: 'Electronic Banking', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4199', unescoCode: 'BUS4199', title: 'Merchant Banking', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4200', unescoCode: 'BUS4200', title: 'Bank & Insurance Accounting', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4201', unescoCode: 'BUS4201', title: 'Core Risk Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4202', unescoCode: 'BUS4202', title: 'Rural Banking', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Economics
+        { code: 'BUS4211', unescoCode: 'BUS4211', title: 'International Trade Theory', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4212', unescoCode: 'BUS4212', title: 'Development Economics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4213', unescoCode: 'BUS4213', title: 'Bangladesh Economy', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4214', unescoCode: 'BUS4214', title: 'Environmental Economics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4221', unescoCode: 'BUS4221', title: 'Public Finance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4222', unescoCode: 'BUS4222', title: 'Econometrics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4223', unescoCode: 'BUS4223', title: 'International Finance', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4224', unescoCode: 'BUS4224', title: 'Mathematical Economics', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Management
+        { code: 'BUS4230', unescoCode: 'BUS4230', title: 'Production and Operations Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4231', unescoCode: 'BUS4231', title: 'Leadership', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4232', unescoCode: 'BUS4232', title: 'Project Appraisal and Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4233', unescoCode: 'BUS4233', title: 'International Financial Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4234', unescoCode: 'BUS4234', title: 'Bank Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4235', unescoCode: 'BUS4235', title: 'Small Business Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4236', unescoCode: 'BUS4236', title: 'Industrial Relations', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4237', unescoCode: 'BUS4237', title: 'Insurance & Risk Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4238', unescoCode: 'BUS4238', title: 'Total Quality Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4239', unescoCode: 'BUS4239', title: 'Intercultural Aspects of Business', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4240', unescoCode: 'BUS4240', title: 'Management Thought', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Entrepreneurship
+        { code: 'BUS4245', unescoCode: 'BUS4245', title: 'Venture Development', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4246', unescoCode: 'BUS4246', title: 'Total Quality Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4247', unescoCode: 'BUS4247', title: 'Small Business Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4248', unescoCode: 'BUS4248', title: 'Project Appraisal & Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4249', unescoCode: 'BUS4249', title: 'Business Plan Development', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4250', unescoCode: 'BUS4250', title: 'Leadership', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4251', unescoCode: 'BUS4251', title: 'Production Planning and Inventory Control', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4252', unescoCode: 'BUS4252', title: 'Cases in Entrepreneurship', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4253', unescoCode: 'BUS4253', title: 'Strategic Marketing', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        // Management Information System and e-Business
+        { code: 'BUS4260', unescoCode: 'BUS4260', title: 'System Analysis and Design', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4261', unescoCode: 'BUS4261', title: 'Applied Database Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4262', unescoCode: 'BUS4262', title: 'Web Design and Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4263', unescoCode: 'BUS4263', title: 'Object Oriented Programming', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4264', unescoCode: 'BUS4264', title: 'Information Technology', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4265', unescoCode: 'BUS4265', title: 'Technology fundamentals of Electronic Commerce', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4266', unescoCode: 'BUS4266', title: 'Marketing on the Internet', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4267', unescoCode: 'BUS4267', title: 'Personal Selling & Sales Force Management', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+        { code: 'BUS4268', unescoCode: 'BUS4268', title: 'Management of Online Business', prereq: [], category: 'MajorElective', courseType: 'Theory', oldCodes: [] },
+
+        // ── ECO-prefixed courses seen in the Class Schedule (BBA Minor in
+        // Economics pool — one schedule cell literally tags a section "for
+        // BBA Minor") — titles from docs/courses-scrapped-urms.txt (real
+        // URMS export), not individually in the catalogue PDF's own tables.
+        // category: OptionalMinor, not MajorElective — these are Economics
+        // department courses taken as a minor/elective, not part of BBA's
+        // own 9-area concentration pool above, and OptionalMinor is what
+        // classifyByPattern() below would already default an unlisted
+        // non-BUS/SCM code to, so this only adds a title, not a category
+        // change that would shift a student's degree-progress credit bucket.
+        { code: 'ECO4601', unescoCode: 'ECO4601', title: 'Principles of Economics', prereq: [], category: 'OptionalMinor', courseType: 'Theory', oldCodes: [] },
+        { code: 'ECO4602', unescoCode: 'ECO4602', title: 'Intermediate Economics', prereq: [], category: 'OptionalMinor', courseType: 'Theory', oldCodes: [] },
+        { code: 'ECO4603', unescoCode: 'ECO4603', title: 'Money and Banking', prereq: [], category: 'OptionalMinor', courseType: 'Theory', oldCodes: [] },
+        { code: 'ECO4604', unescoCode: 'ECO4604', title: 'International Trade', prereq: [], category: 'OptionalMinor', courseType: 'Theory', oldCodes: [] },
+        { code: 'ECO4606', unescoCode: 'ECO4606', title: 'Development Economics', prereq: [], category: 'OptionalMinor', courseType: 'Theory', oldCodes: [] },
     ];
 
     // Degree requirements for BBA (120 credits total) — from the catalogue's

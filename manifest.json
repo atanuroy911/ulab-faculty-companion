@@ -1,10 +1,14 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "2.5.2",
+  "version": "2.6.0",
   "description": "Advising & Save/Bill (CSE/BBA/English/MSJ/EEE/Bangla), Capstone Eligibility (CSE) for ULAB faculty on URMS",
-  "permissions": ["storage", "sidePanel"],
-  "host_permissions": ["https://urms-awp.ulab.edu.bd/*"],
+  "permissions": ["storage", "sidePanel", "downloads"],
+  "host_permissions": [
+    "https://urms-awp.ulab.edu.bd/*",
+    "https://drive.google.com/*",
+    "https://docs.google.com/*"
+  ],
   "externally_connectable": {
     "matches": [
       "https://mms.ulab.edu.bd/*",
@@ -44,8 +48,15 @@
         "features/advising/catalogues/registry.js",
         "features/advising/advising.js",
         "features/advising/report-pdf.js",
-        "features/advising/student-page-content.js"
+        "features/advising/student-page-content.js",
+        "features/course-search/course-search-content.js"
       ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://drive.google.com/drive/*"],
+      "js": ["features/classroom/gc-content.js"],
+      "css": ["features/classroom/gc-content.css"],
       "run_at": "document_idle"
     }
   ],

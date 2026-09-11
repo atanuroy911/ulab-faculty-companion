@@ -152,7 +152,7 @@ chrome.storage.local.get(['ulabClassSchedule', 'ulabConsultationToOpen'], (data)
     // decent cross-department coverage even though this schedule spans many
     // more departments than those six catalogues individually cover. Codes
     // this doesn't resolve just fall back to showing the raw short form.
-    let showFullNames = false;
+    let showFullNames = true;
     const titleCache = new Map();
 
     function resolveTitle(code) {
@@ -347,11 +347,12 @@ chrome.storage.local.get(['ulabClassSchedule', 'ulabConsultationToOpen'], (data)
         downloadBlob(blob, `${(sched.fullName || sched.shortForm).replace(/\s+/g, '_')}_schedule.docx`);
     });
 
-    const fullNameBtn = document.getElementById('full-name-toggle');
-    fullNameBtn.addEventListener('click', () => {
-        showFullNames = !showFullNames;
-        fullNameBtn.classList.toggle('active', showFullNames);
-        fullNameBtn.textContent = showFullNames ? '🔤 Show short codes' : '📖 Show full course names';
+    const fullNameToggle = document.getElementById('full-name-toggle');
+    const fullNameToggleLabel = document.getElementById('full-name-toggle-label');
+    fullNameToggle.checked = showFullNames;
+    fullNameToggle.addEventListener('change', () => {
+        showFullNames = fullNameToggle.checked;
+        fullNameToggleLabel.textContent = showFullNames ? 'Full course names' : 'Short codes';
         renderAll();
     });
 

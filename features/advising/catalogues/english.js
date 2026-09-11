@@ -38,7 +38,7 @@
         { code: 'ENG1201', unescoCode: '0232-013-1201', title: 'Introduction to Poetry and Drama', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG116'] },
         { code: 'ENG1202', unescoCode: '0232-013-1202', title: 'Introduction to Fiction and Non-fiction', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG302'] },
         { code: 'ENG1203', unescoCode: '0232-013-1203', title: 'Pronunciation: Phonetics and Phonology', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG114'] },
-        { code: 'ENG1301', unescoCode: 'ENG1301', title: 'Introduction to Linguistics', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG105'] },
+        { code: 'ENG1301', unescoCode: '0232-013-1301', title: 'Introduction to Linguistics', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG105'] },
         { code: 'ENG1303', unescoCode: 'ENG1303', title: 'Old and Middle English Literature', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
         { code: 'ENG2101', unescoCode: '0232-013-2101', title: 'Elizabethan and Jacobean Drama (Excluding Shakespeare)', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
         { code: 'ENG2102', unescoCode: '0232-013-2102', title: 'Writing about Literature', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['ENG108'] },

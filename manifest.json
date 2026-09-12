@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "2.7.1",
+  "version": "2.8.8",
   "description": "Advising & Save/Bill (CSE/BBA/English/MSJ/EEE/Bangla), Capstone Eligibility (CSE) for ULAB faculty on URMS",
   "permissions": ["storage", "sidePanel", "downloads"],
   "host_permissions": [
@@ -52,6 +52,51 @@
         "features/course-search/course-search-content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://urms-awp.ulab.edu.bd/Account/Login*"],
+      "js": ["features/login/login-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/",
+        "https://urms-awp.ulab.edu.bd/Home*"
+      ],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/home/home-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://urms-awp.ulab.edu.bd/StudentRegistration*"],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/registration/registration-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/RMS_ggs_result/ResultEntryFromExcel*",
+        "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadExcel*",
+        "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadStudentFromExcel*"
+      ],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/result-entry/result-entry-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/AttendanceSheet*",
+        "https://urms-awp.ulab.edu.bd/AdvisingStudent*"
+      ],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/attendance/attendance-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://urms-awp.ulab.edu.bd/Account/Manage*"],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/account/account-ui-content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://urms-awp.ulab.edu.bd/EvaluationComments*"],
+      "js": ["features/shared/ulab-dashboard-shell.js", "features/evaluation/evaluation-ui-content.js"],
+      "run_at": "document_start"
     },
     {
       "matches": ["https://drive.google.com/drive/*"],

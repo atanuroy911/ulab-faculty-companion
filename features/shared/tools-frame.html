@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Companion Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tools-frame.css">
+</head>
+<body>
+    <header id="tf-header">
+        <button id="tf-prev" class="tf-nav-btn" title="Previous tool" aria-label="Previous tool">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div id="tf-title-wrap">
+            <div id="tf-title"></div>
+            <div id="tf-subtitle"></div>
+        </div>
+        <button id="tf-next" class="tf-nav-btn" title="Next tool" aria-label="Next tool">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+    </header>
+    <div id="tf-dots"></div>
+    <main id="tf-body"></main>
+    <footer id="tf-footer">
+        <a href="https://atanusroy.com" target="_blank" rel="noopener" title="Made by Atanu Shuvam Roy, with Shah Jafor Sadeek Quaderi">
+            Made by Atanu Shuvam Roy · with Shah Jafor Sadeek Quaderi
+        </a>
+    </footer>
+
+    <script src="../common/vendor/pdf.min.js"></script>
+    <script src="../common/pdf-upload.js"></script>
+    <script src="../advising/catalogue-factory.js"></script>
+    <script src="../advising/catalogues/cse.js"></script>
+    <script src="../advising/catalogues/bba.js"></script>
+    <script src="../advising/catalogues/english.js"></script>
+    <script src="../advising/catalogues/msj.js"></script>
+    <script src="../advising/catalogues/eee.js"></script>
+    <script src="../advising/catalogues/bangla.js"></script>
+    <script src="../advising/catalogues/registry.js"></script>
+    <script src="../advising/advising.js"></script>
+    <!-- Feature registration order below = tool navigation order. -->
+    <script src="../advising-billing/wizard.js"></script>
+    <script src="../time/time.js"></script>
+    <script src="../capstone-eligibility/capstone-eligibility.js"></script>
+    <script src="../catalogue-viewer/catalogue-viewer.js"></script>
+    <script src="../marks/marks.js"></script>
+    <script src="../classroom/classroom.js"></script>
+    <script src="../class-schedule/schedule-parser.js"></script>
+    <script src="../class-schedule/class-schedule.js"></script>
+    <script src="../class-schedule/my-schedule.js"></script>
+    <script src="tools-frame.js"></script>
+</body>
+</html>

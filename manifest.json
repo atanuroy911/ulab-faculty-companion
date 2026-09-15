@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "2.8.8",
+  "version": "3.0.0",
   "description": "Advising & Save/Bill (CSE/BBA/English/MSJ/EEE/Bangla), Capstone Eligibility (CSE) for ULAB faculty on URMS",
-  "permissions": ["storage", "sidePanel", "downloads"],
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "downloads"
+  ],
   "host_permissions": [
     "https://urms-awp.ulab.edu.bd/*",
     "https://drive.google.com/*",
@@ -22,7 +26,9 @@
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/ResultEntryFromExcel*",
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadExcel*"
       ],
-      "js": ["features/mms-import/urms-import-content.js"],
+      "js": [
+        "features/mms-import/urms-import-content.js"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -31,11 +37,15 @@
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadExcel*",
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadStudentFromExcel*"
       ],
-      "js": ["features/mms-grades/urms-grade-fill-content.js"],
+      "js": [
+        "features/mms-grades/urms-grade-fill-content.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://urms-awp.ulab.edu.bd/StudentRegistration*"],
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/StudentRegistration*"
+      ],
       "js": [
         "features/time/time.js",
         "features/advising/catalogue-factory.js",
@@ -54,8 +64,12 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://urms-awp.ulab.edu.bd/Account/Login*"],
-      "js": ["features/login/login-ui-content.js"],
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/Account/Login*"
+      ],
+      "js": [
+        "features/login/login-ui-content.js"
+      ],
       "run_at": "document_start"
     },
     {
@@ -63,13 +77,27 @@
         "https://urms-awp.ulab.edu.bd/",
         "https://urms-awp.ulab.edu.bd/Home*"
       ],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/home/home-ui-content.js"],
-      "run_at": "document_start"
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/home/home-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
-      "matches": ["https://urms-awp.ulab.edu.bd/StudentRegistration*"],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/registration/registration-ui-content.js"],
-      "run_at": "document_start"
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/StudentRegistration*"
+      ],
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/registration/registration-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
       "matches": [
@@ -77,31 +105,65 @@
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadExcel*",
         "https://urms-awp.ulab.edu.bd/RMS_ggs_result/LoadStudentFromExcel*"
       ],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/result-entry/result-entry-ui-content.js"],
-      "run_at": "document_start"
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/result-entry/result-entry-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
       "matches": [
         "https://urms-awp.ulab.edu.bd/AttendanceSheet*",
         "https://urms-awp.ulab.edu.bd/AdvisingStudent*"
       ],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/attendance/attendance-ui-content.js"],
-      "run_at": "document_start"
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/attendance/attendance-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
-      "matches": ["https://urms-awp.ulab.edu.bd/Account/Manage*"],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/account/account-ui-content.js"],
-      "run_at": "document_start"
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/Account/Manage*"
+      ],
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/account/account-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
-      "matches": ["https://urms-awp.ulab.edu.bd/EvaluationComments*"],
-      "js": ["features/shared/ulab-dashboard-shell.js", "features/evaluation/evaluation-ui-content.js"],
-      "run_at": "document_start"
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/EvaluationComments*"
+      ],
+      "js": [
+        "features/shared/ulab-dashboard-shell.js",
+        "features/evaluation/evaluation-ui-content.js"
+      ],
+      "run_at": "document_start",
+      "css": [
+        "dist/ulab-tailwind.css"
+      ]
     },
     {
-      "matches": ["https://drive.google.com/drive/*"],
-      "js": ["features/classroom/gc-content.js"],
-      "css": ["features/classroom/gc-content.css"],
+      "matches": [
+        "https://drive.google.com/drive/*"
+      ],
+      "js": [
+        "features/classroom/gc-content.js"
+      ],
+      "css": [
+        "features/classroom/gc-content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -120,5 +182,20 @@
     "128": "icons/icon128.png",
     "256": "icons/icon256.png",
     "512": "icons/icon512.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "features/class-schedule/results.html",
+        "features/shared/tools-frame.html",
+        "features/capstone-eligibility/results.html",
+        "features/catalogue-viewer/viewer.html",
+        "features/time/results.html",
+        "features/advising-billing/results.html"
+      ],
+      "matches": [
+        "https://urms-awp.ulab.edu.bd/*"
+      ]
+    }
+  ]
 }

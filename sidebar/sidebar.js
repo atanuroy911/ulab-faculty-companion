@@ -66,8 +66,16 @@ function selectFeature(id) {
     renderFeature(feature);
 }
 
+// Lets a feature module (e.g. "My Schedule" with nothing saved yet) jump
+// straight to another tab instead of just telling the user to go find it.
+window.ULAB_SIDEBAR_GOTO = selectFeature;
+
+const requestedId = new URLSearchParams(location.search).get('feature')
+    || (location.hash ? location.hash.slice(1) : null);
+
 if (FEATURES.length) {
-    selectFeature(FEATURES[0].id);
+    const initial = (requestedId && FEATURES.some(f => f.id === requestedId)) ? requestedId : FEATURES[0].id;
+    selectFeature(initial);
 } else {
     content.innerHTML = `
         <div class="empty-state">

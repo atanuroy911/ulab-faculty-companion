@@ -1,0 +1,129 @@
+/* dist/ulab-tailwind.css — hand-written (no build step, no node_modules).
+   Shadcn/ui-style design tokens + a few reusable component classes for the
+   URMS modern-UI reskin. Loaded as a static content_script CSS file (see
+   manifest.json) alongside features/shared/ulab-dashboard-shell.js on every
+   shell-mounted page. Edit this file directly — there's nothing to compile. */
+
+.ulab-shell-mounted {
+  --ulab-background: 0 0% 100%;
+  --ulab-foreground: 240 10% 3.9%;
+  --ulab-card: 0 0% 100%;
+  --ulab-card-foreground: 240 10% 3.9%;
+  --ulab-primary: 221 55% 46%;
+  --ulab-primary-foreground: 0 0% 100%;
+  --ulab-muted: 240 4.8% 95.9%;
+  --ulab-muted-foreground: 240 3.8% 46.1%;
+  --ulab-accent: 240 4.8% 95.9%;
+  --ulab-accent-foreground: 240 5.9% 10%;
+  --ulab-destructive: 0 72% 63%;
+  --ulab-destructive-foreground: 0 0% 100%;
+  --ulab-border: 240 5.9% 90%;
+  --ulab-input: 240 5.9% 90%;
+  --ulab-ring: 221 55% 46%;
+  --ulab-radius: 0.5rem;
+}
+.ulab-shell-mounted.ulab-dark {
+  --ulab-background: 222 30% 8%;
+  --ulab-foreground: 220 20% 88%;
+  --ulab-card: 224 26% 12%;
+  --ulab-card-foreground: 220 20% 88%;
+  --ulab-primary: 221 55% 56%;
+  --ulab-primary-foreground: 0 0% 100%;
+  --ulab-muted: 223 20% 16%;
+  --ulab-muted-foreground: 220 12% 65%;
+  --ulab-accent: 223 20% 18%;
+  --ulab-accent-foreground: 220 20% 92%;
+  --ulab-destructive: 0 63% 56%;
+  --ulab-destructive-foreground: 0 0% 100%;
+  --ulab-border: 222 18% 20%;
+  --ulab-input: 222 18% 20%;
+  --ulab-ring: 221 55% 56%;
+}
+
+/* --- Off-canvas drawer scrim, used for the sidebar below the 992px
+   breakpoint (see features/shared/ulab-dashboard-shell.js) --- */
+.ulab-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1029;
+  background: rgba(0, 0, 0, .5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+.ulab-sidebar-open .ulab-sheet-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- Switch --- */
+.ulab-switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: hsl(var(--ulab-muted));
+  transition: background-color .15s ease;
+}
+.ulab-switch[data-state="on"] { background: hsl(var(--ulab-primary)); }
+.ulab-switch-thumb {
+  pointer-events: none;
+  display: block;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1), 0 1px 2px -1px rgba(0, 0, 0, .1);
+  transform: translateX(.125rem);
+  transition: transform .15s ease;
+}
+.ulab-switch[data-state="on"] .ulab-switch-thumb { transform: translateX(18px); }
+
+/* --- Icon button (ghost variant), used for the hamburger --- */
+.ulab-btn-icon {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--ulab-radius) - 2px);
+  color: hsl(var(--ulab-foreground) / .8);
+  transition: background-color .15s ease, color .15s ease;
+}
+.ulab-btn-icon:hover {
+  background: hsl(var(--ulab-accent));
+  color: hsl(var(--ulab-accent-foreground));
+}
+.ulab-btn-icon:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--ulab-ring));
+}
+
+/* --- Nav "link" ghost/active states --- */
+.ulab-nav-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  border-radius: calc(var(--ulab-radius) - 2px);
+  padding: .5rem .75rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--ulab-foreground) / .7);
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.ulab-nav-link:hover {
+  background: hsl(var(--ulab-accent));
+  color: hsl(var(--ulab-accent-foreground));
+}
+.ulab-nav-link.is-active,
+.ulab-nav-link.is-active:hover {
+  background: hsl(var(--ulab-primary));
+  color: hsl(var(--ulab-primary-foreground));
+}

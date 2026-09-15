@@ -84,6 +84,21 @@
                 margin: .75rem 0 1.5rem;
             }
 
+            /* Course/section selector panel — bounded white card so the
+               form controls read as one distinct zone above the result
+               table, instead of floating directly on the page background.
+               .form-horizontal is the actual wrapper around the selector
+               fields on this page (confirmed by the existing hr selector
+               above, which already targeted it before this change). */
+            body.${BODY_CLASS} .form-horizontal {
+                background: #fff;
+                border: 1px solid #eef1f6;
+                border-radius: 10px;
+                box-shadow: 0 1px 2px rgba(16,24,40,.04);
+                padding: 1.25rem 1.5rem 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
             /* Static labels & form controls */
             body.${BODY_CLASS} .form-group label { font-weight: 600; color: #344054; font-size: .9rem; }
             body.${BODY_CLASS} select.form-control,
@@ -101,9 +116,10 @@
             body.${BODY_CLASS} .btn-outline-secondary,
             body.${BODY_CLASS} .btn-outline-primary,
             body.${BODY_CLASS} .btn-outline-info {
-                border-radius: 4px;
+                border-radius: 6px;
                 font-weight: 600;
-                transition: box-shadow .15s ease;
+                padding: .5rem 1.1rem;
+                transition: box-shadow .15s ease, transform .1s ease;
             }
             body.${BODY_CLASS} .btn-outline-primary {
                 background: #3A67B2;
@@ -112,50 +128,87 @@
                 box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
             }
             body.${BODY_CLASS} .btn-outline-primary:hover { box-shadow: 0 3px 3px -2px rgba(0,0,0,.2), 0 3px 4px 0 rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12); }
+            body.${BODY_CLASS} .btn-outline-secondary { border-width: 1.5px; }
             body.${BODY_CLASS} #SaveBtn.btn-primary {
                 background: #3A67B2;
                 border: none;
-                border-radius: 4px;
+                border-radius: 6px;
                 font-weight: 600;
+                padding: .5rem 1.2rem;
+                box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+                transition: box-shadow .15s ease;
             }
+            body.${BODY_CLASS} #SaveBtn.btn-primary:hover { box-shadow: 0 3px 3px -2px rgba(0,0,0,.2), 0 3px 4px 0 rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12); }
             body.${BODY_CLASS} h5.alert-warning {
-                border-radius: 4px !important;
+                border-radius: 6px !important;
                 background: #fffbeb !important;
                 border: 1px solid #fde68a !important;
                 color: #92400e !important;
                 font-size: .85rem;
-                padding: .5rem;
+                padding: .6rem .8rem;
             }
 
             /* Result table — structural selectors, so per-student rows
                rendered by the server (or updated in place by MarkEntry())
-               pick this up automatically without any DOM being touched. */
+               pick this up automatically without any DOM being touched.
+               Row-as-card treatment matches registration.js: real <tr>
+               table rows here (no tr.d-flex fake rows on this page), so
+               border-collapse:separate + border-spacing gives the row gap. */
             body.${BODY_CLASS} #T1 {
-                border-radius: 4px;
-                overflow: hidden;
-                background: #fff;
+                border-collapse: separate;
+                border-spacing: 0 8px;
+                background: transparent;
             }
             body.${BODY_CLASS} #T1 tr:first-child th {
-                background: #eef2fb;
-                color: #344054;
+                background: transparent;
+                color: #667085;
                 font-weight: 700;
-                font-size: .76rem;
+                font-size: .8rem;
                 text-transform: uppercase;
-                letter-spacing: .03em;
-                border-bottom: none !important;
-                padding: .7rem .8rem;
+                letter-spacing: .05em;
+                border-bottom: 2px solid #dbe3f5 !important;
+                padding: .5rem .8rem .6rem;
+                white-space: nowrap;
+            }
+            body.${BODY_CLASS} #T1 tbody tr:not(:first-child) {
+                background: #fff;
+                box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+                border-radius: 8px;
+                transition: box-shadow .12s ease;
+            }
+            body.${BODY_CLASS} #T1 tbody tr:not(:first-child):hover {
+                box-shadow: 0 2px 4px -1px rgba(16,24,40,.1), 0 4px 8px 0 rgba(16,24,40,.1);
+            }
+            body.${BODY_CLASS} #T1 tbody tr:not(:first-child) td:first-child {
+                border-top-left-radius: 8px;
+                border-bottom-left-radius: 8px;
+            }
+            body.${BODY_CLASS} #T1 tbody tr:not(:first-child) td:last-child {
+                border-top-right-radius: 8px;
+                border-bottom-right-radius: 8px;
             }
             body.${BODY_CLASS} #T1 td {
-                padding: .55rem .7rem;
+                padding: .6rem .8rem;
                 vertical-align: middle;
-                font-size: .88rem;
+                font-size: .95rem;
             }
             body.${BODY_CLASS} #T1.table-bordered td,
             body.${BODY_CLASS} #T1.table-bordered th {
-                border-color: #eef1f6 !important;
+                border-color: transparent !important;
             }
             body.${BODY_CLASS} #T1.table-striped tbody tr:nth-of-type(odd) {
-                background-color: #fafbfd;
+                background-color: #fff;
+            }
+
+            /* Student ID / registration number column reads like a code —
+               monospace keeps it one clean scannable unit, matching the
+               Course ID treatment in registration.js. */
+            body.${BODY_CLASS} #T1 td:first-child {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                font-size: .92rem;
+                font-weight: 600;
+                color: #2c5296;
+                white-space: nowrap;
             }
 
             /* Print/report split button */
@@ -170,6 +223,62 @@
                 background: transparent;
                 border-top: 1px solid rgba(16,24,40,.06) !important;
                 font-size: .8rem;
+            }
+
+            /* Wrap the result table so it scrolls horizontally rather than
+               overflowing the viewport when it doesn't already sit inside a
+               .table-responsive wrapper. */
+            body.${BODY_CLASS} .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            @media (max-width: 991.98px) {
+                body.${BODY_CLASS} main { padding-left: 1rem !important; padding-right: 1rem !important; }
+                body.${BODY_CLASS} .form-horizontal .form-group,
+                body.${BODY_CLASS} main .row {
+                    flex-wrap: wrap;
+                }
+                body.${BODY_CLASS} .form-horizontal {
+                    padding: 1rem 1.1rem 1.25rem;
+                }
+                body.${BODY_CLASS} #T1:not(.table-responsive *) {
+                    display: block;
+                    width: 100%;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                body.${BODY_CLASS} .btn-group {
+                    flex-wrap: wrap;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                body.${BODY_CLASS} main > h2:first-of-type { font-size: 1.3rem; }
+                body.${BODY_CLASS} .form-group label { font-size: .82rem; }
+                body.${BODY_CLASS} .form-horizontal {
+                    border-radius: 6px;
+                    padding: .85rem .9rem 1.1rem;
+                }
+                body.${BODY_CLASS} .form-horizontal .form-group > label,
+                body.${BODY_CLASS} .form-horizontal .form-group > div {
+                    flex: 0 0 100%;
+                    max-width: 100%;
+                }
+                body.${BODY_CLASS} select.form-control,
+                body.${BODY_CLASS} input.form-control,
+                body.${BODY_CLASS} .btn-outline-secondary,
+                body.${BODY_CLASS} .btn-outline-primary,
+                body.${BODY_CLASS} .btn-outline-info {
+                    font-size: .82rem;
+                    padding: .4rem .6rem;
+                }
+                body.${BODY_CLASS} #T1 tr:first-child th,
+                body.${BODY_CLASS} #T1 td {
+                    padding: .4rem .45rem;
+                    font-size: .8rem;
+                }
+                body.${BODY_CLASS} h5.alert-warning { font-size: .78rem; }
             }
         `;
         document.head.appendChild(style);

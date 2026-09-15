@@ -166,7 +166,16 @@
 
     function extractAdvisingInfo(doc) {
         const probationEl = doc.querySelector('p.bg-warning.text-dark');
-        const t1Rows = Array.from(doc.querySelectorAll('#T1 tbody tr')).map(tr => {
+        // #T1 isn't a unique id in practice: clicking a course row's edit
+        // (pencil) icon makes URMS inject a time-schedule/section-list table
+        // that reuses id="T1" for its own markup, appended after the real
+        // "Courses to be Registered" card. A bare `#T1` selector then pulls
+        // rows from both tables, double-counting whatever section list is
+        // currently showing at the bottom of the page. Scope to the actual
+        // card by its title instead, same as the other cards below.
+        const coursesCard = findCardByTitle(doc, 'Courses to be Registered');
+        const t1Table = coursesCard ? coursesCard.querySelector('table#T1, table') : doc.querySelector('#T1');
+        const t1Rows = Array.from(t1Table ? t1Table.querySelectorAll('tbody tr') : []).map(tr => {
             const tds = tr.querySelectorAll('td');
             return {
                 courseId: tds[0] ? tds[0].textContent.trim() : '',
@@ -176,7 +185,15 @@
             };
         });
 
-        const t4Tables = doc.querySelectorAll('#T4');
+        // Same id collision as #T1 above, different culprit: clicking a
+        // course's edit icon replaces #scheduleTable's contents with an
+        // "available sections" table that itself has id="T4", landing
+        // alongside the two real #T4 tables (completed courses, semester
+        // GPA) that this code already distinguishes by index. Left
+        // unfiltered, that third match shifts t4Tables[0]/[1] and corrupts
+        // both — so exclude anything under the known injected container.
+        const t4Tables = Array.from(doc.querySelectorAll('#T4'))
+            .filter(t => !t.closest('#scheduleTable'));
         const completedCourses = parseGenericTable(t4Tables[0]);
         const semesterGpa = parseGenericTable(t4Tables[1]);
 

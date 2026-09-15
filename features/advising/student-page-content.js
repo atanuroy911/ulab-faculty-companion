@@ -37,27 +37,125 @@
             }
             #${BTN_ID}:hover { background: #0284c7; }
             #${BTN_ID}[disabled] { background: #94a3b8; cursor: not-allowed; }
+            /* Full-page modal: fills the viewport with a small gutter on
+               desktop/tablet and goes edge-to-edge on phone, instead of the
+               old fixed 720px box — there's now enough content (student
+               info, degree progress, full schedule) that a small centered
+               card would mean constant internal scrolling. */
             #${MODAL_ID}-overlay {
                 display: none; position: fixed; inset: 0; z-index: 1000000;
                 background: rgba(15,23,42,.55); align-items: center; justify-content: center;
+                padding: 28px;
             }
             #${MODAL_ID}-overlay.open { display: flex; }
             #${MODAL_ID} {
-                background: #fff; color: #0f172a; width: min(720px, 92vw); max-height: 85vh; overflow-y: auto;
-                border-radius: 14px; padding: 22px 24px; font: 14px/1.5 system-ui, sans-serif; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+                background: #fff; color: #0f172a; width: 100%; height: 100%; max-width: 1080px;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
+                border-radius: 14px; padding: 22px 28px 32px; font: 14px/1.5 system-ui, sans-serif;
+                box-shadow: 0 20px 60px rgba(0,0,0,.4); position: relative;
             }
-            #${MODAL_ID} h2 { margin: 0 0 4px; font-size: 18px; }
+            #${MODAL_ID} h2 { margin: 0 0 4px; font-size: 18px; padding-right: 90px; }
             #${MODAL_ID} .ulab-fa-sub { color: #64748b; font-size: 12px; margin-bottom: 16px; }
             #${MODAL_ID} .ulab-fa-close {
-                float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;
+                position: absolute; top: 18px; right: 20px;
+                background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b;
+                line-height: 1; padding: 4px;
             }
+            #${MODAL_ID} .ulab-fa-grid {
+                display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px 20px; margin-bottom: 4px;
+            }
+            #${MODAL_ID} .ulab-fa-grid dt { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #94a3b8; }
+            #${MODAL_ID} .ulab-fa-grid dd { margin: 2px 0 0; font-size: 13.5px; font-weight: 600; color: #1e293b; }
+            #${MODAL_ID} .ulab-fa-progress-bar {
+                position: relative; height: 6px; border-radius: 999px; background: #e2e8f0; overflow: hidden; margin-top: 4px;
+            }
+            #${MODAL_ID} .ulab-fa-progress-bar > span {
+                position: absolute; inset: 0 auto 0 0; background: #0ea5e9; border-radius: 999px;
+            }
+            #${MODAL_ID} .ulab-fa-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 6px; }
+            #${MODAL_ID} .ulab-fa-table-wrap table { min-width: 480px; }
+
+            /* Cards — issues found are the main focus, so they get a bold
+               left-accent + tint keyed to severity; the info cards below
+               (overview/schedule/degree progress) stay neutral. */
+            #${MODAL_ID} .ulab-fa-card {
+                background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+                padding: 14px 16px; margin-bottom: 14px;
+            }
+            #${MODAL_ID} .ulab-fa-card-title {
+                font-weight: 700; font-size: 13.5px; margin-bottom: 8px; color: #1e293b;
+                display: flex; align-items: center; gap: 6px;
+            }
+            #${MODAL_ID} .ulab-fa-card table { margin-bottom: 0; }
+            #${MODAL_ID} .ulab-fa-card .ulab-fa-table-wrap:last-child { margin-bottom: 0; }
+            #${MODAL_ID} .ulab-fa-card.issue { background: #fef2f2; border-color: #fecaca; border-left: 4px solid #ef4444; }
+            #${MODAL_ID} .ulab-fa-card.warn { background: #fffbeb; border-color: #fde68a; border-left: 4px solid #f59e0b; }
+            #${MODAL_ID} .ulab-fa-card.ok { background: #f0fdf4; border-color: #bbf7d0; border-left: 4px solid #22c55e; }
+            #${MODAL_ID} .ulab-fa-issues-heading {
+                font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+                color: #94a3b8; margin: 4px 0 8px;
+            }
+
+            /* Tabs — one panel visible at a time so the modal isn't a wall
+               of stacked cards; Issues is the default/main focus. */
+            #${MODAL_ID} .ulab-fa-tabs {
+                display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 16px;
+                border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;
+            }
+            #${MODAL_ID} .ulab-fa-tab {
+                background: #f1f5f9; border: 1px solid transparent; color: #475569;
+                border-radius: 999px; padding: 6px 14px; font: 600 12.5px system-ui, sans-serif;
+                cursor: pointer; display: flex; align-items: center; gap: 6px;
+                transition: background .12s ease, color .12s ease;
+            }
+            #${MODAL_ID} .ulab-fa-tab:hover { background: #e2e8f0; }
+            #${MODAL_ID} .ulab-fa-tab.active { background: #0ea5e9; color: #fff; }
+            #${MODAL_ID} .ulab-fa-tab .ulab-fa-tab-count {
+                background: rgba(0,0,0,.12); border-radius: 999px; padding: 0 6px; font-size: 11px;
+            }
+            #${MODAL_ID} .ulab-fa-tab.active .ulab-fa-tab-count { background: rgba(255,255,255,.25); }
+            #${MODAL_ID} .ulab-fa-panel[hidden] { display: none; }
+
+            /* Weekly calendar view of the schedule */
+            #${MODAL_ID} .ulab-fa-cal-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            #${MODAL_ID} .ulab-fa-cal {
+                display: grid; grid-template-columns: 46px repeat(7, minmax(90px, 1fr));
+                min-width: 680px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+            }
+            #${MODAL_ID} .ulab-fa-cal-head {
+                background: #f8fafc; font: 700 11px system-ui, sans-serif; color: #64748b;
+                text-align: center; padding: 6px 2px; border-bottom: 1px solid #e2e8f0; border-left: 1px solid #eef2f6;
+            }
+            #${MODAL_ID} .ulab-fa-cal-head:first-child { border-left: none; }
+            #${MODAL_ID} .ulab-fa-cal-axis {
+                position: relative; border-left: none; background: #fff;
+            }
+            #${MODAL_ID} .ulab-fa-cal-axis span {
+                position: absolute; right: 4px; transform: translateY(-50%);
+                font-size: 9.5px; color: #94a3b8;
+            }
+            #${MODAL_ID} .ulab-fa-cal-col {
+                position: relative; border-left: 1px solid #eef2f6; background:
+                    repeating-linear-gradient(#fff, #fff 59px, #f8fafc 60px, #f8fafc 60px);
+            }
+            #${MODAL_ID} .ulab-fa-cal-block {
+                position: absolute; left: 2px; right: 2px; border-radius: 5px;
+                padding: 2px 5px; font-size: 10px; line-height: 1.25; color: #fff; overflow: hidden;
+                box-shadow: 0 1px 2px rgba(0,0,0,.15);
+            }
+            #${MODAL_ID} .ulab-fa-cal-block b { display: block; font-size: 10.5px; }
+            #${MODAL_ID} .ulab-fa-cal-block .ulab-fa-cal-title {
+                display: block; font-size: 9.5px; opacity: .9; white-space: nowrap;
+                overflow: hidden; text-overflow: ellipsis;
+            }
+            #${MODAL_ID} .ulab-fa-cal-block .ulab-fa-cal-time { display: block; font-size: 9px; opacity: .85; }
             #${MODAL_ID} .ulab-fa-banner {
                 background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px;
                 padding: 10px 12px; margin-bottom: 10px; font-size: 13px;
             }
             #${MODAL_ID} .ulab-fa-banner.warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
             #${MODAL_ID} .ulab-fa-banner.info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
-            #${MODAL_ID} .ulab-fa-section { font-weight: 700; margin: 14px 0 6px; font-size: 13px; color: #334155; }
             #${MODAL_ID} table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 6px; }
             #${MODAL_ID} th, #${MODAL_ID} td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
             #${MODAL_ID} .ulab-fa-ok { color: #15803d; }
@@ -83,6 +181,22 @@
                 font: 600 12.5px system-ui, sans-serif; cursor: pointer; text-decoration: none;
             }
             #${MODAL_ID} .ulab-fa-email-actions .secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+
+            @media (max-width: 991.98px) {
+                #${MODAL_ID}-overlay { padding: 0; }
+                #${MODAL_ID} { max-width: none; height: 100%; border-radius: 0; padding: 18px 18px 28px; }
+                #${MODAL_ID} .ulab-fa-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            }
+            @media (max-width: 575.98px) {
+                #${MODAL_ID} { padding: 16px 14px 24px; }
+                #${MODAL_ID} h2 { font-size: 16px; padding-right: 70px; }
+                #${MODAL_ID} .ulab-fa-email-btn { padding: 5px 9px; font-size: 11px; }
+                #${MODAL_ID} .ulab-fa-grid { grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+                #${MODAL_ID} table { font-size: 11.5px; }
+                #${MODAL_ID} th, #${MODAL_ID} td { padding: 4px 6px; }
+                #${MODAL_ID} .ulab-fa-tabs { gap: 5px; padding-bottom: 8px; }
+                #${MODAL_ID} .ulab-fa-tab { padding: 5px 10px; font-size: 11.5px; }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -119,7 +233,18 @@
         modal.querySelectorAll('[data-action]').forEach(el => {
             el.addEventListener('click', handleModalAction);
         });
+        modal.querySelectorAll('[data-tab]').forEach(el => {
+            el.addEventListener('click', () => switchTab(modal, el.dataset.tab));
+        });
+        modal.scrollTop = 0;
         document.getElementById(`${MODAL_ID}-overlay`).classList.add('open');
+    }
+
+    // One panel visible at a time so the result isn't a wall of stacked
+    // cards — keeps the modal calm/scannable instead of a long scroll.
+    function switchTab(modal, tabId) {
+        modal.querySelectorAll('.ulab-fa-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabId));
+        modal.querySelectorAll('.ulab-fa-panel').forEach(el => { el.hidden = el.dataset.panel !== tabId; });
     }
 
     function handleModalAction(e) {
@@ -301,6 +426,212 @@
             </div>`;
     }
 
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function card(titleHtml, bodyHtml, variant) {
+        return `<div class="ulab-fa-card${variant ? ' ' + variant : ''}">
+            ${titleHtml ? `<div class="ulab-fa-card-title">${titleHtml}</div>` : ''}
+            ${bodyHtml}
+        </div>`;
+    }
+
+    // Overview grid: URMS-scraped fields (name/mobile/email/advisor/program)
+    // plus anything else the "Student Information" card on the page shows
+    // (CGPA, batch, etc. — varies by program) that isn't already covered.
+    function renderStudentInfoSection(info) {
+        const known = new Set(['Name', 'Mobile', 'Email', 'Advisor', 'Program']);
+        const rows = [
+            ['Student ID', currentStudentId()],
+            ['Name', info.urmsName],
+            ['Mobile', info.mobile],
+            ['Email', info.urmsEmail],
+            ['Advisor', info.advisor],
+            ['Program', info.program],
+        ];
+        for (const [k, v] of Object.entries(info.studentInfo || {})) {
+            if (!known.has(k)) rows.push([k, v]);
+        }
+        const body = `<dl class="ulab-fa-grid">
+                ${rows.filter(([, v]) => v).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}
+            </dl>`;
+        return card('👤 Student Overview', body);
+    }
+
+    // "Class schedule properly" — the actual course/section/time table the
+    // student is registering for, previously only summarized in the email
+    // text, never shown in the modal itself.
+    function renderScheduleSection(info) {
+        const rows = info.coursesToRegister || [];
+        if (!rows.length) return '';
+        const body = `<div class="ulab-fa-table-wrap">
+            <table><thead><tr><th>Course</th><th>Title</th><th>Sec</th><th>Schedule</th></tr></thead><tbody>
+            ${rows.map(r => `<tr><td>${esc(r.courseId)}</td><td>${esc(r.title)}</td><td>${esc(r.section)}</td><td>${esc(r.schedule)}</td></tr>`).join('')}
+            </tbody></table>
+            </div>`;
+        return card(`🗓️ Class Schedule (${rows.length} course${rows.length === 1 ? '' : 's'})`, body);
+    }
+
+    const CAL_DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const CAL_COLORS = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#6366f1', '#ef4444', '#14b8a6'];
+    function colorForCourse(courseId) {
+        let h = 0;
+        for (let i = 0; i < courseId.length; i++) h = (h * 31 + courseId.charCodeAt(i)) >>> 0;
+        return CAL_COLORS[h % CAL_COLORS.length];
+    }
+    function fmtHour(mins) {
+        let h = Math.floor(mins / 60), m = mins % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12; if (h === 0) h = 12;
+        return m === 0 ? `${h}${ampm}` : `${h}:${String(m).padStart(2, '0')}${ampm}`;
+    }
+    function fmtClock(mins) {
+        let h = Math.floor(mins / 60), m = mins % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12; if (h === 0) h = 12;
+        return `${h}:${String(m).padStart(2, '0')}${ampm}`;
+    }
+
+    // Weekly calendar view — same course/section data as the table above,
+    // just laid out the way a student actually thinks about their week.
+    // Uses window.ulabParseSchedule (features/time/time.js, loaded in the
+    // same bundle) to turn "THU PD203 10:50AM-12:10PM TBA" style strings
+    // into {day, start, end} minute intervals.
+    function renderScheduleCalendar(info) {
+        const rows = info.coursesToRegister || [];
+        if (!rows.length || !window.ulabParseSchedule) return '';
+
+        const blocks = [];
+        for (const r of rows) {
+            const intervals = window.ulabParseSchedule(r.schedule || '');
+            for (const iv of intervals) blocks.push({ ...iv, courseId: r.courseId, title: r.title });
+        }
+        if (!blocks.length) return '';
+
+        let minStart = Math.min(...blocks.map(b => b.start));
+        let maxEnd = Math.max(...blocks.map(b => b.end));
+        minStart = Math.max(0, Math.floor(minStart / 60) * 60 - 30);
+        maxEnd = Math.min(24 * 60, Math.ceil(maxEnd / 60) * 60 + 30);
+        const totalMin = maxEnd - minStart;
+
+        // Always show the full week (not just days with a class) so the
+        // grid's column count stays fixed and matches the CSS template.
+        const days = CAL_DAYS;
+
+        const hourLines = [];
+        for (let t = Math.ceil(minStart / 60) * 60; t <= maxEnd; t += 60) {
+            hourLines.push(`<span style="top:${((t - minStart) / totalMin) * 100}%">${fmtHour(t)}</span>`);
+        }
+
+        const dayCols = days.map(day => {
+            const dayBlocks = blocks.filter(b => b.day === day);
+            const chips = dayBlocks.map(b => {
+                const top = ((b.start - minStart) / totalMin) * 100;
+                const height = Math.max(((b.end - b.start) / totalMin) * 100, 4);
+                return `<div class="ulab-fa-cal-block" style="top:${top}%;height:${height}%;background:${colorForCourse(b.courseId)}"
+                    title="${esc(b.courseId)} — ${esc(b.title)} (${fmtClock(b.start)}–${fmtClock(b.end)})">
+                    <b>${esc(b.courseId)}</b><span class="ulab-fa-cal-title">${esc(b.title)}</span><span class="ulab-fa-cal-time">${fmtClock(b.start)}–${fmtClock(b.end)}</span>
+                </div>`;
+            }).join('');
+            return `<div class="ulab-fa-cal-col" style="height:${Math.max(totalMin, 480)}px">${chips}</div>`;
+        }).join('');
+
+        const body = `<div class="ulab-fa-cal-wrap">
+            <div class="ulab-fa-cal">
+                <div class="ulab-fa-cal-head"></div>
+                ${days.map(d => `<div class="ulab-fa-cal-head">${d}</div>`).join('')}
+                <div class="ulab-fa-cal-axis" style="height:${Math.max(totalMin, 480)}px">${hourLines.join('')}</div>
+                ${dayCols}
+            </div>
+        </div>`;
+        return card('📆 Weekly Schedule', body);
+    }
+
+    // "Things required to complete the grade/degree" — per-category credit
+    // requirements vs. what's earned/in-progress, from computeDegreeProgress.
+    function renderDegreeProgressSection(advising) {
+        const progress = advising.degreeProgress && advising.degreeProgress.progress;
+        if (!progress || !progress.length) return '';
+        const body = `<div class="ulab-fa-table-wrap">
+            <table><thead><tr><th>Category</th><th>Required</th><th>Earned</th><th>In Progress</th><th>Remaining</th></tr></thead><tbody>
+            ${progress.map(p => {
+                const pct = p.required ? Math.min(100, Math.round(((p.earnedCredits + p.inProgressCredits) / p.required) * 100)) : 0;
+                return `<tr>
+                    <td>${esc(p.label || p.category)}<div class="ulab-fa-progress-bar"><span style="width:${pct}%"></span></div></td>
+                    <td>${p.required}</td>
+                    <td>${p.earnedCredits}</td>
+                    <td>${p.inProgressCredits || ''}</td>
+                    <td>${p.shortBy > 0 ? p.shortBy : '<span class="ulab-fa-ok">✓ complete</span>'}</td>
+                </tr>`;
+            }).join('')}
+            </tbody></table>
+            </div>`;
+        return card('🎯 Degree Requirements Progress', body);
+    }
+
+    // Each issue-finding is its own card with severity-keyed accent color —
+    // these are the main thing a staff member is looking for, so they lead
+    // the modal, right after the top banners.
+    function renderIssueCards(info, advising) {
+        let html = '';
+
+        const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
+        if (openRetakes.length) {
+            const body = `<div class="ulab-fa-table-wrap">
+                <table><thead><tr><th>Course</th><th>Title</th><th>Attempts</th></tr></thead><tbody>
+                ${openRetakes.map(r => `<tr><td>${esc(r.courseId)}</td><td>${esc(r.title)}</td><td>${esc(r.attempts.join(', '))}</td></tr>`).join('')}
+                </tbody></table></div>`;
+            html += card('↻ Courses to retake', body, 'issue');
+        }
+
+        if ((advising.prereqIssues || []).length) {
+            const body = `<div class="ulab-fa-table-wrap">
+                <table><thead><tr><th>Added Course</th><th>Missing Prerequisite(s)</th></tr></thead><tbody>
+                ${advising.prereqIssues.map(p => `<tr><td>${esc(p.courseId)} — ${esc(p.title)}</td><td>${esc(p.missing.map(m => `${m.courseId} (${m.title})`).join(', '))}</td></tr>`).join('')}
+                </tbody></table></div>`;
+            html += card('⛔ Prerequisite issues', body, 'issue');
+        }
+
+        if ((advising.labWithoutTheory || []).length) {
+            const body = `<div class="ulab-fa-table-wrap">
+                <table><thead><tr><th>Lab</th><th>Missing Theory</th></tr></thead><tbody>
+                ${advising.labWithoutTheory.map(l => `<tr><td>${esc(l.labCourseId)} — ${esc(l.labTitle)}</td><td>${esc(l.theoryCourseId)} (${esc(l.theoryTitle)})</td></tr>`).join('')}
+                </tbody></table></div>`;
+            html += card('🧪 Lab registered without theory', body, 'warn');
+        }
+
+        if ((advising.theoryDayConflicts || []).length) {
+            const body = `<div class="ulab-fa-table-wrap">
+                <table><thead><tr><th>Day</th><th>Theory Courses</th></tr></thead><tbody>
+                ${advising.theoryDayConflicts.map(c => `<tr><td>${esc(c.day)}</td><td>${esc(c.courses.map(x => `${x.courseId} (${x.title})`).join(', '))}</td></tr>`).join('')}
+                </tbody></table></div>
+                <div class="ulab-fa-note">Not recommended — all 3 finals would fall on this day too. Section change is only permitted to resolve this specific conflict since it arose during pre-registration/registration/add-drop.</div>`;
+            html += card('📅 3+ theory courses on the same day', body, 'warn');
+        }
+
+        if (!info.registrationNotice && !info.paymentNotice && !info.probation && !advising.finalProbation && !openRetakes.length
+            && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
+            && !(advising.theoryDayConflicts || []).length) {
+            html += card(null, '<div class="ulab-fa-note ulab-fa-ok" style="margin:0">✓ No issues found.</div>', 'ok');
+        }
+
+        return html;
+    }
+
+    function countIssues(advising) {
+        return (advising.needsRetake || []).filter(r => !r.retakingNow).length
+            + (advising.prereqIssues || []).length
+            + (advising.labWithoutTheory || []).length
+            + (advising.theoryDayConflicts || []).length
+            + (advising.finalProbation ? 1 : 0);
+    }
+
+    // Tabbed layout, one panel visible at a time, instead of every card
+    // stacked in one long scroll — keeps the modal calm to look at. Issues
+    // is the default tab since that's the main thing being checked for;
+    // the urgent banners (registration/payment/probation) stay visible
+    // above the tabs regardless of which panel is open.
     function renderResult(info, advising, programId) {
         const name = info.urmsName || 'Student';
         let html = `<button class="ulab-fa-close" data-action="close" title="Close">✕</button>
@@ -319,41 +650,21 @@
             html += `<div class="ulab-fa-banner">🚫 Final Probation (Probation 3 — CGPA below 2.00 for the last three consecutive terms): this student cannot access the online registration system independently. They may only register with the assistance of the Department Head or Coordinator, by sending a request email or visiting in person.</div>`;
         }
 
-        const openRetakes = (advising.needsRetake || []).filter(r => !r.retakingNow);
-        if (openRetakes.length) {
-            html += `<div class="ulab-fa-section">↻ Courses to retake</div>
-                <table><thead><tr><th>Course</th><th>Title</th><th>Attempts</th></tr></thead><tbody>
-                ${openRetakes.map(r => `<tr><td>${r.courseId}</td><td>${r.title}</td><td>${r.attempts.join(', ')}</td></tr>`).join('')}
-                </tbody></table>`;
-        }
+        const issueCount = countIssues(advising);
+        const scheduleCount = (info.coursesToRegister || []).length;
+        const progressCount = (advising.degreeProgress && advising.degreeProgress.progress || []).length;
 
-        if ((advising.prereqIssues || []).length) {
-            html += `<div class="ulab-fa-section">⛔ Prerequisite issues</div>
-                <table><thead><tr><th>Added Course</th><th>Missing Prerequisite(s)</th></tr></thead><tbody>
-                ${advising.prereqIssues.map(p => `<tr><td>${p.courseId} — ${p.title}</td><td>${p.missing.map(m => `${m.courseId} (${m.title})`).join(', ')}</td></tr>`).join('')}
-                </tbody></table>`;
-        }
+        html += `<div class="ulab-fa-tabs">
+            <button class="ulab-fa-tab active" data-tab="issues">⚠️ Issues${issueCount ? ` <span class="ulab-fa-tab-count">${issueCount}</span>` : ''}</button>
+            <button class="ulab-fa-tab" data-tab="overview">👤 Overview</button>
+            <button class="ulab-fa-tab" data-tab="schedule">🗓️ Schedule${scheduleCount ? ` <span class="ulab-fa-tab-count">${scheduleCount}</span>` : ''}</button>
+            <button class="ulab-fa-tab" data-tab="progress">🎯 Degree Progress${progressCount ? ` <span class="ulab-fa-tab-count">${progressCount}</span>` : ''}</button>
+        </div>`;
 
-        if ((advising.labWithoutTheory || []).length) {
-            html += `<div class="ulab-fa-section">🧪 Lab registered without theory</div>
-                <table><thead><tr><th>Lab</th><th>Missing Theory</th></tr></thead><tbody>
-                ${advising.labWithoutTheory.map(l => `<tr><td>${l.labCourseId} — ${l.labTitle}</td><td>${l.theoryCourseId} (${l.theoryTitle})</td></tr>`).join('')}
-                </tbody></table>`;
-        }
-
-        if ((advising.theoryDayConflicts || []).length) {
-            html += `<div class="ulab-fa-section">📅 3+ theory courses on the same day</div>
-                <table><thead><tr><th>Day</th><th>Theory Courses</th></tr></thead><tbody>
-                ${advising.theoryDayConflicts.map(c => `<tr><td>${c.day}</td><td>${c.courses.map(x => `${x.courseId} (${x.title})`).join(', ')}</td></tr>`).join('')}
-                </tbody></table>
-                <div class="ulab-fa-note">Not recommended — all 3 finals would fall on this day too. Section change is only permitted to resolve this specific conflict since it arose during pre-registration/registration/add-drop.</div>`;
-        }
-
-        if (!info.registrationNotice && !info.paymentNotice && !info.probation && !advising.finalProbation && !openRetakes.length
-            && !(advising.prereqIssues || []).length && !(advising.labWithoutTheory || []).length
-            && !(advising.theoryDayConflicts || []).length) {
-            html += `<div class="ulab-fa-note ulab-fa-ok">✓ No issues found.</div>`;
-        }
+        html += `<div class="ulab-fa-panel" data-panel="issues">${renderIssueCards(info, advising) || card(null, '<div class="ulab-fa-note ulab-fa-ok" style="margin:0">✓ No issues found.</div>', 'ok')}</div>`;
+        html += `<div class="ulab-fa-panel" data-panel="overview" hidden>${renderStudentInfoSection(info)}</div>`;
+        html += `<div class="ulab-fa-panel" data-panel="schedule" hidden>${renderScheduleCalendar(info)}${renderScheduleSection(info)}</div>`;
+        html += `<div class="ulab-fa-panel" data-panel="progress" hidden>${renderDegreeProgressSection(advising)}</div>`;
 
         return html;
     }

@@ -79,7 +79,15 @@
                 padding: 3rem 3.25rem;
                 color: #fff;
             }
-            #${SHELL_ID} .ulab-blob { display: none; }
+            /* Soft ambient glow — was dead markup before (.ulab-blob { display: none }
+               while the divs sat unused in the DOM); gives the visual panel
+               some depth instead of a completely flat gradient. */
+            #${SHELL_ID} .ulab-blob {
+                position: absolute; border-radius: 50%; filter: blur(60px);
+                opacity: .35; pointer-events: none;
+            }
+            #${SHELL_ID} .ulab-blob.b1 { width: 320px; height: 320px; background: #7fb3ff; top: -80px; right: -100px; }
+            #${SHELL_ID} .ulab-blob.b2 { width: 260px; height: 260px; background: #1e3a68; bottom: -60px; left: -60px; opacity: .4; }
             #${SHELL_ID} .ulab-grid-pattern {
                 position: absolute; inset: 0;
                 background-image: radial-gradient(rgba(255,255,255,.16) 1px, transparent 1px);
@@ -109,12 +117,20 @@
                 align-items: center;
                 justify-content: center;
                 padding: 2.5rem;
+                background: #fafbfd;
             }
-            #${SHELL_ID} .ulab-formbox { width: 100%; max-width: 380px; }
+            #${SHELL_ID} .ulab-formbox {
+                width: 100%; max-width: 400px;
+                background: #fff;
+                border: 1px solid #eef1f6;
+                border-radius: 14px;
+                box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 32px -8px rgba(16,24,40,.1);
+                padding: 2.25rem 2.25rem 2rem;
+            }
             #${SHELL_ID} .ulab-formbox h2 {
                 font-size: 1.6rem; font-weight: 700; color: #101828; margin: 0 0 .35rem; letter-spacing: -.01em;
             }
-            #${SHELL_ID} .ulab-formbox .ulab-sub { color: #667085; font-size: .92rem; margin: 0 0 2rem; }
+            #${SHELL_ID} .ulab-formbox .ulab-sub { color: #667085; font-size: .92rem; margin: 0 0 1.75rem; }
 
             #${SHELL_ID} .ulab-field { margin-bottom: 1.15rem; }
             #${SHELL_ID} .ulab-field label {
@@ -193,10 +209,28 @@
                 text-align: center; margin-top: 1.8rem; font-size: .78rem; color: #98a2b3;
             }
 
-            @media (max-width: 860px) {
-                #${SHELL_ID} { grid-template-columns: 1fr; }
+            @media (max-width: 991.98px) {
+                #${SHELL_ID} { grid-template-columns: 1fr; overflow-y: auto; }
                 #${SHELL_ID} .ulab-visual { display: none; }
-                #${SHELL_ID} .ulab-formside { padding: 1.5rem; }
+                #${SHELL_ID} .ulab-formside {
+                    padding: 1.5rem;
+                    align-items: flex-start;
+                    min-height: 100%;
+                    padding-top: 3rem;
+                }
+                #${SHELL_ID} .ulab-formbox { max-width: 420px; }
+            }
+
+            @media (max-width: 575.98px) {
+                #${SHELL_ID} .ulab-formside { padding: 1.25rem 1rem; padding-top: 2rem; }
+                #${SHELL_ID} .ulab-formbox { max-width: 100%; }
+                #${SHELL_ID} .ulab-formbox h2 { font-size: 1.35rem; }
+                #${SHELL_ID} .ulab-formbox .ulab-sub { font-size: .85rem; margin-bottom: 1.5rem; }
+                #${SHELL_ID} .ulab-field { margin-bottom: .95rem; }
+                #${SHELL_ID} .ulab-input-wrap input { padding: .65rem .85rem .65rem 2.3rem; font-size: .9rem; }
+                #${SHELL_ID} .ulab-row { margin: 1.1rem 0 1.2rem; flex-wrap: wrap; gap: .6rem; }
+                #${SHELL_ID} .ulab-submit { padding: .75rem 1rem; }
+                #${TOGGLE_ID} { right: 10px; bottom: 10px; padding: 5px 10px 5px 8px; font-size: 10.5px; }
             }
 
             /* Floating "modern UI" toggle */

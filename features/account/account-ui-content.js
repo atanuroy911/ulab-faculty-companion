@@ -75,31 +75,85 @@
                 border-color: rgba(16,24,40,.08);
             }
 
-            /* Form */
-            body.${BODY_CLASS} .control-label { font-weight: 600; color: #344054; font-size: .9rem; }
+            /* Form panel — the change-password fields floated directly on
+               the page canvas with no visual boundary; giving the whole
+               .form-horizontal a bounded white card matches the panel
+               treatment used for grouped sections elsewhere (registration,
+               home) instead of leaving fields to float loose. */
+            body.${BODY_CLASS} main .form-horizontal {
+                background: #fff;
+                border: 1px solid #eef1f6;
+                border-radius: 10px;
+                box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+                padding: 1.5rem 1.75rem;
+                max-width: 640px;
+            }
+            body.${BODY_CLASS} .form-horizontal .form-group {
+                margin-bottom: 1.1rem;
+            }
+            body.${BODY_CLASS} .control-label { font-weight: 600; color: #344054; font-size: .95rem; }
             body.${BODY_CLASS} .form-control {
-                border-radius: 4px;
+                border-radius: 6px;
                 border: 1.5px solid #e4e7ec;
-                transition: border-color .15s ease;
+                padding: .55rem .8rem;
+                font-size: .95rem;
+                transition: border-color .15s ease, box-shadow .15s ease;
             }
             body.${BODY_CLASS} .form-control:focus {
                 outline: none;
                 border-color: #3A67B2;
-                box-shadow: none;
+                box-shadow: 0 0 0 3px rgba(58,103,178,.12);
             }
             body.${BODY_CLASS} input[type="submit"].btn-primary {
-                border-radius: 4px;
+                border-radius: 6px;
                 background: #3A67B2;
                 border: none;
                 font-weight: 600;
+                padding: .55rem 1.4rem;
                 box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
-                transition: box-shadow .15s ease;
+                transition: box-shadow .15s ease, transform .1s ease;
             }
             body.${BODY_CLASS} input[type="submit"].btn-primary:hover {
                 box-shadow: 0 3px 3px -2px rgba(0,0,0,.2), 0 3px 4px 0 rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12);
             }
             body.${BODY_CLASS} .field-validation-error {
-                color: #d92d20; font-size: .78rem;
+                color: #d92d20; font-size: .8rem;
+            }
+
+            @media (max-width: 991.98px) {
+                body.${BODY_CLASS} main { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+                body.${BODY_CLASS} main .form-horizontal { max-width: 100%; padding: 1.25rem; }
+                body.${BODY_CLASS} .form-horizontal .form-group {
+                    display: flex;
+                    flex-wrap: wrap;
+                }
+                body.${BODY_CLASS} .form-horizontal .control-label,
+                body.${BODY_CLASS} .form-horizontal .col-sm-2,
+                body.${BODY_CLASS} .form-horizontal .col-sm-3,
+                body.${BODY_CLASS} .form-horizontal .col-sm-4,
+                body.${BODY_CLASS} .form-horizontal .col-sm-6,
+                body.${BODY_CLASS} .form-horizontal .col-sm-8,
+                body.${BODY_CLASS} .form-horizontal .col-sm-10 {
+                    max-width: 100%;
+                    flex: 0 0 100%;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                body.${BODY_CLASS} main { padding-left: .9rem !important; padding-right: .9rem !important; }
+                body.${BODY_CLASS} main > h2:first-of-type { font-size: 1.25rem; }
+                body.${BODY_CLASS} main h4 { font-size: .95rem; }
+                body.${BODY_CLASS} main .form-horizontal { padding: 1rem; border-radius: 8px; }
+                body.${BODY_CLASS} .control-label { font-size: .85rem; }
+                body.${BODY_CLASS} .form-control { font-size: .9rem; }
+                body.${BODY_CLASS} input[type="submit"].btn-primary {
+                    width: 100%;
+                    padding: .6rem 1rem;
+                }
+                body.${BODY_CLASS} .modal-dialog {
+                    max-width: calc(100% - 1rem) !important;
+                    margin: .5rem auto;
+                }
             }
 
             /* Footer */

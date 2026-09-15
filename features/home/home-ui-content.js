@@ -176,13 +176,32 @@
                 color: #101828;
             }
 
-            @media (max-width: 760px) {
+            @media (max-width: 991.98px) {
                 body.${BODY_CLASS} main .card > .d-flex { flex-direction: column !important; }
                 body.${BODY_CLASS} #v-pills-tab {
                     flex-direction: row !important;
                     border-right: none;
                     border-bottom: 1px solid rgba(16,24,40,.06);
                     overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    min-width: 0;
+                    padding: 1rem;
+                }
+                body.${BODY_CLASS} #v-pills-tab .nav-link { white-space: nowrap; }
+            }
+
+            @media (max-width: 575.98px) {
+                body.${BODY_CLASS} main #welcomeTextHeader { font-size: 1.5rem; }
+                body.${BODY_CLASS} .tab-content { padding: 1.1rem 1rem !important; }
+                body.${BODY_CLASS} .tab-pane {
+                    grid-template-columns: 1fr;
+                    gap: .6rem;
+                }
+                body.${BODY_CLASS} .tab-pane a { padding: .85rem .9rem; }
+                body.${BODY_CLASS} #v-pills-tab .nav-link {
+                    padding: .55rem .7rem !important;
+                    padding-left: 2.1rem !important;
+                    font-size: .85rem !important;
                 }
             }
 
@@ -192,6 +211,26 @@
                 border-top: 1px solid rgba(16,24,40,.06) !important;
                 font-size: .8rem;
             }
+
+            /* Dark mode: the generic body.ulab-dark rules (shared shell) only
+               reach .card/table/form elements, not these hand-styled tile
+               links, so their white background + dark text survive untouched
+               while a *different* dark-mode rule (body.ulab-dark main h5)
+               still recolors the h5 text light-gray — leaving near-invisible
+               light-gray-on-white. Give the tiles their own dark surface. */
+            body.ulab-dark.${BODY_CLASS} .tab-pane a {
+                background: #1c202c;
+                border-color: #2c3142;
+            }
+            body.ulab-dark.${BODY_CLASS} .tab-pane a:hover {
+                border-color: rgba(99,179,237,.4);
+                box-shadow: 0 3px 8px rgba(0,0,0,.35);
+            }
+            body.ulab-dark.${BODY_CLASS} .tab-pane a h5 { color: #e2e8f0 !important; }
+            body.ulab-dark.${BODY_CLASS} .tab-pane a::before { background-color: #262b3b; }
+            body.ulab-dark.${BODY_CLASS} #v-pills-tab { border-color: #2c3142; }
+            body.ulab-dark.${BODY_CLASS} #v-pills-tab .nav-link { color: #9aa5b8; }
+            body.ulab-dark.${BODY_CLASS} #v-pills-tab .nav-link:hover { background: #1c202c; color: #63b3ed; }
         `;
         document.head.appendChild(style);
     }

@@ -70,10 +70,22 @@
                 margin: .75rem 0 1.5rem;
             }
 
+            /* Picker panel — bound the semester/course picker fields into a
+               white card like the results table area, instead of floating
+               directly on the gradient canvas. */
+            body.${BODY_CLASS} main .form-horizontal {
+                background: #fff;
+                border: 1px solid #eef1f6;
+                border-radius: 10px;
+                box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+                padding: 1.5rem 1.75rem;
+                margin-bottom: 1.5rem;
+            }
+
             /* Picker rows — these text inputs use Bootstrap grid classes
                (col-sm-*) for sizing instead of .form-control, so style them
                directly by type/context rather than relying on that class. */
-            body.${BODY_CLASS} .col-form-label { font-weight: 600; color: #344054; font-size: .9rem; }
+            body.${BODY_CLASS} .col-form-label { font-weight: 600; color: #344054; font-size: .95rem; }
             body.${BODY_CLASS} .form-group.row input[type="text"] {
                 border-radius: 4px;
                 border: 1.5px solid #e4e7ec;
@@ -111,6 +123,60 @@
                 box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
             }
 
+            /* Results table — the comments/ratings report rendered below the
+               picker. Row-as-card treatment matching registration.js: real
+               <tr> rows here (no tr.d-flex on this page), so border-spacing
+               handles the row gap. */
+            body.${BODY_CLASS} main .table {
+                border-collapse: separate;
+                border-spacing: 0 8px;
+            }
+            body.${BODY_CLASS} main .table th {
+                background: transparent;
+                color: #667085;
+                font-weight: 700;
+                font-size: .8rem;
+                text-transform: uppercase;
+                letter-spacing: .05em;
+                border-bottom: 2px solid #dbe3f5 !important;
+                padding: .5rem .8rem .6rem;
+            }
+            body.${BODY_CLASS} main .table td {
+                padding: .7rem .8rem;
+                vertical-align: middle;
+                font-size: .95rem;
+            }
+            body.${BODY_CLASS} main .table thead tr {
+                border: none !important; box-shadow: none !important;
+                background: transparent !important; margin: 0 !important;
+            }
+            body.${BODY_CLASS} main .table tbody tr {
+                background: #fff;
+                box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+                border-radius: 8px;
+                transition: box-shadow .12s ease;
+            }
+            body.${BODY_CLASS} main .table tbody tr:hover {
+                box-shadow: 0 2px 4px -1px rgba(16,24,40,.1), 0 4px 8px 0 rgba(16,24,40,.1);
+            }
+            body.${BODY_CLASS} main .table tbody td:first-child {
+                border-top-left-radius: 8px;
+                border-bottom-left-radius: 8px;
+            }
+            body.${BODY_CLASS} main .table tbody td:last-child {
+                border-top-right-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+            body.${BODY_CLASS} main .table-bordered,
+            body.${BODY_CLASS} main .table-bordered td,
+            body.${BODY_CLASS} main .table-bordered th {
+                border-color: transparent !important;
+            }
+            body.${BODY_CLASS} main .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
             /* Picker modal (semester/course search) */
             body.${BODY_CLASS} .modal-content {
                 border: none;
@@ -142,6 +208,54 @@
             body.${BODY_CLASS} .modal-body table td { font-size: .87rem; vertical-align: middle; }
             body.${BODY_CLASS} .modal-body table tbody tr:hover { background: #eef2fb; cursor: pointer; }
             body.${BODY_CLASS} .modal-body input[type="radio"] { accent-color: #3A67B2; }
+            body.${BODY_CLASS} .modal-body .table-responsive,
+            body.${BODY_CLASS} .modal-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+            @media (max-width: 991.98px) {
+                body.${BODY_CLASS} main .form-horizontal { padding: 1.25rem; }
+                body.${BODY_CLASS} .form-group.row { flex-wrap: wrap; }
+                body.${BODY_CLASS} .form-group.row .col-form-label,
+                body.${BODY_CLASS} .form-group.row > div {
+                    flex: 0 0 100%;
+                    max-width: 100%;
+                }
+                body.${BODY_CLASS} .form-group.row .btn-primary { margin-top: .5rem; }
+                body.${BODY_CLASS} main { overflow-x: auto; }
+                body.${BODY_CLASS} main table {
+                    display: block;
+                    width: 100%;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                body.${BODY_CLASS} .modal-dialog.modal-lg {
+                    max-width: calc(100% - 1rem);
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                body.${BODY_CLASS} main > h2:first-of-type { font-size: 1.35rem; }
+                body.${BODY_CLASS} main .form-horizontal { padding: 1rem; border-radius: 8px; }
+                body.${BODY_CLASS} .col-form-label { font-size: .85rem; }
+                body.${BODY_CLASS} .form-group.row input[type="text"] {
+                    padding: .4rem .6rem;
+                    font-size: .85rem;
+                }
+                body.${BODY_CLASS} .modal-header .modal-title { font-size: .9rem; }
+                body.${BODY_CLASS} .modal-body #searchSem,
+                body.${BODY_CLASS} .modal-body input.form-control {
+                    font-size: .85rem;
+                }
+                body.${BODY_CLASS} .modal-body table td,
+                body.${BODY_CLASS} .modal-body table th {
+                    font-size: .78rem;
+                    padding: .4rem .5rem;
+                }
+                body.${BODY_CLASS} main .table th,
+                body.${BODY_CLASS} main .table td {
+                    font-size: .85rem;
+                    padding: .5rem .6rem;
+                }
+            }
 
             /* Footer */
             body.${BODY_CLASS} footer {

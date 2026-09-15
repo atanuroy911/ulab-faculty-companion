@@ -23,7 +23,6 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     const programLabel = programMeta ? programMeta.short : programId;
 
     document.getElementById('n-students-text').textContent = `${nStudents} Students Checked`;
-    document.getElementById('stat-students').textContent = nStudents;
 
     function semesterRank(semStr) {
         const m = (semStr || '').match(/(Spring|Summer|Fall)\s+(\d{4})/i);
@@ -194,18 +193,20 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         if ((advising.theoryDayConflicts || []).length) issueKeys.push('theoryconflict');
         if (info.paymentNotice) issueKeys.push('payment');
 
-        // Candidates for the bulk Save & Email Bill modal — anyone whose
-        // course list actually exists and isn't blocked by an open retake.
-        // A retake-pending student's registration is presumptively wrong
-        // (they should be retaking the failed course, not what they added),
-        // and "no courses added" has nothing to save — so both are hard
-        // exclusions, never offered as checklist options.
-        const bulkBlocked = !!info.error || !hasCourses || openRetakes.length > 0;
+        // Candidates for the bulk Save & Email Bill modal. Only a fetch
+        // error or "no courses added" are hard exclusions now — there's
+        // nothing to save in either case. An open retake used to be a hard
+        // exclusion too (on the theory that the student's registration was
+        // presumptively wrong), but that blocked saving/billing entirely
+        // for anyone with *any* issue, which turned out to be too broad —
+        // it's now just another checklist category the advisor opts into
+        // deliberately, same as probation/prereq/lab/theory-conflict.
+        const bulkBlocked = !!info.error || !hasCourses;
         if (!bulkBlocked) {
             bulkEligible.push({
                 s,
                 name: displayName,
-                categories: issueKeys.filter(k => ['clean', 'probation', 'finalprobation', 'prereq', 'lab', 'theoryconflict'].includes(k)),
+                categories: issueKeys.filter(k => ['clean', 'finalprobation', 'probation', 'retake', 'prereq', 'lab', 'theoryconflict'].includes(k)),
             });
         } else {
             // Never offered in the bulk checklist — the advisor has to reach
@@ -214,7 +215,6 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
             const reasons = [];
             if (info.error) reasons.push('error');
             if (!info.error && !hasCourses) reasons.push('nocourses');
-            if (openRetakes.length) reasons.push('retake');
             bulkExcluded.push({ s, name: displayName, reasons });
         }
 
@@ -573,15 +573,34 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
         list.appendChild(card);
     }
 
-    document.getElementById('stat-clean').textContent = cleanCount;
-    document.getElementById('stat-probation').textContent = probationCount;
-    document.getElementById('stat-nocourses').textContent = noCoursesCount;
-    document.getElementById('stat-retake').textContent = retakeCount;
-    document.getElementById('stat-prereq').textContent = prereqIssueCount;
-    document.getElementById('stat-lab').textContent = labIssueCount;
-    document.getElementById('stat-final-probation').textContent = finalProbationCount;
-    document.getElementById('stat-theory-conflict').textContent = theoryConflictCount;
-    document.getElementById('stat-payment').textContent = paymentIssueCount;
+    // Single compact pill bar — only categories with at least one student
+    // are shown at all, since most cohorts have zero in most categories and
+    // a row of "0" cards is just noise. Students/Clean always show; every
+    // issue pill picks up its priority tier's accent color.
+    (function buildStatsRow() {
+        const pill = (icon, label, count, tierClass) =>
+            `<div class="stat-pill ${tierClass || ''}"><span class="stat-icon">${icon}</span><span class="stat-label">${label}</span><span class="stat-value">${count}</span></div>`;
+
+        let html = pill('👥', 'Students', nStudents) + pill('✓', 'Clean', cleanCount, 'tier-ok');
+
+        const mainPills = [
+            finalProbationCount && pill('🚫', 'Final probation', finalProbationCount, 'tier-main'),
+            probationCount && pill('⚠️', 'Probation', probationCount, 'tier-main'),
+            retakeCount && pill('↻', 'Retake', retakeCount, 'tier-main'),
+            prereqIssueCount && pill('⛔', 'Prereq issue', prereqIssueCount, 'tier-main'),
+        ].filter(Boolean);
+        const midPills = [labIssueCount && pill('🧪', 'Lab w/o theory', labIssueCount, 'tier-mid')].filter(Boolean);
+        const lowPills = [theoryConflictCount && pill('📅', '3+ theory/day', theoryConflictCount, 'tier-low')].filter(Boolean);
+        const blockedPills = [
+            noCoursesCount && pill('📝', 'No courses', noCoursesCount),
+            paymentIssueCount && pill('💳', 'Payment', paymentIssueCount),
+        ].filter(Boolean);
+
+        for (const group of [mainPills, midPills, lowPills, blockedPills]) {
+            if (group.length) html += '<span class="stats-divider"></span>' + group.join('');
+        }
+        document.getElementById('stats-row').innerHTML = html;
+    })();
 
     // ── Save / Save+Bill actions — live against URMS via ULAB_SAVE_ENGINE ───
     const BASE = 'https://urms-awp.ulab.edu.bd';
@@ -616,18 +635,33 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
 
     // ── Bulk "Save & Email Bill" modal ───────────────────────────────────────
     // Opens a checklist modal instead of saving immediately: Clean is checked
-    // by default, but Probation / Final Probation / Prerequisite issues /
-    // Lab without theory / 3+ theory in 1 day can each be opted in too.
-    // Students with an open retake or no courses added are never offered —
-    // they're excluded from bulkEligible entirely (see the main student loop).
+    // by default, and every issue category can be opted in too — grouped
+    // into three priority tiers (advisor guidance) so the checklist reads as
+    // "how serious is this" instead of a flat, equally-weighted list:
+    //   Main   — Final Probation, Probation, Course Retake, Prerequisite issue
+    //   Mid    — Lab without theory
+    //   Low    — 3+ theory courses in one day
+    // Only a fetch error or "no courses added" keep a student off this list
+    // entirely (see bulkEligible/bulkExcluded in the main student loop) —
+    // every other issue is just a checkbox now, not a block.
     const CATEGORY_LABELS = {
         clean: '✓ Clean (no issues)',
-        probation: '⚠️ On probation',
         finalprobation: '🚫 Final probation (restricted)',
+        probation: '⚠️ On probation',
+        retake: '↻ Course retake pending',
         prereq: '⛔ Prerequisite issues',
         lab: '🧪 Lab without theory',
         theoryconflict: '📅 3+ theory in 1 day',
     };
+
+    // Priority tiers per the advisor's own ranking — drives the grouped
+    // checklist layout below. 'clean' is rendered separately, above the
+    // tiers, since it isn't an issue at all.
+    const CATEGORY_TIERS = [
+        { label: 'Main priority', keys: ['finalprobation', 'probation', 'retake', 'prereq'] },
+        { label: 'Mid priority', keys: ['lab'] },
+        { label: 'Low priority', keys: ['theoryconflict'] },
+    ];
 
     const bulkModalOverlay = document.getElementById('bulk-save-modal-overlay');
     const bulkChecklist = document.getElementById('bulk-save-checklist');
@@ -683,13 +717,30 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     const categoriesPresent = Object.keys(CATEGORY_LABELS).filter(key =>
         bulkEligible.some(e => e.categories.includes(key))
     );
-    bulkChecklist.innerHTML = categoriesPresent.map(key => {
+
+    function checklistRow(key) {
         const n = bulkEligible.filter(e => e.categories.includes(key)).length;
         return `<label class="filter-option">
             <input type="checkbox" class="bulk-cat-check" data-key="${key}" ${key === 'clean' ? 'checked' : ''}>
             ${CATEGORY_LABELS[key]} (${n})
         </label>`;
-    }).join('') || `<div class="empty-note">No eligible students (everyone either needs a retake or has no courses added).</div>`;
+    }
+
+    if (!categoriesPresent.length) {
+        bulkChecklist.innerHTML = `<div class="empty-note">No eligible students (everyone has a fetch error or no courses added).</div>`;
+    } else {
+        let html = '';
+        if (categoriesPresent.includes('clean')) html += checklistRow('clean');
+        for (const tier of CATEGORY_TIERS) {
+            const rows = tier.keys.filter(k => categoriesPresent.includes(k));
+            if (!rows.length) continue;
+            html += `<div class="bulk-tier-group">
+                <div class="bulk-tier-label">${tier.label}</div>
+                ${rows.map(checklistRow).join('')}
+            </div>`;
+        }
+        bulkChecklist.innerHTML = html;
+    }
 
     function selectedBulkStudents() {
         const checked = Array.from(document.querySelectorAll('.bulk-cat-check')).filter(cb => cb.checked).map(cb => cb.dataset.key);
@@ -1225,8 +1276,18 @@ chrome.storage.local.get(['ulabABStudents', 'ulabABDetails', 'ulabABProgram'], (
     // ── Theme toggle ─────────────────────────────────────────────
     const htmlEl = document.documentElement;
     const lbl = document.getElementById('toggle-label');
-    const saved = localStorage.getItem('ulab-theme') || 'light';
-    applyTheme(saved);
+    // Default to the site-wide dark/light toggle (ulabModernTheme, set by
+    // features/shared/ulab-dashboard-shell.js) when it's known, so this page
+    // opens matching whatever the rest of URMS is currently showing instead
+    // of always starting light — falls back to this page's own last choice
+    // when opened standalone (e.g. from the side panel, no site theme to
+    // match), and stays live-synced while open inline via postMessage.
+    chrome.storage.local.get(['ulabModernTheme'], (result) => {
+        applyTheme(result.ulabModernTheme || localStorage.getItem('ulab-theme') || 'light');
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.ulabModernTheme) applyTheme(changes.ulabModernTheme.newValue);
+    });
     document.getElementById('theme-toggle').addEventListener('click', () => {
         applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     });

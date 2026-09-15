@@ -118,11 +118,30 @@
         }
         .hero-sub { color: var(--muted); font-size: 14px; }
 
-        .stats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
-        .stat-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; }
-        .stat-icon { font-size: 18px; }
-        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 17px; font-weight: 700; color: var(--accent); }
+        /* One compact, single-line pill bar instead of a grid of cards —
+           built in JS (see results.js buildStatsRow) so a category with zero
+           students in it simply isn't shown at all: the common case is most
+           issue types being empty, and a bar of 10 "0" cards was pure
+           clutter. Students/Clean always show; every issue pill is tinted
+           by its priority tier (main/mid/low) via a left accent bar instead
+           of taking up its own labeled row. */
+        .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 24px; }
+        .stat-pill {
+            display: flex; align-items: center; gap: 6px; background: var(--surface);
+            border: 1px solid var(--border); border-left: 3px solid var(--border);
+            border-radius: 999px; padding: 6px 12px 6px 10px; font-size: 12.5px; white-space: nowrap;
+        }
+        .stat-pill .stat-icon { font-size: 13px; }
+        .stat-pill .stat-label { color: var(--muted); }
+        .stat-pill .stat-value { font-weight: 700; color: var(--text); }
+        .stat-pill.tier-main { border-left-color: var(--bad-text); }
+        .stat-pill.tier-main .stat-value { color: var(--bad-text); }
+        .stat-pill.tier-mid { border-left-color: var(--warn-text); }
+        .stat-pill.tier-mid .stat-value { color: var(--warn-text); }
+        .stat-pill.tier-low { border-left-color: var(--muted); }
+        .stat-pill.tier-ok { border-left-color: var(--ok-text); }
+        .stat-pill.tier-ok .stat-value { color: var(--ok-text); }
+        .stats-divider { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
 
         /* ── Bulk Save/Bill action bar ────────────────────────────────────── */
         .bulk-bar {
@@ -218,6 +237,12 @@
         }
         .filter-option:hover { background: var(--surface2); }
         .filter-option input { cursor: pointer; }
+        .bulk-tier-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .bulk-tier-group:first-of-type { margin-top: 6px; }
+        .bulk-tier-label {
+            font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+            color: var(--muted); padding: 0 8px 4px;
+        }
         .filter-panel-footer {
             display: flex; justify-content: space-between; padding: 8px 8px 2px; margin-top: 4px;
             border-top: 1px solid var(--border);
@@ -459,78 +484,7 @@
         <p class="hero-sub" id="n-students-text">Analyzing…</p>
     </header>
 
-    <div class="stats">
-        <div class="stat-chip">
-            <span class="stat-icon">👥</span>
-            <div>
-                <div class="stat-label">Students</div>
-                <div class="stat-value" id="stat-students">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">✓</span>
-            <div>
-                <div class="stat-label">Clean (no issues)</div>
-                <div class="stat-value" id="stat-clean">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">⚠️</span>
-            <div>
-                <div class="stat-label">On probation</div>
-                <div class="stat-value" id="stat-probation">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">📝</span>
-            <div>
-                <div class="stat-label">No courses added</div>
-                <div class="stat-value" id="stat-nocourses">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">↻</span>
-            <div>
-                <div class="stat-label">Need to retake a course</div>
-                <div class="stat-value" id="stat-retake">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">⛔</span>
-            <div>
-                <div class="stat-label">Prerequisite issues</div>
-                <div class="stat-value" id="stat-prereq">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">🧪</span>
-            <div>
-                <div class="stat-label">Lab without theory</div>
-                <div class="stat-value" id="stat-lab">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">🚫</span>
-            <div>
-                <div class="stat-label">Final probation (restricted)</div>
-                <div class="stat-value" id="stat-final-probation">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">📅</span>
-            <div>
-                <div class="stat-label">3+ theory in 1 day</div>
-                <div class="stat-value" id="stat-theory-conflict">—</div>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <span class="stat-icon">💳</span>
-            <div>
-                <div class="stat-label">Pre-registration incomplete</div>
-                <div class="stat-value" id="stat-payment">—</div>
-            </div>
-        </div>
-    </div>
+    <div class="stats" id="stats-row"></div>
 
     <div class="bulk-bar">
         <div class="bulk-bar-text">
@@ -565,15 +519,27 @@
             <div class="filter-panel" id="filter-panel">
                 <label class="filter-option"><input type="checkbox" class="filter-check" data-key="anyissue"> ⚠ Any issue (not clean)</label>
                 <label class="filter-option"><input type="checkbox" class="filter-check" data-key="clean"> ✓ Clean (no issues)</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="probation"> ⚠️ On probation</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="finalprobation"> 🚫 Final probation (restricted)</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="nocourses"> 📝 No courses added</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="retake"> ↻ Needs to retake a course</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="prereq"> ⛔ Prerequisite issues</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="lab"> 🧪 Lab without theory</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="theoryconflict"> 📅 3+ theory in 1 day</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="payment"> 💳 Pre-registration incomplete (payment)</label>
-                <label class="filter-option"><input type="checkbox" class="filter-check" data-key="error"> ⚠️ Fetch failed</label>
+                <div class="bulk-tier-group">
+                    <div class="bulk-tier-label">Main priority</div>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="finalprobation"> 🚫 Final probation (restricted)</label>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="probation"> ⚠️ On probation</label>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="retake"> ↻ Needs to retake a course</label>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="prereq"> ⛔ Prerequisite issues</label>
+                </div>
+                <div class="bulk-tier-group">
+                    <div class="bulk-tier-label">Mid priority</div>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="lab"> 🧪 Lab without theory</label>
+                </div>
+                <div class="bulk-tier-group">
+                    <div class="bulk-tier-label">Low priority</div>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="theoryconflict"> 📅 3+ theory in 1 day</label>
+                </div>
+                <div class="bulk-tier-group">
+                    <div class="bulk-tier-label">Not checkable yet</div>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="nocourses"> 📝 No courses added</label>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="payment"> 💳 Pre-registration incomplete (payment)</label>
+                    <label class="filter-option"><input type="checkbox" class="filter-check" data-key="error"> ⚠️ Fetch failed</label>
+                </div>
                 <div class="filter-panel-footer">
                     <button class="filter-clear-btn" id="filter-clear" type="button">Clear all</button>
                 </div>

@@ -268,7 +268,11 @@
                 ulabABDetails: details,
                 ulabABProgram: SELECTED_PROGRAM,
             }, () => {
-                chrome.runtime.sendMessage({ action: 'openAdvisingBillingResults' });
+                if (window.ULAB_TOOLS_FRAME_SHOW_RESULTS) {
+                    window.ULAB_TOOLS_FRAME_SHOW_RESULTS('features/advising-billing/results.html');
+                } else {
+                    chrome.runtime.sendMessage({ action: 'openAdvisingBillingResults' });
+                }
             });
         } catch (err) {
             console.error('[ULAB Advising & Billing]', err);

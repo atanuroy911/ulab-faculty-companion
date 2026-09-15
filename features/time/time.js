@@ -414,7 +414,11 @@
 
             setRunStatus('✅ Done! Opening results…');
             chrome.storage.local.set({ ulabResults: results, ulabStudents: students, ulabSchedules: schedules }, () => {
-                chrome.runtime.sendMessage({ action: 'openResults' });
+                if (window.ULAB_TOOLS_FRAME_SHOW_RESULTS) {
+                    window.ULAB_TOOLS_FRAME_SHOW_RESULTS('features/time/results.html');
+                } else {
+                    chrome.runtime.sendMessage({ action: 'openResults' });
+                }
             });
 
         } catch (err) {

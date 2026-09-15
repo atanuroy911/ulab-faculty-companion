@@ -11,6 +11,10 @@
     }
 
     function mount(container) {
+        if (window.ULAB_TOOLS_FRAME_SHOW_RESULTS) {
+            window.ULAB_TOOLS_FRAME_SHOW_RESULTS('features/catalogue-viewer/viewer.html');
+            return;
+        }
         container.innerHTML = `
             <p class="ulab-step-desc">
                 Browse every course this extension knows about, along with its prerequisites

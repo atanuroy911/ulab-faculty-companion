@@ -208,8 +208,15 @@ chrome.storage.local.get(['ulabCapstoneResults'], (data) => {
 
     const htmlEl = document.documentElement;
     const lbl = document.getElementById('toggle-label');
-    const savedTheme = localStorage.getItem('ulab-theme') || 'light';
-    applyTheme(savedTheme);
+    // Default to the site-wide dark/light toggle when known (see
+    // advising-billing/results.js for the full rationale), falling back to
+    // this page's own last choice when opened standalone.
+    chrome.storage.local.get(['ulabModernTheme'], (result) => {
+        applyTheme(result.ulabModernTheme || localStorage.getItem('ulab-theme') || 'light');
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.ulabModernTheme) applyTheme(changes.ulabModernTheme.newValue);
+    });
     document.getElementById('theme-toggle').addEventListener('click', () => {
         applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     });

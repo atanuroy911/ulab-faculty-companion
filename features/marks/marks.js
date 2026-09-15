@@ -10,17 +10,26 @@
         document.head.appendChild(link);
     }
 
-    const MMS_URL = 'https://ulab-mms.netlify.app/';
+    const MMS_LINKS = [
+        { label: '📊 Marks Management (New)', url: 'https://mms.ulab.edu.bd/' },
+        { label: '📊 Marks Management (Legacy)', url: 'https://ulab-mms.netlify.app/' },
+    ];
 
     function mount(container) {
         container.innerHTML = `
             <p class="ulab-step-desc">
-                Opens the Marks Management System in a new tab.
+                Opens the Marks Management System in a new tab. ULAB has been
+                migrating MMS to a new domain — both are listed until the
+                move is complete, in case one isn't ready for your course yet.
             </p>
-            <button class="ulab-primary-btn" id="ulab-open-mms">📊 Manage Marks</button>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+                ${MMS_LINKS.map((l, i) => `<button class="ulab-primary-btn" data-idx="${i}">${l.label}</button>`).join('')}
+            </div>
         `;
-        container.querySelector('#ulab-open-mms').addEventListener('click', () => {
-            window.open(MMS_URL, '_blank');
+        container.querySelectorAll('button[data-idx]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                window.open(MMS_LINKS[Number(btn.dataset.idx)].url, '_blank');
+            });
         });
     }
 

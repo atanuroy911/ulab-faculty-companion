@@ -495,7 +495,11 @@
 
             setRunStatus('✅ Done! Opening report…');
             chrome.storage.local.set({ ulabCapstoneResults: results }, () => {
-                chrome.runtime.sendMessage({ action: 'openCapstoneResults' });
+                if (window.ULAB_TOOLS_FRAME_SHOW_RESULTS) {
+                    window.ULAB_TOOLS_FRAME_SHOW_RESULTS('features/capstone-eligibility/results.html');
+                } else {
+                    chrome.runtime.sendMessage({ action: 'openCapstoneResults' });
+                }
             });
         } catch (err) {
             console.error('[ULAB Capstone Eligibility]', err);

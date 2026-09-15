@@ -50,7 +50,7 @@
         // pairings that credit/type-based classification doesn't.
         const labTheoryMap = {};
         for (const c of courses) {
-            if (c.courseType !== 'Lab') continue;
+            if (c.courseType !== 'Lab' || c.noTheoryPairing) continue;
             const m = c.unescoCode.match(/^(\d+-\d+-)(\d+)$/);
             if (!m) continue;
             const [, prefix, numStr] = m;

@@ -61,7 +61,12 @@
 
         // ── Major Core ───────────────────────────────────────────────────
         { code: 'CSE1101', unescoCode: '0613-014-1101', title: 'Introduction to Programming', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: [] },
-        { code: 'CSE1102', unescoCode: '0613-014-1102', title: 'Introduction to Programming Lab', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: [] },
+        // Despite the UNESCO numbering looking like a standard lab/theory
+        // pair with CSE1101, this lab does not actually require CSE1101 as
+        // a co-requisite in practice — confirmed by faculty — so it's opted
+        // out of the auto-derived lab-without-theory check (see
+        // catalogue-factory.js's noTheoryPairing handling).
+        { code: 'CSE1102', unescoCode: '0613-014-1102', title: 'Introduction to Programming Lab', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: [], noTheoryPairing: true },
         { code: 'CSE1201', unescoCode: '0613-014-1201', title: 'Structured Programming', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['CSE 103'] },
         { code: 'CSE1202', unescoCode: '0613-014-1202', title: 'Structured Programming LAB', prereq: [], category: 'MajorCore', courseType: 'Lab', oldCodes: ['CSE 104'] },
         { code: 'CSE1203', unescoCode: '0613-014-1203', title: 'Discrete Mathematics', prereq: [], category: 'MajorCore', courseType: 'Theory', oldCodes: ['CSE 103', 'CSE 205'] },

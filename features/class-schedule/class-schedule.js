@@ -41,54 +41,30 @@
         el.innerHTML = msg ? `<div class="${isError ? 'ulab-preview-warn' : 'ulab-preview-ok'}">${msg}</div>` : '';
     }
 
-    const HISTORY_KEY = 'ulabSavedConsultationSchedules';
+    // Every generated schedule is also saved here, keyed by short-form +
+    // semester + year, so it can be reopened later from the dedicated
+    // "My Schedule" tool (features/class-schedule/my-schedule.js) without
+    // re-uploading the spreadsheet. Separate from
+    // 'ulabSavedConsultationSchedules', which is a different feature (the
+    // "Export Teaching & Consultation Schedule" button inside results.html)
+    // that was previously — confusingly — the key this history list read.
+    const SAVED_SCHEDULES_KEY = 'ulabSavedClassSchedules';
 
     function escapeHtml(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    function loadHistory() {
-        chrome.storage.local.get([HISTORY_KEY], (data) => {
-            renderHistoryList(data[HISTORY_KEY] || {});
-        });
+    function scheduleKey(entry) {
+        return `${entry.shortForm || 'unknown'}__${entry.semester || 'na'}__${entry.year || 'na'}`;
     }
 
-    function renderHistoryList(all) {
-        const list = $('ulab-cs-history-list');
-        if (!list) return;
-        const entries = Object.entries(all).sort((a, b) => (b[1].savedAt || 0) - (a[1].savedAt || 0));
-        if (!entries.length) {
-            list.innerHTML = `<div class="ulab-format-hint">No saved schedules yet — export one with "Save & Export" to see it here.</div>`;
-            return;
-        }
-        list.innerHTML = entries.map(([key, entry]) => `
-            <span class="ulab-history-pill" data-key="${escapeHtml(key)}">
-                <span class="ulab-history-pill-open" data-key="${escapeHtml(key)}">
-                    🕘 ${escapeHtml(entry.displayName || entry.shortForm || key)}
-                </span>
-                <button class="ulab-history-pill-remove" data-key="${escapeHtml(key)}" title="Remove from history">×</button>
-            </span>
-        `).join('');
-
-        list.querySelectorAll('.ulab-history-pill-open').forEach((el) => {
-            el.addEventListener('click', () => openSavedSchedule(all[el.dataset.key]));
-        });
-        list.querySelectorAll('.ulab-history-pill-remove').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                chrome.storage.local.get([HISTORY_KEY], (data) => {
-                    const current = data[HISTORY_KEY] || {};
-                    delete current[btn.dataset.key];
-                    chrome.storage.local.set({ [HISTORY_KEY]: current }, () => renderHistoryList(current));
-                });
+    function saveScheduleToHistory(entry) {
+        return new Promise((resolve) => {
+            chrome.storage.local.get([SAVED_SCHEDULES_KEY], (data) => {
+                const all = data[SAVED_SCHEDULES_KEY] || {};
+                all[scheduleKey(entry)] = entry;
+                chrome.storage.local.set({ [SAVED_SCHEDULES_KEY]: all }, resolve);
             });
-        });
-    }
-
-    function openSavedSchedule(entry) {
-        if (!entry) return;
-        chrome.storage.local.set({ ulabConsultationToOpen: entry }, () => {
-            chrome.runtime.sendMessage({ action: 'openClassScheduleResults' });
         });
     }
 
@@ -103,11 +79,6 @@
                 form (e.g. <strong>ASR</strong>) or full name — every cell in the sheet is searched for
                 you, exactly as you'd read it by eye, and your personal weekly timetable is built from
                 every class where it shows up.
-            </div>
-
-            <div class="ulab-format-box">
-                <button class="ulab-link-chip" style="cursor:pointer" id="ulab-cs-history-toggle">🕘 Saved schedules (history)</button>
-                <div id="ulab-cs-history-list" style="display:none;margin-top:10px"></div>
             </div>
 
             <div class="ulab-format-box">
@@ -127,7 +98,7 @@
             </div>
 
             <div class="ulab-format-box">
-                <div class="ulab-format-label">3. Semester (for the Google Calendar start date)</div>
+                <div class="ulab-format-label">3. Semester (also saved with your schedule, so 📅 My Schedule can tell your terms apart)</div>
                 <div style="display:flex;flex-wrap:wrap;gap:10px">
                     <select id="ulab-cs-semester" style="flex:1;min-width:0;padding:9px 8px;border-radius:8px;border:1px solid var(--border);color:var(--text);background:transparent;font:inherit;max-width:100%">
                         <option value="">Not sure / other</option>
@@ -170,13 +141,6 @@
         $('ulab-teacher-query').addEventListener('input', updateGenerateEnabled);
 
         $('ulab-generate-btn').addEventListener('click', runGenerate);
-
-        $('ulab-cs-history-toggle').addEventListener('click', () => {
-            const list = $('ulab-cs-history-list');
-            const opening = list.style.display === 'none';
-            list.style.display = opening ? 'block' : 'none';
-            if (opening) loadHistory();
-        });
     }
 
     async function runGenerate() {
@@ -202,16 +166,21 @@
             }
 
             setStatus(`✅ Found ${result.entries.length} class slot(s). Opening your schedule…`);
-            chrome.storage.local.set({
-                ulabClassSchedule: {
-                    ...result,
-                    sourceFile: selectedFile.name,
-                    semester: $('ulab-cs-semester').value || null,
-                    year: $('ulab-cs-year').value ? parseInt($('ulab-cs-year').value, 10) : null,
-                    generatedAt: Date.now(),
-                },
-            }, () => {
-                chrome.runtime.sendMessage({ action: 'openClassScheduleResults' });
+            const scheduleEntry = {
+                ...result,
+                sourceFile: selectedFile.name,
+                semester: $('ulab-cs-semester').value || null,
+                year: $('ulab-cs-year').value ? parseInt($('ulab-cs-year').value, 10) : null,
+                generatedAt: Date.now(),
+                savedAt: Date.now(),
+            };
+            await saveScheduleToHistory(scheduleEntry);
+            chrome.storage.local.set({ ulabClassSchedule: scheduleEntry }, () => {
+                if (window.ULAB_TOOLS_FRAME_SHOW_RESULTS) {
+                    window.ULAB_TOOLS_FRAME_SHOW_RESULTS('features/class-schedule/results.html');
+                } else {
+                    chrome.runtime.sendMessage({ action: 'openClassScheduleResults' });
+                }
                 $('ulab-generate-btn').disabled = false;
             });
         } catch (err) {

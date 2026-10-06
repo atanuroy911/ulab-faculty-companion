@@ -100,7 +100,7 @@
             <div class="ulab-format-box">
                 <div class="ulab-format-label">3. Semester (also saved with your schedule, so 📅 My Schedule can tell your terms apart)</div>
                 <div style="display:flex;flex-wrap:wrap;gap:10px">
-                    <select id="ulab-cs-semester" style="flex:1;min-width:0;padding:9px 8px;border-radius:8px;border:1px solid var(--border);color:var(--text);background:transparent;font:inherit;max-width:100%">
+                    <select id="ulab-cs-semester" style="flex:1;min-width:0;padding:9px 8px;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--surface);font:inherit;max-width:100%">
                         <option value="">Not sure / other</option>
                         <option value="Spring">Spring</option>
                         <option value="Summer">Summer</option>

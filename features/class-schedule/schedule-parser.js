@@ -175,11 +175,11 @@
         return { short: q, fullName: '' };
     }
 
-    // ── Main scan: walk every row, track the current time-block, and pull
-    // out every cell whose teacher segment matches the resolved short form.
-    function scanSheetForTeacher(rows, shortForm) {
-        const entries = [];
-        const shortLower = shortForm.toLowerCase();
+    // ── Block walk: visit every row, track the current time-block, and
+    // hand each class cell (with the header it sits under) to `onCell`.
+    // `onHeader` (optional) sees every time-header block as it's found.
+    // Shared by the single-teacher scan and the all-teachers scan.
+    function walkClassCells(rows, onCell, onHeader) {
         let header = null; // { rowIdx, times: {col: label}, days: [..] }
         let blankRun = 0;
 
@@ -203,6 +203,7 @@
                 const dayLabel = cellText(row, 0) + ' ' + cellText(nextRow, 0);
                 const days = extractDayTokens(dayLabel);
                 header = { rowIdx: r, times, days: days.length ? days : DAY_ORDER.slice() };
+                if (onHeader) onHeader(header);
                 continue;
             }
 
@@ -222,34 +223,53 @@
                 const tagText = tagMatch ? tagMatch[1] : '';
                 const remainder = tagMatch ? raw.slice(0, tagMatch.index).trim() : raw;
                 const dayOverride = extractDayOverride(tagText);
-
-                const segments = remainder.split('-').map((s) => s.trim());
-                let matchIdx = -1;
-                for (let i = segments.length - 1; i >= 0; i--) {
-                    const seg = segments[i];
-                    if (!seg || !/^[A-Za-z][A-Za-z .]*$/.test(seg)) continue;
-                    if (seg.toLowerCase() === shortLower) { matchIdx = i; break; }
-                }
-                if (matchIdx <= 0) continue;
-
-                const course = segments.slice(0, matchIdx).join(' - ').replace(/\s*\/\s*$/, '').trim();
                 const timeLabel = header.times[c] || 'Time TBA';
-                const days = dayOverride ? [dayOverride] : header.days;
-                const range = parseTimeRange(timeLabel);
 
-                for (const day of days) {
-                    entries.push({
-                        day,
-                        time: timeLabel,
-                        course: course || raw,
-                        raw,
-                        sortKey: parseStartMinutes(timeLabel),
-                        startMin: range ? range.start : null,
-                        endMin: range ? range.end : null,
-                    });
-                }
+                onCell({
+                    raw,
+                    segments: remainder.split('-').map((s) => s.trim()),
+                    timeLabel,
+                    days: dayOverride ? [dayOverride] : header.days,
+                    range: parseTimeRange(timeLabel),
+                });
             }
         }
+    }
+
+    function isNameSegment(seg) {
+        return !!seg && /^[A-Za-z][A-Za-z .]*$/.test(seg);
+    }
+
+    // One timetable entry for the teacher whose short form sits at
+    // segments[matchIdx] (everything before it is the course text).
+    function makeEntry(cell, day, matchIdx) {
+        const course = cell.segments.slice(0, matchIdx).join(' - ').replace(/\s*\/\s*$/, '').trim();
+        return {
+            day,
+            time: cell.timeLabel,
+            course: course || cell.raw,
+            raw: cell.raw,
+            sortKey: parseStartMinutes(cell.timeLabel),
+            startMin: cell.range ? cell.range.start : null,
+            endMin: cell.range ? cell.range.end : null,
+        };
+    }
+
+    // ── Main scan: pull out every cell whose teacher segment matches the
+    // resolved short form.
+    function scanSheetForTeacher(rows, shortForm) {
+        const entries = [];
+        const shortLower = shortForm.toLowerCase();
+        walkClassCells(rows, (cell) => {
+            let matchIdx = -1;
+            for (let i = cell.segments.length - 1; i >= 0; i--) {
+                const seg = cell.segments[i];
+                if (!isNameSegment(seg)) continue;
+                if (seg.toLowerCase() === shortLower) { matchIdx = i; break; }
+            }
+            if (matchIdx <= 0) return;
+            for (const day of cell.days) entries.push(makeEntry(cell, day, matchIdx));
+        });
         return entries;
     }
 
@@ -287,6 +307,92 @@
             fullName: resolved.fullName,
             entries: deduped,
         };
+    }
+
+    // ── All-teachers scan (for "Who's Free?") ───────────────────────────
+    // One pass over the workbook that records, for every teacher short form
+    // found in any class cell, every (day, time) they teach — plus every
+    // distinct time slot the sheet defines per day, so the UI can offer the
+    // sheet's own slots to pick from. Within a cell the teacher is the LAST
+    // name-like segment ("course - sec - room - ASR"); an earlier name-like
+    // segment only counts if the legend knows it, so a stray word like
+    // "Lab" isn't mistaken for a person. Everyone in the legend is listed
+    // even with zero classes (they're simply free all week).
+    function parseWorkbookAllTeachers(workbook) {
+        const sheets = workbook.SheetNames.map((name) =>
+            XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: false, defval: '' })
+        );
+        const legend = buildLegend(sheets);
+
+        const teachers = {}; // shortLower -> { short, fullName, entries: [] }
+        const slotsByDay = {}; // day -> { rangeKey: { label, startMin, endMin } }
+        const seen = new Set();
+
+        function teacherFor(short) {
+            const key = short.toLowerCase();
+            if (!teachers[key]) {
+                const leg = legend.shortToFull[key];
+                teachers[key] = { short: leg ? leg.short : short, fullName: leg ? leg.full : '', entries: [] };
+            }
+            return teachers[key];
+        }
+
+        for (const key of Object.keys(legend.shortToFull)) teacherFor(legend.shortToFull[key].short);
+
+        for (const rows of sheets) {
+            walkClassCells(rows, (cell) => {
+                const hits = [];
+                for (let i = cell.segments.length - 1; i >= 1; i--) {
+                    const seg = cell.segments[i];
+                    if (!isNameSegment(seg)) continue;
+                    if (!hits.length || legend.shortToFull[seg.toLowerCase()]) hits.push(i);
+                }
+                for (const idx of hits) {
+                    const t = teacherFor(cell.segments[idx]);
+                    for (const day of cell.days) {
+                        const key = t.short + '|' + day + '|' + cell.timeLabel + '|' + cell.raw;
+                        if (seen.has(key)) continue;
+                        seen.add(key);
+                        t.entries.push(makeEntry(cell, day, idx));
+                    }
+                }
+            }, (header) => {
+                for (const day of header.days) {
+                    const bucket = slotsByDay[day] || (slotsByDay[day] = {});
+                    for (const label of Object.values(header.times)) {
+                        const range = parseTimeRange(label);
+                        const key = range ? range.start + '-' + range.end : 'label:' + label;
+                        if (!bucket[key]) bucket[key] = { label, startMin: range ? range.start : null, endMin: range ? range.end : null };
+                    }
+                }
+            });
+        }
+
+        const slots = {};
+        for (const day of Object.keys(slotsByDay)) {
+            slots[day] = Object.values(slotsByDay[day]).sort((a, b) =>
+                (a.startMin ?? parseStartMinutes(a.label)) - (b.startMin ?? parseStartMinutes(b.label)));
+        }
+
+        return {
+            teachers: Object.values(teachers).sort((a, b) => a.short.localeCompare(b.short)),
+            slots,
+            days: DAY_ORDER.filter((d) => slots[d]),
+        };
+    }
+
+    // The entries of `teacher` on `day` that overlap [startMin, endMin) —
+    // empty array means they're free then. Overlap (not label equality) is
+    // what matters, since a 3-hour lab block clashes with every regular slot
+    // it spans; slots whose times couldn't be read fall back to label match.
+    function busyEntriesFor(teacher, day, startMin, endMin, label) {
+        return teacher.entries.filter((e) => {
+            if (e.day !== day) return false;
+            if (e.startMin != null && e.endMin != null && startMin != null && endMin != null) {
+                return e.startMin < endMin && startMin < e.endMin;
+            }
+            return !!label && e.time === label;
+        });
     }
 
     // ── Semester start-date defaults ────────────────────────────────────
@@ -334,6 +440,7 @@
 
     window.ULAB_ScheduleParser = {
         parseWorkbookForTeacher, parseTimeRange, DAY_ORDER,
+        parseWorkbookAllTeachers, busyEntriesFor,
         detectSemesterFromFilename, semesterDefaults,
     };
 })();

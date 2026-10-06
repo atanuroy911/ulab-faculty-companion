@@ -82,6 +82,7 @@
                 { label: 'Course Catalogue', icon: 'book', action: 'open-tool:catalogue-viewer' },
                 { label: 'Generate My Schedule', icon: 'calendar', action: 'open-tool:class-schedule' },
                 { label: 'My Schedule', icon: 'calendar', action: 'open-tool:my-schedule' },
+                { label: "Who's Free?", icon: 'people', action: 'open-tool:free-teachers' },
                 { label: 'Marks Management', icon: 'chart', action: 'open-tool:marks' },
                 { label: 'Google Classroom', icon: 'school', action: 'open-tool:classroom' },
             ]

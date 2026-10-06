@@ -84,6 +84,7 @@
 
             const session = result && result.activeImportSession;
             if (!session) return; // no import requested — leave this page alone
+            if (session.source === 'attendance-sheet-pdf') return; // that import runs on the Attendance Sheet page
             if (Date.now() - session.timestamp > SESSION_TTL_MS) {
                 chrome.storage.session.remove('activeImportSession');
                 return;

@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased (manifest 3.2.0)
+
+- **New: Who's Free?** Upload the semester's Class Schedule xlsx (the same file "Generate
+  My Schedule" uses), pick a day and one of the sheet's own time slots or a custom range, and
+  see which teachers have no class then. Busy teachers are listed with the class that
+  clashes. A class counts as a clash if it overlaps the chosen time, so a long lab block
+  makes its teacher busy for every slot it covers. Teachers who are in the sheet's legend but
+  have no classes are shown as free. Available in the side panel and under My Tools on the
+  site.
+
+- **Changed: MMS "Import Students from URMS" now uses the Attendance Sheet.** The Section
+  Wise Result Entry page only exists while result entry is open, and opens preset to that
+  semester (often last semester's). The import now opens URMS's Attendance Sheet instead:
+  pick Semester, Course and Section, and the extension downloads the sheet as a PDF and hands
+  it to MMS, which reads it with its "Upload PDF" parser. The course is checked against the
+  dropdown's label here and against the PDF in MMS. MMS builds that don't ask for this keep
+  the old result-entry route.
+- **New: MMS integration — Look Up Students (name + email).** When a coordinator adds
+  students to a capstone group in MMS by ID alone, MMS can ask the extension to fill in
+  each student's name and email. Same background StudentRegistration lookup as the email
+  sync below (no popup, uses your existing URMS session), on its own `mms-urms-students`
+  port so the email sync's payload shape is unchanged. If your URMS session has expired the
+  extension reports that specifically, and MMS can ask it to open URMS's login in a popup
+  window and retry without losing the list.
+- **New: MMS integration — Sync Student Emails.** MMS can now ask the extension for a
+  batch of student IDs' email addresses. The extension looks each one up via the same
+  StudentRegistration "Load" request the Advising feature already uses, using your
+  existing URMS session — no popup window needed. Note: the public version number here
+  doesn't match this changelog's numbering (manifest is 3.2.0 vs. the 1.5.2 entry below) —
+  reconcile before publishing to the Web Store.
+
 ## 1.5.2 — 2026-07-26
 
 - **New: MMS integration — Import Students from URMS.** The [ULAB MMS](https://ulab-mms.netlify.app/)

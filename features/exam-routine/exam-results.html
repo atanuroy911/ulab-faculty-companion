@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULAB Exam Routine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        [data-theme="dark"] {
+            --bg:            #0c1220;
+            --surface:       #131e30;
+            --surface2:      #1a2840;
+            --border:        rgba(255,255,255,0.08);
+            --text:          #e2e8f0;
+            --muted:         #64748b;
+            --accent:        #38bdf8;
+            --accent2:       #818cf8;
+            --accent3:       #34d399;
+            --accent3-bg:    rgba(52,211,153,0.12);
+            --accent3-bdr:   rgba(52,211,153,0.28);
+            --badge2-bg:     rgba(129,140,248,0.14);
+            --badge2-border: rgba(129,140,248,0.28);
+            --hero-grad:     linear-gradient(135deg, #f8fafc 30%, #94a3b8);
+            --warn-bg:       rgba(251,191,36,0.12);
+            --warn-bdr:      rgba(251,191,36,0.28);
+            --warn-text:     #fbbf24;
+            --date-grad:     linear-gradient(135deg, #1a2840, #131e30);
+            --date-line:     #38bdf8;
+            --btn-border:    rgba(255,255,255,0.14);
+        }
+        [data-theme="light"] {
+            --bg:            #f8fafc;
+            --surface:       #ffffff;
+            --surface2:      #f1f5f9;
+            --border:        rgba(0,0,0,0.08);
+            --text:          #0f172a;
+            --muted:         #64748b;
+            --accent:        #0284c7;
+            --accent2:       #4f46e5;
+            --accent3:       #059669;
+            --accent3-bg:    rgba(5,150,105,0.08);
+            --accent3-bdr:   rgba(5,150,105,0.22);
+            --badge2-bg:     rgba(99,102,241,0.08);
+            --badge2-border: rgba(99,102,241,0.22);
+            --hero-grad:     linear-gradient(135deg, #0f172a 30%, #334155);
+            --warn-bg:       rgba(234,179,8,0.10);
+            --warn-bdr:      rgba(234,179,8,0.28);
+            --warn-text:     #a16207;
+            --date-grad:     linear-gradient(135deg, #f0f9ff, #f8fafc);
+            --date-line:     #0284c7;
+            --btn-border:    rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 72px;
+            min-height: 100vh;
+        }
+
+        /* ── Theme toggle ──────────────────────────────────────────────── */
+        .theme-toggle {
+            position: fixed; top: 14px; right: 14px; z-index: 200;
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 7px 14px; cursor: pointer;
+            font: inherit; font-size: 12px; color: var(--text);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .theme-toggle:hover { transform: translateY(-1px); }
+        .theme-toggle .toggle-moon { display: none; }
+        [data-theme="dark"] .theme-toggle .toggle-sun { display: none; }
+        [data-theme="dark"] .theme-toggle .toggle-moon { display: inline; }
+
+        /* ── Page layout ───────────────────────────────────────────────── */
+        .page { max-width: 880px; margin: 0 auto; padding: 40px 20px 24px; }
+
+        /* ── Hero header ───────────────────────────────────────────────── */
+        header.hero { text-align: center; margin-bottom: 26px; }
+        .hero-eyebrow {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+        }
+        h1 {
+            font-size: 30px; font-weight: 800; letter-spacing: -0.5px;
+            background: var(--hero-grad); -webkit-background-clip: text;
+            background-clip: text; color: transparent;
+        }
+        .hero-sub { color: var(--muted); font-size: 13.5px; margin-top: 8px; font-weight: 500; }
+
+        /* ── Stat chips ────────────────────────────────────────────────── */
+        .stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+        .stat-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 10px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+        }
+        .stat-icon { font-size: 18px; }
+        .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+
+        /* ── Export action row ─────────────────────────────────────────── */
+        .export-row {
+            display: flex; gap: 10px; justify-content: center;
+            margin-bottom: 28px; flex-wrap: wrap;
+        }
+        .export-btn {
+            flex-shrink: 0; white-space: nowrap; padding: 9px 18px;
+            background: var(--surface); border: 1px solid var(--btn-border);
+            color: var(--text); font-size: 13px; font-weight: 600;
+            border-radius: 10px; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 7px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            transition: all 0.15s ease;
+        }
+        .export-btn:hover { background: var(--surface2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+        .export-btn.primary {
+            background: var(--accent); color: #fff; border-color: var(--accent);
+        }
+        .export-btn.primary:hover { opacity: 0.92; background: var(--accent); }
+
+        /* ── Date section card ──────────────────────────────────────────── */
+        .date-section {
+            margin-bottom: 22px;
+            border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .date-header {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--date-grad); padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            border-left: 5px solid var(--date-line);
+        }
+        .date-header .date-icon { font-size: 22px; }
+        .date-header .date-text { flex: 1; min-width: 0; }
+        .date-header .date-full { font-size: 16px; font-weight: 800; color: var(--text); }
+        .date-header .date-count {
+            font-size: 11px; font-weight: 700; color: var(--muted);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 3px 12px; white-space: nowrap;
+        }
+
+        /* ── Exam card ──────────────────────────────────────────────────── */
+        .exam-list { background: var(--surface); }
+
+        .exam-card {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        .exam-card:last-child { border-bottom: none; }
+        .exam-card:hover { background: var(--surface2); }
+
+        .exam-time-col {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; min-width: 90px;
+        }
+        .exam-time-badge {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border);
+            color: var(--accent2); border-radius: 20px; padding: 5px 11px;
+            text-align: center; white-space: nowrap;
+        }
+        .exam-slot-num {
+            font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase;
+        }
+
+        .exam-body { min-width: 0; }
+        .exam-course-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+        }
+        .exam-course-code {
+            font-size: 17px; font-weight: 800; color: var(--text);
+            letter-spacing: -0.2px;
+        }
+        .exam-section-room {
+            display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        .exam-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 11.5px; font-weight: 600;
+            border-radius: 20px; padding: 3px 11px;
+        }
+        .exam-pill.section {
+            background: var(--badge2-bg); border: 1px solid var(--badge2-border);
+            color: var(--accent2);
+        }
+        .exam-pill.room {
+            background: var(--accent3-bg); border: 1px solid var(--accent3-bdr);
+            color: var(--accent3);
+        }
+
+        .exam-gcal-link {
+            font-size: 11px; font-weight: 600; color: var(--accent);
+            text-decoration: none; border: 1px dashed var(--accent);
+            border-radius: 20px; padding: 2px 10px; display: inline-flex;
+            align-items: center; gap: 4px; transition: all 0.15s ease;
+        }
+        .exam-gcal-link:hover {
+            background: var(--accent); color: #fff; border-style: solid;
+        }
+
+        .exam-raw-col {
+            min-width: 0;
+        }
+        .exam-raw {
+            font-size: 10px; color: var(--muted); word-break: break-all;
+            line-height: 1.45; font-family: monospace;
+            background: var(--surface2); border-radius: 6px;
+            padding: 6px 9px; border: 1px solid var(--border);
+            max-width: 250px;
+        }
+
+        /* ── Empty state ───────────────────────────────────────────────── */
+        .empty-state {
+            text-align: center; margin-top: 100px; color: var(--muted); padding: 40px 20px;
+        }
+        .empty-state .icon { font-size: 54px; margin-bottom: 16px; }
+
+        /* ── Footer ────────────────────────────────────────────────────── */
+        footer {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 9px 16px; text-align: center; font-size: 11px; color: var(--muted);
+        }
+        footer a { color: inherit; text-decoration: none; font-weight: 500; }
+        footer a:hover { color: var(--accent); }
+
+        /* ── Responsive ────────────────────────────────────────────────── */
+        @media (max-width: 680px) {
+            .exam-card {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .exam-time-col {
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            .exam-raw { max-width: 100%; }
+        }
+
+        /* ── Print styles ──────────────────────────────────────────────── */
+        @media print {
+            .theme-toggle, .export-row, .exam-gcal-link, footer { display: none !important; }
+            body { background: #fff !important; color: #000 !important; padding-bottom: 0; }
+            .page { max-width: 100%; padding: 0; margin: 0; }
+            .date-section { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; margin-bottom: 16px; }
+            .date-header { background: #f0f4f8 !important; border-left: 4px solid #1a365d !important; }
+            .date-full { color: #000 !important; }
+            .exam-course-code { color: #000 !important; font-size: 15px; }
+            .exam-pill.section { background: #f3e8ff !important; color: #581c87 !important; border: 1px solid #d8b4fe !important; }
+            .exam-pill.room { background: #dcfce7 !important; color: #14532d !important; border: 1px solid #86efac !important; }
+            .exam-time-badge { background: #f1f5f9 !important; color: #000 !important; border: 1px solid #cbd5e1 !important; }
+            .exam-raw { background: #fafafa !important; color: #555 !important; border: 1px solid #eee !important; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle" title="Toggle light/dark theme">
+    <span class="toggle-sun">☀️</span>
+    <span class="toggle-moon">🌙</span>
+    <span id="toggle-label">Light mode</span>
+</button>
+
+<div class="page">
+    <header class="hero">
+        <div class="hero-eyebrow" id="hero-eyebrow">ULAB Exam Routine</div>
+        <h1 id="page-title">My Exam Routine</h1>
+        <p class="hero-sub" id="hero-sub">—</p>
+    </header>
+
+    <div class="stats" id="stats-row"></div>
+
+    <div class="export-row">
+        <button class="export-btn primary" id="export-print-btn">🖨️ Print / Save as PDF</button>
+        <button class="export-btn" id="export-ics-btn">📅 Export to Calendar (.ics)</button>
+    </div>
+
+    <div id="exam-content"></div>
+</div>
+
+<footer>Made by <a href="https://atanusroy.com" target="_blank" rel="noopener">Atanu Shuvam Roy</a> · with Shah Jafor Sadeek Quaderi</footer>
+
+<!-- Load separate script file for MV3 Content Security Policy compliance (no inline script) -->
+<script src="exam-results.js"></script>
+</body>
+</html>

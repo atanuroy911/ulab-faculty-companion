@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased (manifest 3.2.0)
+## 3.3.0 — 2026-10-25
+
+- **New: Exam Routine Finder.** Upload the university's Exam Schedule Excel file
+  (`.xlsx`) and enter your short form (e.g. `ASR`) or full name to view your
+  personalized date-wise exam routine. Results open in a dedicated report page with
+  light/dark theme support, date-grouped exam cards with time slots, courses,
+  sections, and rooms, 🖨️ Print/PDF export, 📅 full-schedule `.ics` calendar
+  download, and 1-click "+ Google Calendar" links for individual exam slots.
+
+## 3.2.0 — 2026-10-25
 
 - **New: Who's Free?** Upload the semester's Class Schedule xlsx (the same file "Generate
   My Schedule" uses), pick a day and one of the sheet's own time slots or a custom range, and

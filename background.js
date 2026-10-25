@@ -23,6 +23,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/catalogue-viewer/viewer.html') });
     } else if (request.action === 'openClassScheduleResults') {
         chrome.tabs.create({ url: chrome.runtime.getURL('features/class-schedule/results.html') });
+    } else if (request.action === 'openExamRoutineResults') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('features/exam-routine/exam-results.html') });
     } else if (request.type === 'URMS_PARAMS_READY') {
         handleUrmsParamsReady(request, sender, sendResponse);
         return true; // keep the message channel open for the async response

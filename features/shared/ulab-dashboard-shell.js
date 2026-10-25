@@ -83,6 +83,7 @@
                 { label: 'Generate My Schedule', icon: 'calendar', action: 'open-tool:class-schedule' },
                 { label: 'My Schedule', icon: 'calendar', action: 'open-tool:my-schedule' },
                 { label: "Who's Free?", icon: 'people', action: 'open-tool:free-teachers' },
+                { label: 'Exam Routine Finder', icon: 'clipboard', action: 'open-tool:exam-routine' },
                 { label: 'Marks Management', icon: 'chart', action: 'open-tool:marks' },
                 { label: 'Google Classroom', icon: 'school', action: 'open-tool:classroom' },
             ]

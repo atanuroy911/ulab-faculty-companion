@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ULAB Faculty Companion",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Advising & Save/Bill (CSE/BBA/English/MSJ/EEE/Bangla), Capstone Eligibility (CSE) for ULAB faculty on URMS",
   "permissions": [
     "storage",
@@ -196,6 +196,8 @@
     {
       "resources": [
         "features/class-schedule/results.html",
+        "features/exam-routine/exam-results.html",
+        "features/exam-routine/exam-results.js",
         "features/shared/tools-frame.html",
         "features/capstone-eligibility/results.html",
         "features/catalogue-viewer/viewer.html",
